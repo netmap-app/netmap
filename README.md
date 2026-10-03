@@ -23,6 +23,30 @@ open-port sweep. Where the two disagree, it says so; a person decides.
 Every source is **read-only**: NetMap never changes your router, DNS, proxy or
 containers. Credentials you add are encrypted at rest.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/overview-dark.png">
+  <img alt="Overview: what needs attention, what is up, quick links" src="docs/screenshots/overview-light.png">
+</picture>
+
+<details>
+<summary>More screenshots — inventory, topology graph, phone</summary>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/inventory-dark.png">
+  <img alt="Inventory grouped by category, with live status and ports" src="docs/screenshots/inventory-light.png">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/graph-dark.png">
+  <img alt="Topology graph: what runs on what, what depends on what, what the proxy exposes" src="docs/screenshots/graph-light.png">
+</picture>
+
+<img alt="Overview on a phone" src="docs/screenshots/phone-overview.png" width="300">
+
+</details>
+
+*The screenshots show a demo inventory with made-up names and addresses.*
+
 | | |
 |---|---|
 | Web UI | `http://<server>:8087/` |
