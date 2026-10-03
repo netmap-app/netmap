@@ -48,23 +48,21 @@ On a push to `main` whose `VERSION` is not yet published,
    `ghcr.io/netmap-app/netmap` as `:<version>`, `:latest` and `:sha-<commit>`;
 3. keeps the newest 10 releases and deletes older image versions
    (`.github/scripts/prune-images.sh`);
-4. optionally asks a Dockhand instance to recreate the container — only when
+4. creates the GitHub Release `v<version>` on the commit that set that
+   `VERSION`, with that version's `CHANGELOG.md` bullets and the pull command
+   (`.github/scripts/release-notes.sh`) — unless it already exists;
+5. optionally asks a Dockhand instance to recreate the container — only when
    the repository variable `DOCKHAND_URL` is set. The workflow header lists the
    variables and secrets it needs; none of them belong in the code.
 
-A push that does not change `VERSION` runs the tests and publishes nothing.
+A push that does not change `VERSION` runs the tests and publishes nothing; it
+still creates the release for the current version if that one is missing.
 
 ## 5. Announce
 
-Create a GitHub Release for the new version (tag `v<version>`, target `main`)
-with the changelog bullets and the pull command:
-
-```bash
-docker pull ghcr.io/netmap-app/netmap:<version>
-```
-
-Say whether the upgrade needs anything beyond `docker compose pull &&
-docker compose up -d`.
+CI writes the release. If an upgrade needs anything beyond `docker compose pull
+&& docker compose up -d`, say so in a `CHANGELOG.md` bullet — that is where the
+release notes come from. Edit the release on GitHub afterwards if needed.
 
 ## 6. Check
 

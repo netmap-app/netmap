@@ -1,4 +1,4 @@
-# CI/CD. Three jobs, each gated on the one before:
+# CI/CD. Four jobs, each gated on the one it needs:
 #
 #   pytest   every push and pull request — the same command as locally.
 #   publish  pushes to main only, after pytest: build the image for amd64 and
@@ -7,6 +7,10 @@
 #            a release is a VERSION bump (app/main.py), so a README-only push
 #            never overwrites a version. Then prune: keep the newest 10
 #            releases and what they reference (.github/scripts/prune-images.sh).
+#   release  after publish, on main: create the GitHub Release v<VERSION>
+#            (notes from CHANGELOG.md, .github/scripts/release-notes.sh) on
+#            the commit that set that VERSION, unless it already exists — so
+#            a version published without a release gets one on the next push.
 #   deploy   optional, after publish: ask a Dockhand instance to recreate the
 #            container from the new image and wait until the new version
 #            reports healthy. Runs only when the repository variable
@@ -144,6 +148,35 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KEEP: "10"
         run: .github/scripts/prune-images.sh
+
+  release:
+    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write          # create the release and its tag, nothing else
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      V: ${{ needs.publish.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0       # to find the commit that set VERSION
+      - name: Create the GitHub Release for this version
+        run: |
+          set -euo pipefail
+          if gh release view "v$V" >/dev/null 2>&1; then
+            echo "Release v$V already exists — nothing to do."
+            exit 0
+          fi
+          # Tag the release commit, not whatever later commit runs this: the
+          # oldest commit whose app/main.py carries this VERSION.
+          sha=$(git log --reverse --format=%H -G "^VERSION = \"$V\"" -- app/main.py | head -n 1)
+          [ -n "$sha" ] || sha=$GITHUB_SHA
+          .github/scripts/release-notes.sh "$V" CHANGELOG.md "ghcr.io/${GITHUB_REPOSITORY,,}" > notes.md
+          gh release create "v$V" --target "$sha" --title "NetMap $V" --notes-file notes.md
+          echo "::notice::Released v$V on ${sha:0:7}."
 
   deploy:
     needs: [pytest, publish]
