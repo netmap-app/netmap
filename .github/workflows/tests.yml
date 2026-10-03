@@ -172,7 +172,7 @@ jobs:
           fi
           # Tag the release commit, not whatever later commit runs this: the
           # oldest commit whose app/main.py carries this VERSION.
-          sha=$(git log --reverse --format=%H -G "^VERSION = \"$V\"" -- app/main.py | head -n 1)
+          sha=$(git log --reverse --format=%H -G "^VERSION = \"$V\"" -- app/main.py | sed -n 1p)
           [ -n "$sha" ] || sha=$GITHUB_SHA
           .github/scripts/release-notes.sh "$V" CHANGELOG.md "ghcr.io/${GITHUB_REPOSITORY,,}" > notes.md
           gh release create "v$V" --target "$sha" --title "NetMap $V" --notes-file notes.md
