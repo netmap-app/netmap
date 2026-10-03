@@ -20,7 +20,8 @@ named in `CHANGELOG.md` once users have had a chance to update.
   read-only credential to create for each.
 - Source and notification secrets are encrypted at rest; set
   `NETMAP_SECRET_KEY` to keep the key out of the database.
-- The MCP endpoint is guarded by its path and `NETMAP_MCP_TOKEN`.
+- The MCP endpoint is off unless `NETMAP_MCP_TOKEN` is set, and then requires
+  that bearer token.
 - Only host names listed in `NETMAP_ALLOWED_HOSTS` are answered (DNS
   rebinding).
 - The container runs as an unprivileged user.

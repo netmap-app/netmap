@@ -851,17 +851,21 @@ def test_a_channel_can_switch_to_a_daily_summary(page, server):
     assert server.api("GET", "/api/settings/timezone")["timezone"] == "Europe/Berlin"
 
 
-# ---- an MCP endpoint without its bearer token ----------------------------------------------------
-def test_a_missing_mcp_token_is_on_the_overview_and_in_about(page, server):
-    # The test server sets no NETMAP_MCP_TOKEN.
+# ---- an MCP endpoint that is off (no NETMAP_MCP_TOKEN) ------------------------------------------
+def test_mcp_off_is_in_about_and_not_a_warning(page, server):
+    # The test server sets no NETMAP_MCP_TOKEN, so the endpoint is off.
     page.wait_for_selector("#overview .verdict")
-    expect(page.locator("#overview .at", has_text="MCP endpoint has no bearer token")).to_have_count(1)
+    expect(page.locator("#overview .at", has_text="MCP")).to_have_count(0)
+    open_settings(page, "about")
+    body = page.locator("#aboutBody")
+    expect(body).to_contain_text("off — set NETMAP_MCP_TOKEN to enable it")
+    expect(body).not_to_contain_text("MCP accepts Host")
     page.set_viewport_size({"width": 375, "height": 812})
     page.wait_for_timeout(150)
     assert page.evaluate("document.documentElement.scrollWidth") <= 375
-    page.set_viewport_size({"width": 1280, "height": 900})
-    open_settings(page, "about")
-    expect(page.locator("#aboutBody")).to_contain_text("NO bearer token")
+    r = page.request.post(server.url + "/mcp", data="{}",
+                          headers={"content-type": "application/json"})
+    assert r.status == 503 and "NETMAP_MCP_TOKEN" in r.text()
 
 
 # ---- the UI audit (1.92.2) -------------------------------------------------------------------------

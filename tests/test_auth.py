@@ -176,11 +176,11 @@ def test_allowed_hosts_listed_once(make_app):
 
 
 # ---- malformed headers and an MCP endpoint without its token ---------------------------------
-def _raw(app, path: str, auth: bytes) -> int:
+def _raw(app, path: str, auth: bytes | None, sent: list | None = None) -> int:
     """One request straight to the ASGI app — a test client refuses to send
     the malformed header this is about."""
     import asyncio
-    sent = []
+    sent = [] if sent is None else sent
 
     async def receive():
         return {"type": "http.request", "body": b"{}", "more_body": False}
@@ -188,12 +188,27 @@ def _raw(app, path: str, auth: bytes) -> int:
     async def send(msg):
         sent.append(msg)
 
+    headers = [(b"host", b"localhost")] + ([(b"authorization", auth)] if auth is not None else [])
     scope = {"type": "http", "method": "POST", "path": path, "query_string": b"",
-             "headers": [(b"host", b"localhost"), (b"authorization", auth)],
+             "headers": headers,
              "scheme": "http", "server": ("localhost", 80), "client": ("127.0.0.1", 1),
              "root_path": "", "http_version": "1.1"}
     asyncio.run(app(scope, receive, send))
     return sent[0]["status"]
+
+
+def _stub_mcp(main) -> list:
+    """Put a stand-in where the MCP app sits and return the list of requests
+    that reached it."""
+    reached = []
+
+    async def stub(scope, receive, send):
+        reached.append(scope["path"])
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b"{}"})
+
+    main.application.mcp_app = stub
+    return reached
 
 
 def test_a_malformed_authorization_header_is_refused_not_a_crash(make_app):
@@ -202,15 +217,50 @@ def test_a_malformed_authorization_header_is_refused_not_a_crash(make_app):
     assert _raw(main.application, "/api/entries", b"Bearer \xff\xfe") == 401
 
 
-def test_an_mcp_endpoint_without_a_token_is_warned_about(make_app):
+@pytest.mark.parametrize("path", ["/mcp", "/private_test"])
+def test_without_a_token_the_mcp_endpoint_is_off(make_app, path):
+    main, c = make_app(NETMAP_MCP_TOKEN="", NETMAP_MCP_PATH=path)
+    h = {"host": "localhost", "accept": "application/json, text/event-stream"}
+    body = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": {"protocolVersion": "2025-06-18", "capabilities": {},
+                       "clientInfo": {"name": "t", "version": "1"}}}
+    for p in (path, path + "/"):
+        r = c.post(p, headers=h, json=body)
+        assert r.status_code == 503
+        assert r.text.startswith("MCP is off: set NETMAP_MCP_TOKEN")
+        assert r.headers["content-type"].startswith("text/plain")
+    assert c.get(path, headers=h).status_code == 503
+    # Nothing reaches the MCP app, whatever the request carries.
+    reached = _stub_mcp(main)
+    assert _raw(main.application, path, None) == 503
+    assert _raw(main.application, path, b"Bearer anything") == 503
+    assert reached == []
+
+
+def test_with_a_token_only_the_right_bearer_reaches_mcp(make_app):
+    main, _ = make_app()                        # BASE_ENV sets the token
+    reached = _stub_mcp(main)
+    assert _raw(main.application, "/private_test", None) == 401
+    assert _raw(main.application, "/private_test", b"Bearer wrong-token") == 401
+    assert _raw(main.application, "/mcp", b"Bearer mcp-test-token") != 200   # not the path
+    assert reached == []
+    assert _raw(main.application, "/private_test", b"Bearer mcp-test-token") == 200
+    assert reached == ["/private_test"]
+
+
+def test_an_mcp_endpoint_that_is_off_is_said_so_quietly(make_app):
     main, c = make_app(NETMAP_API_TOKEN="full-token", NETMAP_MCP_TOKEN="")
-    assert main.mcp_warnings() and "NETMAP_MCP_TOKEN" in main.mcp_warnings()[0]
-    keys = [i["key"] for i in c.get("/api/overview", headers=TOKEN).json()["attention"]]
-    assert "mcp-open" in keys
+    assert main.mcp_startup_line() == "[netmap] MCP endpoint off — NETMAP_MCP_TOKEN not set"
+    # Off is not a problem: nothing on the Overview about it.
+    att = c.get("/api/overview", headers=TOKEN).json()["attention"]
+    assert not [i for i in att if "mcp" in i["key"].lower() or "MCP" in i["title"]]
+    about = c.get("/api/about", headers=TOKEN).json()
+    assert about["mcp_enabled"] is False
     main, c = make_app(NETMAP_API_TOKEN="full-token")
-    assert main.mcp_warnings() == []
-    keys = [i["key"] for i in c.get("/api/overview", headers=TOKEN).json()["attention"]]
-    assert "mcp-open" not in keys
+    assert "mounted at /private_test (bearer token required)" in main.mcp_startup_line()
+    about = c.get("/api/about", headers=TOKEN).json()
+    assert about["mcp_enabled"] is True
+    assert "/private_test" not in str(about)
 
 
 def test_health_does_not_name_the_mcp_path(make_app):

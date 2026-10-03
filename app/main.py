@@ -3,7 +3,8 @@
 Serves:
   /            responsive web UI
   /api/...     JSON REST API
-  /mcp         Model Context Protocol (streamable HTTP) endpoint for Claude
+  /mcp         Model Context Protocol (streamable HTTP) endpoint for Claude —
+               off unless NETMAP_MCP_TOKEN is set (README section 10)
 """
 import csv
 import io
@@ -27,19 +28,20 @@ from .sources import dynamic
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
 CHANGELOG_PATH = os.path.join(os.path.dirname(HERE), "CHANGELOG.md")
-VERSION = "2.0.1"
+VERSION = "2.0.2"
 STARTED = time.time()
 notify.VERSION = VERSION
 
-# The MCP endpoint path. A long random value, held by the Cloudflare MCP
-# server portal's NetMap entry together with NETMAP_MCP_TOKEN (README 10).
+# The MCP endpoint path (README 10). Configurable, but never a credential on
+# its own: the endpoint is off until NETMAP_MCP_TOKEN is set.
 MCP_PATH = os.environ.get("NETMAP_MCP_PATH", "/mcp")
 if not MCP_PATH.startswith("/"):
     MCP_PATH = "/" + MCP_PATH
-# Second factor: if set, that path also requires "Authorization: Bearer
-# <token>" — the portal sends it.
+# The switch and the credential in one: set, the path requires
+# "Authorization: Bearer <token>"; empty, the path is refused outright — the
+# web UI and API require a login by default, and so does MCP.
 MCP_TOKEN = os.environ.get("NETMAP_MCP_TOKEN", "")
-overview_mod.MCP_OPEN = not MCP_TOKEN
+MCP_OFF_TEXT = b"MCP is off: set NETMAP_MCP_TOKEN to enable it \xe2\x80\x94 README section 10\n"
 
 # The MCP SDK refuses any Host header it does not recognise (HTTP 421), which
 # is DNS-rebinding protection: it stops a malicious web page from making a
@@ -622,16 +624,12 @@ async def recent_changes(limit: int = 25, include_logins: bool = False) -> list[
     return await anyio.to_thread.run_sync(lambda: db.audit(limit, include_logins=include_logins))
 
 
-def mcp_warnings() -> list[str]:
-    """The MCP path skips the web UI's authentication entirely: without
-    NETMAP_MCP_TOKEN its only protection is the path itself."""
-    if MCP_TOKEN:
-        return []
-    return ["[netmap] WARNING: NETMAP_MCP_TOKEN is not set — the MCP endpoint "
-            "(which can change and delete entries) answers anyone who can reach "
-            "it and knows its path" + (", and the path is the default /mcp"
-                                      if MCP_PATH == "/mcp" else "")
-            + ". Set NETMAP_MCP_TOKEN (README section 10)."]
+def mcp_startup_line() -> str:
+    """What start-up says about the MCP endpoint. Without NETMAP_MCP_TOKEN it
+    is off — not a problem, just a state."""
+    if not MCP_TOKEN:
+        return "[netmap] MCP endpoint off — NETMAP_MCP_TOKEN not set"
+    return f"[netmap] MCP endpoint mounted at {MCP_PATH} (bearer token required)"
 
 
 # --------------------------------------------------------------------------
@@ -695,11 +693,9 @@ async def lifespan(_app: FastAPI):
     n = db.seed_if_empty(seed) if seed else 0
     if n:
         print(f"[netmap] seeded {n} entries from {seed}", flush=True)
-    print(f"[netmap] MCP endpoint mounted at {MCP_PATH}"
-          f"{' (bearer token required)' if MCP_TOKEN else ''}", flush=True)
-    for line in mcp_warnings():
-        print(line, flush=True)
-    print(f"[netmap] MCP accepts Host: {', '.join(ALLOWED_HOSTS)}", flush=True)
+    print(mcp_startup_line(), flush=True)
+    if MCP_TOKEN:
+        print(f"[netmap] MCP accepts Host: {', '.join(ALLOWED_HOSTS)}", flush=True)
     for line in web_security.startup_lines():
         print(line, flush=True)
     # Service marks, on a thread, best effort. Nothing waits for it: until it
@@ -853,8 +849,8 @@ def api_about():
         "last_sweep": status.LAST_SWEEP,
         "check_interval": status.INTERVAL,
         "check_timeout": status.TIMEOUT,
+        "mcp_enabled": bool(MCP_TOKEN),
         "mcp_path_is_default": MCP_PATH == "/mcp",
-        "mcp_token_required": bool(MCP_TOKEN),
         "mcp_allowed_hosts": ALLOWED_HOSTS,
         "auth": web_security.describe(),
         "secret_key": crypto.key_location(),
@@ -1679,13 +1675,12 @@ class _MCPDispatcher:
                 "/" + scope.get("path", "").strip("/") == self.path:
             # Normalise so the MCP app always sees its own configured path,
             # with or without a trailing slash, and never issues a redirect.
-            if MCP_TOKEN:
-                # A second credential, independent of the secret path. The path
-                # travels in the URL — into logs, history, settings sync and
-                # screenshots — and a header value does not, so the two fail in
-                # different ways rather than together.
-                if not web_security.bearer_ok(dict(scope.get("headers") or []), MCP_TOKEN):
-                    return await self._deny(send)
+            if not MCP_TOKEN:
+                # Off: nothing reaches the MCP app. A path alone is no
+                # credential — it travels in URLs, logs and screenshots.
+                return await self._off(send)
+            if not web_security.bearer_ok(dict(scope.get("headers") or []), MCP_TOKEN):
+                return await self._deny(send)
             scope = dict(scope)
             scope["path"] = self.path
             return await self.mcp_app(scope, receive, send)
@@ -1699,6 +1694,12 @@ class _MCPDispatcher:
                     "headers": [(b"content-type", b"application/json"),
                                 (b"www-authenticate", b'Bearer realm="netmap-mcp"')]})
         await send({"type": "http.response.body", "body": b'{"error":"unauthorized"}'})
+
+    @staticmethod
+    async def _off(send):
+        await send({"type": "http.response.start", "status": 503,
+                    "headers": [(b"content-type", b"text/plain; charset=utf-8")]})
+        await send({"type": "http.response.body", "body": MCP_OFF_TEXT})
 
 
 # ASGI entrypoint — uvicorn serves `application`, not `app`.

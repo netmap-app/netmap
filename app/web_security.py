@@ -1,8 +1,8 @@
 """Who may use the web UI and REST API, and what the browser is told to allow.
 
 The MCP endpoint is not handled here — `_MCPDispatcher` in main.py sends it
-to the MCP app before any of this runs, and it keeps its own two credentials
-(the secret path and the bearer token) and its own Host check.
+to the MCP app before any of this runs. It is off unless NETMAP_MCP_TOKEN is
+set, and then requires that bearer token; it has its own Host check.
 
 Everything else used to trust the network: Cloudflare Access stood in front of
 the public hostname, but the container's port was also open on the LAN, where the

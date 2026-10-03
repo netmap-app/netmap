@@ -51,7 +51,7 @@ containers. Credentials you add are encrypted at rest.
 |---|---|
 | Web UI | `http://<server>:8087/` |
 | REST API | `/api/…` |
-| MCP endpoint | `/mcp` by default (streamable HTTP, section 10) |
+| MCP endpoint | off until `NETMAP_MCP_TOKEN` is set; `/mcp` by default (streamable HTTP, section 10) |
 | Health | `/healthz` |
 | Storage | SQLite at `/data/netmap.db` |
 
@@ -142,7 +142,8 @@ A signed-out browser is sent to `/login`; API calls get 401. A state-changing
 request authenticated by a cookie (Access or password) is refused if its
 `Origin` names another site. `NETMAP_AUTH=off` turns all of this off for a local development copy; the
 log and Settings › About both say so in capitals. The MCP endpoint is separate
-and unaffected — it keeps its secret path and `NETMAP_MCP_TOKEN` (section 10).
+and unaffected — it is off unless `NETMAP_MCP_TOKEN` is set, and then requires
+that bearer token (section 10).
 
 Requests whose `Host` is not in `NETMAP_ALLOWED_HOSTS` (port ignored) are
 refused with 400 before any of this runs — that is what stops DNS rebinding,
@@ -154,9 +155,10 @@ refusal names the host and the setting to add it to.
 ## 3. Connect an AI assistant (MCP)
 
 NetMap is an MCP server at `NETMAP_MCP_PATH` (default `/mcp`, streamable
-HTTP), protected by that path and `NETMAP_MCP_TOKEN` — section 10. Any MCP
-client that can send a bearer token works: Claude (Desktop, Code, or claude.ai
-through a connector or an MCP portal), and others.
+HTTP). It is **off until you set `NETMAP_MCP_TOKEN`**, and then every request
+needs that bearer token — section 10. Any MCP client that can send a bearer
+token works: Claude (Desktop, Code, or claude.ai through a connector or an MCP
+portal), and others.
 
 ### Tools Claude gets
 
@@ -357,8 +359,8 @@ Kinds appear as filter chips and as a badge on each row.
 The gear button opens Settings: a **theme** switch (Auto / Light / Dark — Auto
 follows the OS, and an explicit choice is remembered per browser) and an
 **About** panel showing version, counts, conflicts, last status sweep, check
-interval, uptime, database size and path, and the MCP endpoint's state. About
-never reveals the MCP path — only whether it is still the insecure default.
+interval, uptime, database size and path, and whether the MCP endpoint is on
+or off. About never reveals the MCP path.
 A **Data** panel exports and imports the inventory (section 11).
 
 Explanations of how something works sit behind an **ⓘ** next to what they
@@ -495,7 +497,7 @@ otherwise every restart would log sixty false changes.
 | `NETMAP_CHECK_INTERVAL` | `120` | seconds between sweeps |
 | `NETMAP_CHECK_TIMEOUT` | `2.5` | seconds per TCP probe |
 | `NETMAP_MCP_PATH` | `/mcp` | MCP endpoint path (see section 10) |
-| `NETMAP_MCP_TOKEN` | *(empty)* | optional bearer token on that path |
+| `NETMAP_MCP_TOKEN` | *(empty)* | bearer token required on that path; empty means the MCP endpoint is off |
 | `NETMAP_ALLOWED_HOSTS` | *(empty)* | every name or address NetMap is opened by (localhost is implicit) — web UI, API and MCP |
 | `NETMAP_CF_ACCESS_TEAM` | *(empty)* | Cloudflare Access team name; with the AUD, enables JWT login |
 | `NETMAP_CF_ACCESS_AUD` | *(empty)* | the Access application's AUD tag |
@@ -679,16 +681,20 @@ so any entry name is safe. Example rules: `netmap_entry_up{criticality="critical
 
 ## 10. MCP endpoint
 
-NetMap serves MCP (streamable HTTP) at `NETMAP_MCP_PATH`. Two checks guard it,
-independent of each other and of the web login (section 2), which does not
-apply to this path:
+NetMap serves MCP (streamable HTTP) at `NETMAP_MCP_PATH`. The web login
+(section 2) does not apply to this path; the MCP endpoint has its own guard,
+and it is **off by default**:
 
-- **`NETMAP_MCP_PATH`** — the endpoint path. **Treat it as a credential**:
-  the toolset includes `delete_entry`. Generate one:
+- **`NETMAP_MCP_TOKEN`** — turns the endpoint on. Every request on the path
+  must carry `Authorization: Bearer <token>`; anything else gets 401. Without
+  it, the path answers `503 MCP is off: set NETMAP_MCP_TOKEN to enable it` and
+  nothing reaches the MCP server — the toolset includes `delete_entry`. There
+  is no other way to switch it on. Generate one:
+  `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`
+- **`NETMAP_MCP_PATH`** — the endpoint path, `/mcp` by default. A private
+  path keeps the endpoint out of casual scans, but it is not a credential: it
+  travels in URLs (logs, history, screenshots). Optional:
   `python3 -c "import secrets; print('/private_' + secrets.token_urlsafe(18))"`
-- **`NETMAP_MCP_TOKEN`** — `Authorization: Bearer <token>` required on that
-  path. The path travels in URLs (logs, history, screenshots) and the header
-  does not, so the two fail independently.
 
 Point any MCP client that can send a header at
 `https://<your host><NETMAP_MCP_PATH>` with that bearer token. Exposed to the
@@ -700,10 +706,9 @@ calls.
 **Rotating the path or the token:** change it in `docker-compose.yml`, run
 `docker compose up -d`, then update every client that uses it.
 
-The health endpoint does not report the path, and Settings › About never
-shows it. The start-up log does print it — keep that log to yourself.
-Without `NETMAP_MCP_TOKEN` the path is the endpoint's only protection: the
-start-up log warns, and the Overview carries a warning until it is set.
+The health endpoint does not report the path, and Settings › About only says
+whether the endpoint is on or off. With a token set, the start-up log prints
+the path; without one it says `MCP endpoint off — NETMAP_MCP_TOKEN not set`.
 
 ---
 

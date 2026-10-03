@@ -11,13 +11,14 @@ Issues and pull requests are welcome. Security problems go through
 
 ## Rules the code keeps
 
-- **Credentials never appear in the repository, an issue, a log or a test
-  fixture.** Every source is an instance added in Settings › Sources and
+- **Credentials never appear in chat, the repository, an issue, a log, a test
+  fixture or a tool call.** Every source is an instance added in Settings › Sources and
   stored in `source_instances` (drivers: `app/sources/dynamic.py`; field
   schema: `app/sources/fields.py`). The old `NETMAP_*` source variables are a
   one-time seed (`sources.migrate_legacy()`, guarded by the `sources_seeded`
-  kv row) and ignored afterwards. A credential pasted somewhere public by
-  mistake is regenerated, not reused.
+  kv row) and ignored afterwards. Never ask for a credential or echo one; a
+  credential pasted into a chat or somewhere public by mistake is
+  regenerated, not reused.
 - **Every secret is encrypted at rest.** A source's `secrets` column goes
   through `app/crypto.py`. With `NETMAP_SECRET_KEY` set, the key lives only in
   the container's environment and the database holds ciphertext alone — a
@@ -53,6 +54,9 @@ Issues and pull requests are welcome. Security problems go through
   convention. Derive it from a source or make it a field.
 - **Discovery never writes to the inventory.** A scan reports; a person
   decides. Firewall changes are made by the person, never by the app.
+- **Nothing is reachable without a credential by default.** The web UI and
+  API require a login; the MCP endpoint is off until `NETMAP_MCP_TOKEN` is
+  set. A path is never a credential.
 - **Entry notes are short.** Essential technical facts only.
 
 ## Working on it
@@ -69,8 +73,8 @@ python3.12 -m venv .venv
   temporary database — configuration is read at import, so that is the way to
   test a different auth mode.
 - **A UI change comes with a browser test** in `tests/ui` (Playwright, a real
-  server per test; CI runs them and fails if the browser is missing). The
-  suite includes a phone-width check.
+  server per test; CI runs them and fails if the browser is missing),
+  including a check at phone width (375 px, no horizontal scroll).
 - **Test the states the seed data does not produce** — sources reporting, a
   queue with rows, the all-clear — by intercepting `/api/overview` in the
   test. A build once shipped broken because an empty source list meant the

@@ -28,19 +28,16 @@ services:
       # the port sweep should not run 96 times a day. Scans also run at start-up.
       - NETMAP_DISCOVERY_INTERVAL=86400
       - NETMAP_CHECK_TIMEOUT=2.5    # seconds per TCP probe
-      # MCP endpoint path (README section 10). Treat as a credential: it is
-      # half of what lets a caller use tools like delete_entry. Rotate by
-      # changing it here AND in every MCP client that uses it.
-      # Generate your own:
+      # MCP endpoint path (README section 10). Optional: a private path keeps
+      # the endpoint out of casual scans, but it is not a credential — the
+      # token below is. Rotate by changing it here AND in every MCP client.
       #   python3 -c "import secrets; print('/private_' + secrets.token_urlsafe(18))"
-      # Left as the default /mcp until you set it.
       - NETMAP_MCP_PATH=/mcp
-      # A second credential on that path, independent of it. The path travels
-      # in the URL (logs, history, settings sync, screenshots); a header value
-      # does not. MCP clients send it as `Authorization: Bearer <this token>`.
+      # Turns the MCP endpoint on (its tools can change and delete entries).
+      # Left empty, the endpoint is OFF: the path above answers 503 and
+      # nothing reaches the MCP server. Set, every request needs
+      # `Authorization: Bearer <this token>`.
       #   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
-      # Left empty, the path above is the MCP endpoint's only protection —
-      # start-up and the Overview warn.
       - NETMAP_MCP_TOKEN=
       # REQUIRED: every name or address you open NetMap by, comma separated —
       # this server's LAN IP, its DNS name, the name a reverse proxy sends.

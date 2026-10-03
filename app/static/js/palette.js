@@ -161,9 +161,10 @@ async function renderSettingsPage() {
       ["Check interval", `${a.check_interval}s · ${a.check_timeout}s timeout`],
       ["App uptime", fmtDur(a.uptime_seconds)],
       ["Database", `${fmtBytes(a.db_bytes)} — ${a.db_path}`],
-      ["MCP endpoint", (a.mcp_path_is_default ? "default path /mcp — not secret" : "private path")
-        + (a.mcp_token_required ? " + bearer token" : " · NO bearer token")],
-      ["MCP accepts Host", (a.mcp_allowed_hosts || []).join(", ")],
+      ["MCP endpoint", a.mcp_enabled
+        ? "on — bearer token required" + (a.mcp_path_is_default ? " · default path" : " · custom path")
+        : "off — set NETMAP_MCP_TOKEN to enable it"],
+      ...(a.mcp_enabled ? [["MCP accepts Host", (a.mcp_allowed_hosts || []).join(", ")]] : []),
       ["API access", !a.auth ? "—" : a.auth.disabled
         ? "OPEN — NETMAP_AUTH=off, anyone who can reach the port"
         : [a.auth.cf_access && "Cloudflare Access (verified JWT)",

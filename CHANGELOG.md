@@ -4,6 +4,12 @@ Notable changes to NetMap, newest first. One line per change, no commentary
 — each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.0.2 — 2026-10-03
+
+- The MCP endpoint is off unless `NETMAP_MCP_TOKEN` is set: without it the MCP path answers 503 and nothing reaches the MCP server, instead of serving its tools to anyone who knows the path. If you use MCP without a token, set one (README section 10).
+- Start-up says "MCP endpoint off — NETMAP_MCP_TOKEN not set"; the Overview no longer warns about it, and Settings › About shows MCP as on or off.
+- CONTRIBUTING.md now carries all of the project's ground rules.
+
 ## 2.0.1 — 2026-10-03
 
 - Updated the MCP library to 1.28.1.

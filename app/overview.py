@@ -28,10 +28,6 @@ from __future__ import annotations
 from . import db, sources
 from .sources.dynamic import has_role
 
-# Set by main: NETMAP_MCP_TOKEN is empty, so the MCP endpoint — which skips
-# the web UI's authentication — is protected by its path alone.
-MCP_OPEN = False
-
 # What it costs to ignore. Used to sort the queue and to colour it.
 SEV = {"critical": 0, "warn": 1, "note": 2}
 
@@ -260,16 +256,6 @@ def snapshot(status_cache: dict | None = None) -> dict:
                          "with — restore that key, or re-enter them in Settings › Sources "
                          "and Settings › Notifications."),
             "fingerprint": ",".join(crypto.UNDECRYPTABLE),
-        })
-
-    # ---- 1c. the MCP endpoint without its bearer token -------------------
-    if MCP_OPEN:
-        items.append({
-            "level": "warn", "order": 1, "key": "mcp-open",
-            "title": "The MCP endpoint has no bearer token",
-            "detail": ("Anyone who can reach NetMap and knows the MCP path can change "
-                       "and delete entries through it. Set NETMAP_MCP_TOKEN "
-                       "(README section 10)."),
         })
 
     # ---- 2. critical things that stopped answering ----------------------
