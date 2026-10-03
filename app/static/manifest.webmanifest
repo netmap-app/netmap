@@ -1,0 +1,13 @@
+{
+  "name": "NetMap",
+  "short_name": "NetMap",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#12161B",
+  "theme_color": "#12161B",
+  "icons": [
+    { "src": "/static/brand/netmap-tile-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/static/brand/netmap-tile-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/brand/netmap-tile-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

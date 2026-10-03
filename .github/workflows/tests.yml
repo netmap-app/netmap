@@ -1,0 +1,219 @@
+# CI/CD. Three jobs, each gated on the one before:
+#
+#   pytest   every push and pull request — the same command as locally.
+#   publish  pushes to main only, after pytest: build the image for amd64 and
+#            arm64 and push it to ghcr.io/<owner>/<repo> as :latest, :<VERSION>
+#            and :sha-<commit>. Skipped when :<VERSION> is already published —
+#            a release is a VERSION bump (app/main.py), so a README-only push
+#            never overwrites a version. Then prune: keep the newest 10
+#            releases and what they reference (.github/scripts/prune-images.sh).
+#   deploy   optional, after publish: ask a Dockhand instance to recreate the
+#            container from the new image and wait until the new version
+#            reports healthy. Runs only when the repository variable
+#            DOCKHAND_URL is set (Settings › Secrets and variables › Actions):
+#              vars     DOCKHAND_URL, DOCKHAND_ENV (default 1), CONTAINER (default netmap)
+#              secrets  DOCKHAND_TOKEN; CF_ACCESS_CLIENT_ID and
+#                       CF_ACCESS_CLIENT_SECRET when Dockhand is behind
+#                       Cloudflare Access
+#            Without it the image is published and nothing is deployed — a
+#            fork or a plain install updates by pulling :latest.
+name: CI
+
+on:
+  push:
+  pull_request:
+  # Deploy an already-published version again (Actions → CI → Run workflow),
+  # e.g. after fixing a deploy problem. Runs the tests, skips publish.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version expected on :latest (e.g. 1.69.6)"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  DOCKHAND_URL: ${{ vars.DOCKHAND_URL }}
+  DOCKHAND_ENV: ${{ vars.DOCKHAND_ENV || '1' }}
+  CONTAINER: ${{ vars.CONTAINER || 'netmap' }}
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Every action is pinned by commit, like the base image in the
+      # Dockerfile: a tag can be moved, a commit cannot. Bump deliberately.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"   # the Dockerfile's python:3.12-slim
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      # The browser the UI tests drive (tests/ui). Downloading it and its
+      # system libraries took 30 s on a good day and 3–6 min on a bad one, on
+      # every push. The browser is kept between runs, keyed on the Playwright
+      # version (requirements-dev.txt): a cache hit downloads nothing.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        id: pwcache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements-dev.txt') }}
+      - name: Browser for the UI tests
+        run: |
+          if [ "${{ steps.pwcache.outputs.cache-hit }}" = "true" ]; then
+            # The runner image already carries Chromium's system libraries
+            # (it ships Chrome); install them only if the cached browser
+            # cannot start without them.
+            if ! python -c "from playwright.sync_api import sync_playwright as s
+          p = s().start(); p.chromium.launch().close(); p.stop()"; then
+              python -m playwright install-deps chromium
+            fi
+          else
+            python -m playwright install --with-deps chromium
+          fi
+      - run: pytest -q
+        env:
+          NETMAP_UI_REQUIRED: "1"   # a missing browser fails here, never skips
+
+  publish:
+    needs: pytest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write          # push to ghcr.io with the job's own token
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      published: ${{ steps.exists.outputs.published }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - id: v
+        run: |
+          v=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' app/main.py)
+          [ -n "$v" ] || { echo "::error::cannot read VERSION from app/main.py"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          # A registry path must be lower case; an owner name need not be.
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: exists
+        run: |
+          if docker manifest inspect "$IMAGE:${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+            echo "::notice::$IMAGE:${{ steps.v.outputs.version }} is already published — nothing to release. Bump VERSION in app/main.py to deploy this commit."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+      # arm64 too (Raspberry Pi, ARM NAS boxes), built under emulation.
+      - if: steps.exists.outputs.published == 'true'
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1  # v4.4.0
+      - if: steps.exists.outputs.published == 'true'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+      - if: steps.exists.outputs.published == 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ steps.v.outputs.version }}
+            ${{ env.IMAGE }}:sha-${{ github.sha }}
+          # The deploy job reads this label back from the running container
+          # to prove the new version, not the old one, is what came up.
+          labels: |
+            org.opencontainers.image.version=${{ steps.v.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+      # Retention: the newest 10 releases stay available to roll back to;
+      # nothing older can run against today's database anyway. A failure here
+      # warns and never blocks the deploy of what was just published.
+      - name: Prune old images
+        if: steps.exists.outputs.published == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP: "10"
+        run: .github/scripts/prune-images.sh
+
+  deploy:
+    needs: [pytest, publish]
+    if: >-
+      !cancelled() && needs.pytest.result == 'success' && vars.DOCKHAND_URL != ''
+      && (needs.publish.outputs.published == 'true'
+          || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency: deploy   # never two deploys at once
+    env:
+      CF_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+      CF_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+      DH_TOKEN: ${{ secrets.DOCKHAND_TOKEN }}
+      WANT: ${{ inputs.version || needs.publish.outputs.version }}
+    steps:
+      - name: Recreate the netmap container from the new image
+        run: |
+          set -euo pipefail
+          if [ -z "$DH_TOKEN" ]; then
+            echo "::warning::DOCKHAND_URL is set but the DOCKHAND_TOKEN secret is not — $WANT is published but not deployed."
+            exit 0
+          fi
+          # Cloudflare Access headers only when both are set.
+          access=()
+          if [ -n "$CF_ID" ] && [ -n "$CF_SECRET" ]; then
+            access=(-H "CF-Access-Client-Id: $CF_ID" -H "CF-Access-Client-Secret: $CF_SECRET")
+          fi
+          # Any answer but a 2xx is an error that says which layer gave it —
+          # a redirect to *.cloudflareaccess.com is Access refusing the service
+          # token; a redirect to /login or a 401 is Dockhand refusing its token.
+          # Only the status and the redirect's host and path are printed.
+          api() {
+            local out code loc
+            out=$(mktemp)
+            read -r code loc < <(curl -sS --max-time 60 -o "$out" -w '%{http_code} %{redirect_url}\n' \
+              "${access[@]}" -H "Authorization: Bearer $DH_TOKEN" "$@")
+            if [ "${code:0:1}" != "2" ]; then
+              echo "::error::HTTP $code from ${*: -1}${loc:+ → redirect to ${loc%%\?*}}" >&2
+              head -c 300 "$out" | tr -d '\r' | sed 's/^/  body: /' >&2; echo >&2
+              rm -f "$out"; return 1
+            fi
+            cat "$out"; rm -f "$out"
+          }
+          find_id() {
+            api "$DOCKHAND_URL/api/containers?env=$DOCKHAND_ENV" \
+              | jq -r --arg n "$CONTAINER" '(if type == "array" then . else .containers end)[] | select(.name == $n) | .id'
+          }
+
+          id=$(find_id) || exit 1
+          [ -n "$id" ] || { echo "::error::no container named $CONTAINER in Dockhand environment $DOCKHAND_ENV"; exit 1; }
+          echo "Updating $CONTAINER ($id) to $WANT"
+          api -N -X POST -H 'content-type: application/json' \
+            "$DOCKHAND_URL/api/containers/batch-update?env=$DOCKHAND_ENV" \
+            -d "{\"containerIds\":[\"$id\"]}" | tail -n 20
+
+          # Recreating gives the container a new id. Wait for the one carrying
+          # the new version label to report healthy.
+          for i in $(seq 1 30); do
+            sleep 10
+            nid=$(find_id || true)
+            [ -n "$nid" ] || { echo "waiting for the container to come back…"; continue; }
+            info=$(api "$DOCKHAND_URL/api/containers/$nid/inspect?env=$DOCKHAND_ENV" || true)
+            got=$(echo "$info" | jq -r '.Config.Labels["org.opencontainers.image.version"] // empty')
+            health=$(echo "$info" | jq -r '.State.Health.Status // .State.Status // empty')
+            echo "running version: ${got:-?}  health: ${health:-?}"
+            if [ "$got" = "$WANT" ] && [ "$health" = "healthy" ]; then
+              echo "::notice::Deployed $WANT — healthy."
+              exit 0
+            fi
+          done
+          echo "::error::$CONTAINER did not come up healthy on $WANT within 5 minutes. Check it in Dockhand; roll back with the previous :<version> tag."
+          exit 1

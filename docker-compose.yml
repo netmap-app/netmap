@@ -1,0 +1,102 @@
+# NetMap — every option, with what it is for. Copy this file, fill in what
+# you use, then:  docker compose up -d
+# The first start prints a one-time admin password to the log:
+#   docker compose logs netmap | grep password
+services:
+  netmap:
+    # Multi-arch (amd64, arm64). Pin a version tag (e.g. :2.0.0) to upgrade
+    # on your own schedule; :latest follows every release.
+    image: ghcr.io/netmap-app/netmap:latest
+    # Or build it from a clone of the repository: docker compose up -d --build
+    # build: .
+    container_name: netmap
+    restart: unless-stopped
+    # Reachable on the LAN at http://<this host>:8087 (login required). Behind
+    # a reverse proxy or a tunnel, bind it to loopback instead —
+    # "127.0.0.1:8087:8087" — or drop `ports` and join the proxy's network.
+    ports:
+      - "8087:8087"
+    # The database and the icon cache. The app runs as UID 1000: the folder
+    # must be owned by it (sudo chown -R 1000:1000 ./data), or build with
+    # --build-arg NETMAP_UID=<yours>.
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Etc/UTC                  # your time zone, e.g. Europe/Berlin
+      - NETMAP_CHECK_INTERVAL=120   # seconds between reachability sweeps
+      # Discovery is reconciliation, not monitoring — daily is enough, and
+      # the port sweep should not run 96 times a day. Scans also run at start-up.
+      - NETMAP_DISCOVERY_INTERVAL=86400
+      - NETMAP_CHECK_TIMEOUT=2.5    # seconds per TCP probe
+      # MCP endpoint path (README section 10). Treat as a credential: it is
+      # half of what lets a caller use tools like delete_entry. Rotate by
+      # changing it here AND in every MCP client that uses it.
+      # Generate your own:
+      #   python3 -c "import secrets; print('/private_' + secrets.token_urlsafe(18))"
+      # Left as the default /mcp until you set it.
+      - NETMAP_MCP_PATH=/mcp
+      # A second credential on that path, independent of it. The path travels
+      # in the URL (logs, history, settings sync, screenshots); a header value
+      # does not. MCP clients send it as `Authorization: Bearer <this token>`.
+      #   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+      # Left empty, the path above is the MCP endpoint's only protection —
+      # start-up and the Overview warn.
+      - NETMAP_MCP_TOKEN=
+      # REQUIRED: every name or address you open NetMap by, comma separated —
+      # this server's LAN IP, its DNS name, the name a reverse proxy sends.
+      # localhost is always allowed. Anything else is refused (DNS-rebinding
+      # protection) with a page naming what to add here.
+      - NETMAP_ALLOWED_HOSTS=192.168.1.50,netmap.home.arpa
+      # ---- Web UI / REST API authentication (README section 2) ---------
+      # Every request other than /healthz and /static/ must carry an identity.
+      # Cloudflare Access: the team name (xxx in xxx.cloudflareaccess.com) and
+      # the Application Audience (AUD) tag from the Access application's
+      # Overview tab. Neither is a secret; the JWT signature is the check.
+      - NETMAP_CF_ACCESS_TEAM=
+      - NETMAP_CF_ACCESS_AUD=
+      # For machines that cannot log in (a dashboard widget, scripts): send "Authorization: Bearer <this>". Optional.
+      #   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+      - NETMAP_API_TOKEN=
+      # Read-only token for GET /api/summary only — a dashboard widget.
+      - NETMAP_SUMMARY_TOKEN=
+      # Read-only token for GET /metrics only — a Prometheus scraper.
+      - NETMAP_METRICS_TOKEN=
+      # The local password login (/login, Settings > Profile) is always on —
+      # the way in when Access is misconfigured. Its starting password: this
+      # value on the first start only, or, if empty, a random one printed once
+      # to the container log. Change it under Settings > Profile; after that
+      # this line is ignored and can be emptied. Forgot it?
+      #   docker exec -it netmap python -m app.accounts reset
+      - NETMAP_ADMIN_PASSWORD=
+      # Key for the source secrets stored from Settings. Set, it keeps the key
+      # out of netmap.db (existing secrets are re-encrypted at start-up and the
+      # database copy of the key is deleted). Keep a copy somewhere safe.
+      #   python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      - NETMAP_SECRET_KEY=
+      # NETMAP_AUTH=off disables all of the above — local development only.
+      # ==== Sources ====================================================
+      # Docker, OPNsense, Pi-hole, AdGuard Home, a DHCP lease file, router ARP
+      # (SNMP), UniFi, Home Assistant, NPM, Traefik, Cloudflare, Open ports,
+      # Proxmox VE and NetBox are added in
+      # Settings › Sources, credentials encrypted under NETMAP_SECRET_KEY —
+      # not here. README §12 says which read-only credential to create for
+      # each. (The NETMAP_* source variables of ≤ 1.74 are a one-time seed on
+      # upgrade, listed in README §7; a new install does not need them.)
+      # - NETMAP_SEED_FILE=/data/export.json    # load an export into an EMPTY db, once
+      # - NETMAP_NPM_TOKEN_MAX_AGE=1800         # NPM re-login interval, seconds
+
+  # Read-only window onto the Docker API, for the Docker source (README 12a).
+  # NetMap never touches the socket: mounting it :ro restricts the file, not
+  # the API verbs, so anything holding it could still create a privileged
+  # container. This is what makes it safe. In Settings › Sources › Docker the
+  # URL is http://docker-proxy:2375. Leave it out if you do not add Docker.
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: netmap-docker-proxy
+    restart: unless-stopped
+    environment:
+      - CONTAINERS=1        # the only API section enabled
+      - POST=0              # every write verb refused (also the default)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+

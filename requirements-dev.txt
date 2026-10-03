@@ -1,0 +1,6 @@
+# Test-only dependencies, on top of requirements.txt:
+#   .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+#   .venv/bin/pytest
+pytest==9.1.1
+# Browser tests (tests/ui). Also once: .venv/bin/python -m playwright install chromium
+playwright==1.63.0

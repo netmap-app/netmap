@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64" role="img" aria-label="NetMap">
+  <!-- Adaptive glyph: structure inherits the surrounding text colour, so the
+       same file works on a dark app header and a white README. Only the live
+       node keeps a fixed ink. -->
+  <g stroke="currentColor" stroke-width="6" opacity="0.62">
+    <line x1="17" y1="47" x2="17" y2="17"></line>
+    <line x1="19" y1="19" x2="45" y2="45"></line>
+    <line x1="47" y1="47" x2="47" y2="17"></line>
+  </g>
+  <g fill="currentColor">
+    <rect x="12" y="42" width="10" height="10"></rect>
+    <rect x="12" y="12" width="10" height="10"></rect>
+    <rect x="42" y="42" width="10" height="10"></rect>
+  </g>
+  <circle cx="47" cy="17" r="6" fill="#22D3EE"></circle>
+</svg>

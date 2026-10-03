@@ -1,0 +1,7 @@
+fastapi==0.141.1
+uvicorn[standard]==0.46.0
+mcp==1.27.0
+cryptography==50.0.1
+# Time zones for summary notifications, whatever the base image ships.
+tzdata==2026.4
+pyjwt[crypto]==2.15.0

@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="netmap-version" content="__V__">
+<title>NetMap — homelab inventory</title>
+<link rel="stylesheet" href="/static/style.css?v=__V__">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2312161B'/><g stroke='%236B7480' stroke-width='6' fill='none'><path d='M17 47V17M19 19l26 26M47 47V17'/></g><g fill='%23E4E8ED'><rect x='12' y='42' width='10' height='10'/><rect x='12' y='12' width='10' height='10'/><rect x='42' y='42' width='10' height='10'/></g><circle cx='47' cy='17' r='6' fill='%2322D3EE'/></svg>">
+<link rel="icon" sizes="32x32" href="/static/brand/netmap-tile-32.png">
+<link rel="icon" sizes="16x16" href="/static/brand/netmap-tile-16.png">
+<link rel="apple-touch-icon" href="/static/brand/netmap-tile-180.png">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NetMap">
+<meta name="theme-color" content="#12161B">
+</head>
+<body>
+<!-- The rail. Four destinations and a settings door: at this size a
+     persistent list beats a pill group, because the reader can see where else
+     they could be without first losing where they are. It is hidden below
+     980px, where the header's tab group takes over — a 200px column is not a
+     trade a phone can afford. -->
+<nav class="rail" aria-label="Sections">
+  <button class="railtog" id="railTog" title="Collapse the sidebar" aria-label="Collapse the sidebar"><svg viewBox="0 0 24 24" class="ico"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+  <div class="railbrand"><svg class="logo" viewBox="0 0 64 64" width="21" height="21" aria-hidden="true"><g stroke="currentColor" stroke-width="6" fill="none" opacity=".55"><path d="M17 47V17M19 19l26 26M47 47V17"/></g><g fill="currentColor"><rect x="12" y="42" width="10" height="10"/><rect x="12" y="12" width="10" height="10"/><rect x="42" y="42" width="10" height="10"/></g><circle cx="47" cy="17" r="6" fill="#22D3EE"/></svg><span>NetMap</span></div>
+  <div class="railnav" id="railnav">
+    <button class="rnav on" data-view="overview"><svg viewBox="0 0 24 24" class="ico"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Overview</span></button>
+    <button class="rnav" data-view="inventory"><svg viewBox="0 0 24 24" class="ico"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/></svg><span>Inventory</span></button>
+    <button class="rnav" data-view="network"><svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5v3.5M12 11h-5v5.5M12 11h5v5.5"/></svg><span>Network</span><span class="vbadge" id="railBadge" hidden></span></button>
+    <button class="rnav" data-view="changes"><svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg><span>Changes</span></button>
+  </div>
+  <div class="railfoot">
+    <button class="rnav" id="railSet"><svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span>Settings</span></button>
+    <div class="railver"><i></i>NetMap <small id="railVer"></small></div>
+    <div class="railcheck" id="railCheck"></div>
+  </div>
+</nav>
+<header>
+  <div class="bar">
+    <div class="brand barbrand"><svg class="logo" viewBox="0 0 64 64" width="21" height="21" aria-hidden="true"><g stroke="currentColor" stroke-width="6" fill="none" opacity=".55"><path d="M17 47V17M19 19l26 26M47 47V17"/></g><g fill="currentColor"><rect x="12" y="42" width="10" height="10"/><rect x="12" y="12" width="10" height="10"/><rect x="42" y="42" width="10" height="10"/></g><circle cx="47" cy="17" r="6" fill="#22D3EE"/></svg><span>NetMap</span></div>
+
+    <div class="viewtabs" id="viewtabs">
+      <button class="vtab on" data-view="overview">Overview</button>
+      <button class="vtab" data-view="inventory">Inventory</button>
+      <button class="vtab" data-view="network">Network</button>
+      <button class="vtab" data-view="changes">Changes</button>
+    </div>
+
+    <div class="pagetitle"><h1 id="ptName">Overview</h1></div>
+
+    <div class="searchwrap">
+      <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="search" type="search" placeholder="Search name, IP, port, note, tag…" autocomplete="off">
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="addBtn" title="Add entry">
+        <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Add</span>
+      </button>
+      <button class="btn icon-only" id="refreshBtn" title="Re-check everything — reachability and every reconciliation source">
+        <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><path d="M20 11a8 8 0 1 0-2.3 5.6"/><path d="M20 5v6h-6"/></svg>
+      </button>
+      <button class="btn icon-only" id="histBtn" title="Change history">
+        <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg>
+      </button>
+      <button class="btn icon-only" id="setBtn" title="Settings">
+        <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+      </button>
+      <a class="btn icon-only" href="/api/export.csv" title="Export CSV">
+        <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><path d="M12 4v10"/><path d="M8 11l4 4 4-4"/><path d="M5 19h14"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="chipsrow" id="chipsrow" hidden>
+    <div class="chips" id="chips"></div>
+    <!-- Kind, criticality, zone and tags live behind this button; the strip
+         keeps the categories. Outside the scrolling strip, so always in view. -->
+    <button class="chip fbtn" id="filterBtn" aria-haspopup="true" aria-expanded="false"
+            aria-controls="filterPop">Filters</button>
+    <div class="filterpop" id="filterPop" role="dialog" aria-label="Filters" hidden></div>
+  </div>
+</header>
+
+<!-- Shown when the server runs a newer version than this tab loaded. -->
+<button class="pwbanner updbanner" id="updBanner" role="status" aria-live="polite" hidden></button>
+<!-- Shown while what the page shows is older than a couple of minutes. -->
+<button class="pwbanner updbanner stalebanner" id="staleBanner" role="status" aria-live="polite" hidden></button>
+<!-- Shown until the starting password has been replaced. -->
+<button class="pwbanner" id="pwBanner" hidden>The local login still uses its
+  starting password — set your own in Settings › Profile.</button>
+
+<main id="overview"></main>
+<main id="list" hidden>
+  <div class="groupbar">
+    <small id="count"></small>
+    <span class="gb">Grouped by</span>
+    <div class="seg small" id="groupSeg">
+      <button data-group="category">Category</button>
+      <button data-group="host">Host</button>
+      <button data-group="kind">Kind</button>
+    </div>
+  </div>
+  <div id="listbody"></div>
+</main>
+<nav class="jumpbar" id="netJump" aria-label="Network sections" hidden></nav>
+<main id="network" hidden></main>
+<main id="changes" hidden></main>
+<main id="settingsPage" hidden>
+  <div class="seg settabs" id="setTabs">
+    <button data-settab="about" class="on">About</button>
+    <button data-settab="sources">Sources</button>
+    <button data-settab="notify">Notifications</button>
+    <button data-settab="data">Data</button>
+    <button data-settab="profile">Profile</button>
+  </div>
+
+  <div class="setpanel" data-panel="about">
+    <div class="ovsec">
+      <div class="ovhead"><h2>About</h2></div>
+      <div class="card2 setcard">
+        <dl class="about" id="aboutBody"><dd>Loading…</dd></dl>
+
+        <div class="srcdivider">Service icons</div>
+        <div class="setrow">
+          <button class="btn" id="iconWarm">Fetch Icons</button>
+          <span class="hint" data-tip>Product marks come from the
+            dashboard-icons project, are fetched once by NetMap itself and then
+            served from disk. Entries without one keep their category glyph.</span>
+          <span class="hint" id="iconWarmOut"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="setpanel" data-panel="sources" hidden>
+    <div class="ovsec">
+      <div class="ovhead"><h2>Sources</h2>
+        <span class="hint" data-tip>The systems NetMap reads to check the inventory
+          against — add, edit or remove them here, with no redeploy. Secrets
+          are encrypted at rest and never shown again once saved.</span></div>
+      <form class="card2 setcard scanset" id="scanForm">
+        <div class="setrow">
+          <span>Scan every source automatically every</span>
+          <span class="hint" data-tip id="scanTip">Between 5 minutes and 7 days. Every pass
+            includes the port sweep. The refresh button scans now, whatever this says.</span>
+          <label class="scanin"><input id="scanH" type="number" min="0" max="168" step="1"
+            inputmode="numeric" aria-label="Hours"> h</label>
+          <label class="scanin"><input id="scanM" type="number" min="0" max="59" step="1"
+            inputmode="numeric" aria-label="Minutes"> min</label>
+        </div>
+        <div class="setrow">
+          <span>Show a source as stale when its last answer is older than</span>
+          <span class="hint" data-tip id="staleHTip">Its name in the source line turns amber.
+            Between 1 and 720 hours; the default is 5.</span>
+          <label class="scanin"><input id="srcStaleH" type="number" min="1" max="720" step="1"
+            inputmode="numeric" aria-label="Hours until stale"> h</label>
+          <button class="btn" type="submit" id="scanSave">Save</button>
+        </div>
+        <span class="hint" id="scanNext"></span>
+      </form>
+      <form class="card2 setcard scanset" id="newdevForm">
+        <div class="setrow">
+          <span>A device is new on the network for</span>
+          <span class="hint" data-tip>Only devices no entry claims. What a source already saw
+            the first time it reported is never new.</span>
+          <label class="scanin"><input id="ndDays" type="number" min="1" max="90" step="1"
+            inputmode="numeric" aria-label="Days"> days</label>
+          <span>after it is first seen; history is kept</span>
+          <label class="scanin"><input id="ndKeep" type="number" min="7" max="3650" step="1"
+            inputmode="numeric" aria-label="Days of history"> days</label>
+          <button class="btn" type="submit" id="ndSave">Save</button>
+        </div>
+        <div class="flabel"><label class="ckf"><input type="checkbox" id="ndRandom"> Also report
+          devices with a randomised MAC</label>
+          <span class="hint" data-tip>Phones' private Wi-Fi addresses, which can look new every
+            day.</span></div>
+      </form>
+      <form class="card2 setcard scanset" id="staleForm">
+        <div class="setrow">
+          <span>Flag entries nothing has seen for</span>
+          <span class="hint" data-tip>Only entries something confirmed once — a source, an
+            address it sees, or the health check answering. One note on the Overview.</span>
+          <label class="scanin"><input id="staleDays" type="number" min="1" max="365" step="1"
+            inputmode="numeric" aria-label="Days"> days</label>
+          <button class="btn" type="submit" id="staleSave">Save</button>
+        </div>
+      </form>
+      <form class="card2 setcard scanset" id="uptimeForm">
+        <div class="flabel"><span>Show 30-day uptime on the service card and the status dot for</span>
+          <span class="hint" data-tip>Any match counts. A tag on an entry wins:
+            <code>uptime:on</code> or <code>uptime:off</code>. Only monitored entries.
+            Time NetMap was not running, or an entry was not checked, counts as unknown —
+            never as up.</span></div>
+        <div class="uprule" id="uptimeRule"><span class="hint">Loading…</span></div>
+        <div class="setrow"><button class="btn" type="submit" id="uptimeSave">Save</button></div>
+      </form>
+      <form class="card2 setcard scanset" id="certForm">
+        <div class="setrow">
+          <span>Warn when a checked certificate expires within</span>
+          <span class="hint" data-tip>Certificates are read by entries whose health check is
+            <code>https</code> (edit an entry to set one). An expired one is critical.</span>
+          <label class="scanin"><input id="certDays" type="number" min="1" max="365" step="1"
+            inputmode="numeric" aria-label="Days"> days</label>
+          <button class="btn" type="submit" id="certSave">Save</button>
+        </div>
+
+      </form>
+      <div class="card2 setcard">
+        <div id="srcList"></div>
+        <div class="setrow"><button class="btn" id="srcAddBtn">Add source…</button></div>
+        <div id="srcForm"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="setpanel" data-panel="notify" hidden>
+    <div class="ovsec">
+      <div class="ovhead"><h2>Notifications</h2>
+        <span class="hint" data-tip>What the Overview would show you — a new finding, a
+          critical entry down, a source not answering — sent where you will see
+          it. Once per change, never once per scan. Tokens are encrypted at rest
+          and never shown again once saved.</span></div>
+      <div class="card2 setcard">
+        <div id="notifyList"></div>
+        <div class="setrow"><button class="btn" id="notifyAddBtn">Add channel…</button></div>
+        <div id="notifyForm"></div>
+      </div>
+      <form class="card2 setcard scanset" id="tzForm">
+        <div class="setrow">
+          <span>Summaries are sent in the time zone</span>
+          <span class="hint" data-tip>A name like <code>Europe/Berlin</code> or <code>UTC</code>.
+            A channel set to a daily or weekly summary holds everything but urgent events
+            until then.</span>
+          <label class="scanin tzin"><input id="tzName" autocomplete="off" spellcheck="false"
+            aria-label="Time zone" placeholder="Europe/Berlin"></label>
+          <button class="btn" type="submit" id="tzSave">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="setpanel" data-panel="data" hidden>
+    <div class="ovsec">
+      <div class="ovhead"><h2>Data</h2></div>
+      <div class="card2 setcard">
+        <div class="setrow">
+          <a class="btn" href="/api/export.json" download>Export JSON</a>
+          <a class="btn" href="/api/export.csv">Export CSV</a>
+          <button class="btn" id="impBtn">Import JSON…</button>
+          <input type="file" id="impFile" accept="application/json,.json" hidden>
+        </div>
+        <label class="impmode"><input type="checkbox" id="impReplace">
+          Replace mode — also delete entries the file does not contain</label>
+        <div id="impPlan"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="setpanel" data-panel="profile" hidden>
+    <div class="ovsec">
+      <div class="ovhead"><h2>Profile</h2>
+        <span class="hint" data-tip>The local account — the password login at /login,
+          for when Cloudflare Access cannot sign you in.</span></div>
+      <div class="card2 setcard">
+        <div class="profwho" id="profWho">Loading…</div>
+
+        <div class="srcdivider">Appearance
+          <span class="hint" data-tip>Auto follows your device setting. Saved in this browser.</span></div>
+        <div class="seg" id="themeSeg">
+          <button data-theme-set="auto">Auto</button>
+          <button data-theme-set="light">Light</button>
+          <button data-theme-set="dark">Dark</button>
+        </div>
+
+        <div class="srcdivider">Account</div>
+        <form class="profrow" id="profNameForm">
+          <div class="f"><label for="profUser">Username</label>
+            <input id="profUser" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+          <button class="btn" type="submit">Save</button>
+        </form>
+
+        <div class="srcdivider">Change password</div>
+        <form class="profpw" id="profPwForm">
+          <input type="text" autocomplete="username" id="profPwUser" hidden>
+          <div class="f"><label for="pwCur">Current password</label>
+            <input id="pwCur" type="password" autocomplete="current-password" required></div>
+          <div class="f"><div class="flabel"><label for="pwNew">New password</label>
+            <span class="hint" data-tip>At least 10 characters. Changing it signs out every
+              other browser using the password login.</span></div>
+            <input id="pwNew" type="password" autocomplete="new-password" minlength="10" required></div>
+          <div class="f"><label for="pwNew2">New password, again</label>
+            <input id="pwNew2" type="password" autocomplete="new-password" minlength="10" required></div>
+          <div class="setrow"><button class="btn primary" type="submit">Change password</button></div>
+        </form>
+
+        <div class="srcdivider">Session</div>
+        <div class="setrow"><button class="btn" id="signOut">Sign out</button>
+          <span class="hint" id="signOutHint"></span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal" id="editModal" hidden role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="sheet">
+    <h2 id="editTitle">Edit entry</h2>
+    <div class="grid">
+      <div class="f"><label for="f_name">Name *</label><input id="f_name" aria-required="true"></div>
+      <div class="f"><label for="f_category">Category</label><input id="f_category" list="catlist"><datalist id="catlist"></datalist></div>
+      <div class="f"><label for="f_host">Host / VM</label><input id="f_host"></div>
+      <div class="f"><label for="f_ip">IP / hostname</label><input id="f_ip" class="mono"></div>
+      <div class="f"><label for="f_mac">MAC address(es)</label>
+        <input id="f_mac" class="mono" placeholder="aa:bb:cc:dd:ee:ff, and a second if it has one"></div>
+      <div class="f"><label for="f_ports">Port(s)</label><input id="f_ports" class="mono"></div>
+      <div class="f"><label for="f_protocol">Protocol / access</label><input id="f_protocol"></div>
+      <div class="f"><div class="flabel"><label for="f_kind">Kind</label><span class="hint" data-tip>What it
+        is — as opposed to its category (what it does) or its host (where it runs).</span></div><select id="f_kind">
+        <option value="">— unset —</option>
+        <option value="hardware">hardware</option>
+        <option value="vm">vm</option>
+        <option value="container">container</option>
+        <option value="service">service</option>
+        <option value="rule">rule</option>
+        <option value="network">network</option>
+      </select></div>
+      <div class="f"><label for="f_criticality">Criticality</label><select id="f_criticality">
+        <option value="">— unset —</option>
+        <option value="critical">critical</option>
+        <option value="important">important</option>
+        <option value="normal">normal</option>
+        <option value="experimental">experimental</option>
+      </select></div>
+      <div class="f"><label for="f_zone">Zone</label><input id="f_zone" list="zonelist" placeholder="LAN, IoT, DMZ…"><datalist id="zonelist"></datalist></div>
+      <div class="f wide"><div class="flabel"><label for="f_secret_ref">Secret reference</label>
+        <span class="hint" data-tip>Where the credentials live — a pointer such as a password
+          manager path, never the secret itself.</span></div>
+        <input id="f_secret_ref" class="mono" placeholder="op://Vault/Item/field"></div>
+      <div class="f wide"><div class="flabel"><label for="f_url">URL</label>
+        <span class="hint" data-tip>Optional. Without one, the link is built from the address
+          and the first port.</span></div><input id="f_url" class="mono" placeholder="https://host.example:8443"></div>
+      <div class="f wide"><div class="flabel"><label for="f_healthcheck">Health check</label>
+        <span class="hint" data-tip id="hcHelp">Empty: a TCP connect to the first port. Otherwise
+          <code>tcp</code> or <code>tcp:22</code> · <code>https:8443/health=200</code> (a GET;
+          without <code>=code</code> anything below 500 is up; https also reads the
+          certificate) · <code>ping</code> · <code>none</code></span></div>
+        <input id="f_healthcheck" class="mono" placeholder="empty: TCP to the first port"
+          aria-describedby="hcHelp" spellcheck="false" autocapitalize="none"></div>
+      <div class="f wide"><div class="flabel"><label for="f_tags">Tags</label>
+        <span class="hint" data-tip>Comma separated. Some carry meaning: <code>icon:&lt;slug&gt;</code>,
+          <code>uptime:on</code>/<code>off</code>, <code>ha:&lt;entity&gt;</code>,
+          <code>pihole:&lt;group&gt;</code>, <code>dup-ok</code>.</span></div><input id="f_tags"></div>
+      <div class="f wide"><label for="f_notes">Notes</label><textarea id="f_notes"></textarea></div>
+      <div class="checks">
+        <label><input type="checkbox" id="f_monitor" checked> Monitor reachability</label>
+        <label><input type="checkbox" id="f_verified" checked> Values verified</label>
+        <label><input type="checkbox" id="f_pinned"> Pin to Quick links</label>
+      </div>
+    </div>
+    <div class="sheetfoot">
+      <button class="btn danger" id="delBtn">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn" id="cancelBtn">Cancel</button>
+      <button class="btn primary" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="histModal" hidden role="dialog" aria-modal="true" aria-labelledby="histTitle">
+  <div class="sheet">
+    <button class="sheetx" data-sheetclose aria-label="Close" title="Close (Esc)">
+      <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h2 id="histTitle">Change history</h2>
+    <div id="histBody"></div>
+    <div class="sheetfoot"><button class="btn" id="histClose">Close</button></div>
+  </div>
+</div>
+
+<div class="modal" id="changelogModal" hidden role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+  <div class="sheet">
+    <button class="sheetx" data-sheetclose aria-label="Close" title="Close (Esc)">
+      <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h2 id="changelogTitle">What's new</h2>
+    <div id="changelogBody"></div>
+    <div class="sheetfoot"><button class="btn" id="changelogClose">Close</button></div>
+  </div>
+</div>
+
+
+<div class="modal" id="cardModal" hidden role="dialog" aria-modal="true" aria-label="Service card">
+  <div class="sheet card-sheet" id="cardBody"></div>
+</div>
+
+<div class="modal" id="portModal" hidden role="dialog" aria-modal="true" aria-label="Port">
+  <div class="sheet card-sheet" id="portBody"></div>
+</div>
+
+<div class="modal pal" id="palModal" hidden role="dialog" aria-modal="true" aria-label="Jump to a service">
+  <div class="palbox">
+    <div class="palinput">
+      <svg viewBox="0 0 24 24" width="16" height="16" class="ico"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="palInput" placeholder="Jump to a service…" autocomplete="off" spellcheck="false" aria-label="Jump to a service">
+    </div>
+    <div class="palresults" id="palResults" role="listbox" aria-label="Matching services" tabindex="0"></div>
+    <div class="palfoot">
+      <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> move</span>
+      <span><kbd>&crarr;</kbd> open</span>
+      <span><kbd>&#8984;&crarr;</kbd> details</span>
+      <span><kbd>esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<!-- The app's own confirmation, for anything that deletes or cannot be
+     undone. Last among the dialogs, so it sits on top of the one that asked. -->
+<div class="modal" id="confirmModal" hidden role="alertdialog" aria-modal="true"
+     aria-labelledby="confirmTitle" aria-describedby="confirmBody">
+  <div class="sheet confirm-sheet">
+    <h2 id="confirmTitle"></h2>
+    <p class="confirmbody" id="confirmBody"></p>
+    <div class="sheetfoot">
+      <button class="btn" id="confirmCancel">Cancel</button>
+      <button class="btn danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<!-- Plain scripts sharing one global scope, in this order: code that runs at
+     load may only use what an earlier file defines (tests/test_frontend.py). -->
+<script src="/static/js/core.js?v=__V__"></script>
+<script src="/static/js/theme.js?v=__V__"></script>
+<script src="/static/js/overview.js?v=__V__"></script>
+<script src="/static/js/inventory.js?v=__V__"></script>
+<script src="/static/js/edit.js?v=__V__"></script>
+<script src="/static/js/profile.js?v=__V__"></script>
+<script src="/static/js/network.js?v=__V__"></script>
+<script src="/static/js/graph.js?v=__V__"></script>
+<script src="/static/js/addresses.js?v=__V__"></script>
+<script src="/static/js/reconcile.js?v=__V__"></script>
+<script src="/static/js/card.js?v=__V__"></script>
+<script src="/static/js/palette.js?v=__V__"></script>
+<script src="/static/js/sources.js?v=__V__"></script>
+<script src="/static/js/notify.js?v=__V__"></script>
+<script src="/static/js/import.js?v=__V__"></script>
+<script src="/static/js/boot.js?v=__V__"></script>
+</body>
+</html>
