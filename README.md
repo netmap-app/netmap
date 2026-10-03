@@ -1670,9 +1670,9 @@ demand.
 
 ## Contributing
 
-Issues and pull requests are welcome. `CLAUDE.md` holds the rules the code
-keeps (read-only sources, no assumptions about one network, a test with every
-fix); `pytest -q` runs the backend and browser tests. Security reports:
+Issues and pull requests are welcome. The code keeps a few rules: every source
+is read-only, nothing assumes one particular network, and every fix comes with
+a test. `pytest -q` runs the backend and browser tests. Security reports:
 [SECURITY.md](SECURITY.md).
 
 ## License
