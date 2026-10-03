@@ -1670,10 +1670,10 @@ demand.
 
 ## Contributing
 
-Issues and pull requests are welcome. The code keeps a few rules: every source
-is read-only, nothing assumes one particular network, and every fix comes with
-a test. `pytest -q` runs the backend and browser tests. Security reports:
-[SECURITY.md](SECURITY.md).
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) has the
+rules the code keeps (read-only sources, no assumptions about one network, a
+test with every fix) and how to run it; [RELEASING.md](RELEASING.md) how a
+release is cut. Security reports: [SECURITY.md](SECURITY.md).
 
 ## License
 
