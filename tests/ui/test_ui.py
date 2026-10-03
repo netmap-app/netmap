@@ -175,7 +175,7 @@ def test_every_view_tab_and_dialog_opens(page, server):
     for tab in ("about", "sources", "data", "profile"):
         open_settings(page, tab)
         expect(page.locator(f'.setpanel[data-panel="{tab}"]')).to_be_visible()
-    expect(page.locator("#aboutBody")).to_contain_text("1.")      # version line rendered
+    expect(page.locator("#aboutBody")).to_contain_text(re.compile(r"Version\s*\d+\.\d+\.\d+"))  # version line rendered
     page.keyboard.press("Control+k")
     expect(page.locator("#palModal")).to_be_visible()
     page.fill("#palInput", "rout")

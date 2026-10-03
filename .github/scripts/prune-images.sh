@@ -22,7 +22,9 @@ PKG=${PKG:-${REPO##*/}}
 PKG=${PKG,,}
 [ -n "$OWNER" ] && [ -n "$PKG" ] || { echo "set OWNER and PKG (or GITHUB_REPOSITORY)"; exit 1; }
 KEEP=${KEEP:-10}
-API="/users/$OWNER/packages/container/$PKG/versions"
+# An organisation's packages live under /orgs, a personal account's under /users.
+[ "$(gh api "/users/$OWNER" --jq .type)" = Organization ] && SCOPE=orgs || SCOPE=users
+API="/$SCOPE/$OWNER/packages/container/$PKG/versions"
 ACCEPT="application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json"
 
 versions=$(gh api --paginate "$API?per_page=100" | jq -s 'add')
