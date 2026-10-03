@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary
 — each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.0.1 — 2026-10-03
+
+- Updated the MCP library to 1.28.1.
+
 ## 2.0.0 — 2026-10-03
 
 - First public release.
