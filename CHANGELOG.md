@@ -4,6 +4,12 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.4.0 - 2026-10-04
+
+- New Overview card, Hardware & blast radius: one tile per physical host that something runs on, with how many entries depend on it (through VMs and containers), how many of those a health check watches, and amber notes when two of the firewall, DNS, proxy and edge sources point at the same host, when three or more critical entries depend on it, or when it is tagged `backup:none`. A Network gear tile shows the Core Network hardware, up out of monitored. API: `GET /api/overview/hardware`.
+- Inventory by category shows each category's monitored share: a solid fill for monitored inside a faint fill for the total, and "monitored/total" on each row.
+- The default card order is now Reachable from outside, Hardware, Categories, Quick links, Recent changes, Address space. A saved layout keeps its order and gets the new card after Reachable from outside.
+
 ## 2.3.0 - 2026-10-04
 
 - The Overview opens with a status strip instead of the big banner: "All clear - nothing needs you" as one row with the numbers when nothing does, otherwise "N things need you" with the queue folded in, tinted by the worst level (red critical, amber to look at, neutral for later).

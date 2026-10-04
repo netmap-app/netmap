@@ -334,9 +334,16 @@ source above what it would have reported). Each row has its rank, a type
 (source, down, certificate, exposure, mismatch, conflict, coverage, verify),
 when it started, an action (Retry scan, Open entry, Accept, Review, *Mark all
 verified*) and **Snooze**; snoozed rows sit behind "*N* snoozed" and come back
-when the situation changes. Below it come a
-**Quick links** row of pinned services, an
-inventory-by-category breakdown, and the six most recent changes. The numbers and
+when the situation changes. Below it come **Hardware & blast radius** (one
+tile per physical host that something runs on: how many entries depend on it
+through `runs_on`, VMs and containers included, how many of those a health
+check watches, and amber notes when two systems the network leans on -
+firewall, DNS, proxy, edge, read from where each source's URL points - share
+the host, when three or more critical entries depend on it, or when it is
+tagged `backup:none`; plus the network gear, up out of monitored), an
+inventory-by-category breakdown with each category's monitored share (solid)
+inside its total (faint), a **Quick links** row of pinned services, and the six
+most recent changes. The numbers and
 the breakdown always describe the whole inventory, never the current filter.
 Clicking a category jumps to Inventory filtered to it. **Customize overview**
 at the bottom of the page shows, hides and reorders the cards below the status;

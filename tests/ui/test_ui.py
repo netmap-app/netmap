@@ -1293,15 +1293,15 @@ def _ov_cards(page):
 
 
 def test_overview_cards_can_be_hidden_reordered_and_reset(page, server):
-    assert _ov_cards(page) == ["exposure", "quicklinks", "changes", "categories", "addresses"]
+    assert _ov_cards(page) == ["exposure", "hardware", "categories", "quicklinks", "changes", "addresses"]
     page.click("#ovCustomize")
     dlg = page.locator("#layoutModal")
     expect(dlg).to_be_visible()
     expect(dlg.locator("#lyStatus")).to_be_disabled()             # the status strip always shows
     dlg.get_by_label("Address space", exact=True).uncheck()
     expect(page.locator('#overview [data-ovcard="addresses"]')).to_have_count(0)
-    up = dlg.get_by_role("button", name="Move Quick links up")
-    up.click()
+    for _ in range(3):
+        dlg.get_by_role("button", name="Move Quick links up").click()
     expect(page.locator("#overview [data-ovcard]").first).to_have_attribute("data-ovcard", "quicklinks")
     # Focus stays on the control that moved, so the keyboard can keep going.
     expect(dlg.get_by_role("button", name="Move Quick links down")).to_be_focused()
@@ -1311,16 +1311,17 @@ def test_overview_cards_can_be_hidden_reordered_and_reset(page, server):
 
     page.reload()                                                   # saved on the server
     page.wait_for_selector("#overview .verdict")
-    assert _ov_cards(page) == ["quicklinks", "exposure", "changes", "categories"]
+    assert _ov_cards(page) == ["quicklinks", "exposure", "hardware", "categories", "changes"]
     page.click("#ovCustomize")
     page.click("#layoutReset")
     expect(page.locator('#overview [data-ovcard="addresses"]')).to_have_count(1)
-    assert _ov_cards(page) == ["exposure", "quicklinks", "changes", "categories", "addresses"]
+    assert _ov_cards(page) == ["exposure", "hardware", "categories", "quicklinks", "changes", "addresses"]
 
 
 def test_every_card_hidden_leaves_the_status_and_the_way_back(page, server):
     server.api("PUT", "/api/settings/overview", {"cards": [
-        {"id": i, "show": False} for i in ("exposure", "quicklinks", "changes", "categories", "addresses")]})
+        {"id": i, "show": False} for i in ("exposure", "hardware", "quicklinks", "changes", "categories",
+                                           "addresses")]})
     page.reload()
     page.wait_for_selector("#overview .verdict")
     expect(page.locator("#overview [data-ovcard]")).to_have_count(0)
@@ -1422,3 +1423,53 @@ def test_only_for_later_items_tint_the_strip_neutral(page, server):
     _overview_with(page, server, level="note", attention=later)
     expect(page.locator("#overview .verdict")).to_have_class(re.compile(r"\bnote\b"))
     expect(page.locator("#overview .vhead")).to_have_text("1 thing needs you")
+
+
+# ---- hardware & categories ---------------------------------------------------------------------
+def test_hardware_card_shows_dependents_coverage_and_risks(page, server):
+    box = server.api("POST", "/api/entries", {"name": "Box", "kind": "hardware", "ip": "10.0.0.2"})["id"]
+    hw = {"hosts": [{"id": box, "name": "Box", "ip": "10.0.0.2", "up": True, "dependents": 12,
+                     "checkable": 10, "monitored": 2,
+                     "notes": [{"text": "OPNsense and Pi-hole share this host", "risk": True},
+                               {"text": "1 critical entry depends on it", "risk": False}]}],
+          "gear": {"total": 3, "monitored": 2, "up": 2,
+                   "items": [{"id": box, "name": "Switch", "ip": "", "monitor": True, "up": True}]}}
+    page.route("**/api/overview/hardware", lambda r: r.fulfill(
+        status=200, content_type="application/json", body=json.dumps(hw)))
+    page.reload()
+    card = page.locator('#overview [data-ovcard="hardware"]')
+    tile = card.locator("button.hwcard").first
+    expect(tile).to_contain_text("12")
+    expect(tile).to_contain_text("entries depend on it")
+    expect(tile.locator(".hwcov small")).to_have_text("2 of 10 monitored")
+    expect(tile.locator(".hwcov small")).to_have_class(re.compile(r"\bwarnc\b"))
+    expect(tile.locator(".hwnote.warnc")).to_have_text("OPNsense and Pi-hole share this host")
+    expect(tile.locator(".dot")).to_have_attribute("title", "up")
+    gear = card.locator(".hwgear")
+    expect(gear).to_contain_text("2/2")
+    expect(gear).to_contain_text("1 of 3 not monitored")
+    tile.click()
+    expect(page.locator("#cardModal")).to_be_visible()
+    page.keyboard.press("Escape")
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375
+
+
+def test_hardware_card_says_when_it_cannot_load(page, server):
+    page.route("**/api/overview/hardware", lambda r: r.fulfill(status=500, body="no"))
+    page.reload()
+    expect(page.locator("#ovHw")).to_contain_text("could not load")
+
+
+def test_categories_show_the_monitored_share(page, server):
+    for name, mon in (("A", True), ("B", False), ("C", True)):
+        server.api("POST", "/api/entries", {"name": name, "category": "Media", "monitor": mon})
+    server.api("POST", "/api/entries", {"name": "D", "category": "Tools", "monitor": False})
+    page.reload()
+    rows = page.locator('#overview [data-ovcard="categories"] .catrow')
+    expect(rows.locator(".cc")).to_have_text(["2/3", "0/1"])
+    expect(rows.first).to_have_attribute("title", "Show only Media: 2 of 3 monitored")
+    expect(page.locator('#overview [data-ovcard="categories"] .ovhead')).to_contain_text("solid = monitored")
+    rows.first.click()
+    expect(page.locator("#list")).to_be_visible()

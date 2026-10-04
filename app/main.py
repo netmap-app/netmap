@@ -28,7 +28,7 @@ from .sources import dynamic
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
 CHANGELOG_PATH = os.path.join(os.path.dirname(HERE), "CHANGELOG.md")
-VERSION = "2.3.0"
+VERSION = "2.4.0"
 STARTED = time.time()
 notify.VERSION = VERSION
 
@@ -1226,6 +1226,13 @@ def api_scan_schedule_set(request: Request, payload: dict = Body(...)):
         except ValueError as exc:
             raise HTTPException(400, str(exc))
     return discovery.schedule()
+
+
+@app.get("/api/overview/hardware")
+def api_overview_hardware():
+    """Per physical host: what runs on it and how much of that is watched;
+    plus the network gear."""
+    return overview_mod.hardware(status.CACHE)
 
 
 @app.get("/api/settings/overview")

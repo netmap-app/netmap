@@ -260,10 +260,18 @@ const OV_CARDS = {
       <div class="ovhead"><h2>Recent changes</h2><span class="more" id="ovHist">View all</span></div>
       <div class="card2"><div class="feed" id="ovFeed"><div class="empty-hint">Loading…</div></div></div>
     </div>`,
+  hardware: () => `
+    <div class="ovsec" data-ovcard="hardware">
+      <div class="ovhead"><h2>Hardware &amp; blast radius</h2>
+        <span class="hint" data-tip>What runs on each physical box, directly or through
+          a VM or container, and how much of it a health check watches.</span>
+        <button class="more linkbtn" data-goto="network">Open topology</button></div>
+      <div id="ovHw"><div class="empty-hint">Loading…</div></div>
+    </div>`,
   categories: (all) => `
     <div class="ovsec" data-ovcard="categories">
       <div class="ovhead"><h2>Inventory by category</h2>
-        <span class="hint">${all.length} tracked</span></div>
+        <span class="hint">${all.length} tracked · solid = monitored</span></div>
       <div class="card2">${catCardHtml(all)}</div>
     </div>`,
   addresses: (all) => `
@@ -440,6 +448,10 @@ function wireOverview(box, all) {
     };
   });
 
+  const hw = $("#ovHw");
+  if (hw) api("/api/overview/hardware").then(h => { hw.innerHTML = hwHtml(h); })
+    .catch(() => { hw.innerHTML = `<div class="empty-hint">The hardware view could not load.</div>`; });
+
   api("/api/audit?limit=6").then(rows => {
     const f = $("#ovFeed");
     if (!f) return;
@@ -459,20 +471,63 @@ function wireOverview(box, all) {
    category, not to the total - with nine categories a share-of-total bar is
    nine slivers, and the question this answers is "which of these is big",
    not "what fraction of everything is it". */
+/* One tile per physical host that something runs on, biggest first, then
+   the network gear as one line. The dot and the coverage both say their
+   state in words as well (title, "N of M monitored"). */
+const UPWORD = (u) => u === true ? "up" : u === false ? "down" : "not checked";
+const upTone = (u) => u === true ? "up" : u === false ? "down" : "na";
+
+function hwHtml(h) {
+  const hosts = h.hosts || [], g = h.gear || { total: 0 };
+  if (!hosts.length && !g.total)
+    return `<div class="empty-hint">Nothing records what runs on which machine yet - set
+      <strong>Runs on</strong> on an entry, or let a source derive it.</div>`;
+  const pc = (a, b) => b ? Math.round(100 * a / b) : 0;
+  return `<div class="hwgrid">${hosts.map(x => `
+    <button class="hwcard" data-card="${x.id}">
+      <span class="hwtop"><i class="dot ${upTone(x.up)}" title="${UPWORD(x.up)}"></i>
+        <b class="hwn">${esc(x.name)}</b><span class="mono hwip">${esc(x.ip)}</span></span>
+      <span class="hwbig"><b class="num mono">${x.dependents}</b>
+        <small>entr${x.dependents === 1 ? "y depends" : "ies depend"} on it</small></span>
+      ${x.checkable ? `<span class="hwcov" title="${x.monitored} of ${x.checkable} that a check could probe">
+        <span class="hwbar"><i style="width:${pc(x.monitored, x.checkable)}%"></i></span>
+        <small class="${x.monitored < x.checkable ? "warnc" : ""}">${x.monitored} of ${x.checkable} monitored</small></span>` : ""}
+      ${(x.notes || []).map(n => `<small class="hwnote${n.risk ? " warnc" : ""}">${esc(n.text)}</small>`).join("")}
+    </button>`).join("")}
+    ${g.total ? `
+    <div class="hwcard hwgear">
+      <span class="hwtop"><b class="hwn">Network gear</b></span>
+      <span class="hwbig"><b class="num mono">${g.up}/${g.monitored}</b><small>up</small></span>
+      ${g.total > g.monitored ? `<small class="warnc">${g.total - g.monitored} of ${g.total} not monitored</small>` : ""}
+      <span class="hwitems">${g.items.map(i => `<span class="lchip" data-card="${i.id}" title="${
+        esc(i.monitor ? UPWORD(i.up) : "not monitored")}"><i class="dot ${i.monitor ? upTone(i.up) : "na"}"></i>${
+        esc(i.name)}</span>`).join("")}</span>
+    </div>` : ""}</div>`;
+}
+
 function catCardHtml(all) {
-  const n = {};
-  for (const e of all) n[(e.category || "").trim() || "Uncategorised"] =
-    (n[(e.category || "").trim() || "Uncategorised"] || 0) + 1;
+  const n = {}, m = {};
+  for (const e of all) {
+    const c = (e.category || "").trim() || "Uncategorised";
+    n[c] = (n[c] || 0) + 1;
+    if (e.monitor) m[c] = (m[c] || 0) + 1;
+  }
   const rows = Object.entries(n).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   if (!rows.length) return `<div class="empty-hint">Nothing tracked yet.</div>`;
   const max = rows[0][1];
-  return `<div class="cats">${rows.map(([cat, k]) => `
-    <div class="catrow" data-cat="${esc(cat)}" title="Show only ${esc(cat)}">
+  // The track is as long as the category is big; inside it, the faint fill is
+  // every entry and the solid fill the monitored ones.
+  return `<div class="cats">${rows.map(([cat, k]) => {
+    const mon = m[cat] || 0;
+    return `
+    <button class="catrow" data-cat="${esc(cat)}" title="Show only ${esc(cat)}: ${mon} of ${k} monitored">
       ${catGlyph(cat)}
       <span class="cn">${esc(cat)}</span>
-      <span class="catbar"><i class="${catKey(cat)}" style="width:${Math.round(100 * k / max)}%"></i></span>
-      <span class="cc num">${k}</span>
-    </div>`).join("")}</div>`;
+      <span class="catbar"><span class="cattrack ${catKey(cat)}" style="width:${Math.round(100 * k / max)}%">
+        <i style="width:${Math.round(100 * mon / k)}%"></i></span></span>
+      <span class="cc num mono">${mon}/${k}</span>
+    </button>`;
+  }).join("")}</div>`;
 }
 
 /* Address space, in proportion. The Network view draws all 254 addresses one

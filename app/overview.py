@@ -26,6 +26,7 @@ Three rules:
 from __future__ import annotations
 
 import json
+import urllib.parse
 
 from . import db, sources
 from .sources.dynamic import has_role
@@ -498,6 +499,121 @@ def snapshot(status_cache: dict | None = None) -> dict:
     }
 
 
+# ---- hardware and blast radius ------------------------------------------------
+# What breaks if a physical box dies: everything that runs on it, directly or
+# through a VM or container in between (`runs_on` only - a cable to a switch
+# is not "runs on"). Coverage is over what a health check could probe, so a
+# NAT rule hanging off a router does not read as a gap.
+NETWORK_GEAR = "Core Network"
+SHARED_ROLES = ("firewall", "dns", "proxy", "edge")
+CRITICAL_MANY = 3
+
+
+def _watched(e: dict) -> bool:
+    return bool(e.get("monitor")) or any(
+        t.lower().startswith("ha:") for t in (e.get("tags") or []))
+
+
+def _source_hosts() -> dict[str, list[tuple[str, str]]]:
+    """Address or host name -> [(role, source name)] for every enabled source
+    that holds one of SHARED_ROLES: where the firewall, DNS, proxy and edge
+    actually run, read from each source's own URL (never its secrets)."""
+    from .sources import dynamic
+    out: dict[str, list[tuple[str, str]]] = {}
+    for inst in db.list_source_instances():
+        if not inst.get("enabled"):
+            continue
+        cfg = inst.get("config") or {}
+        host = (urllib.parse.urlparse(cfg.get("url") or "").hostname
+                or (cfg.get("host_ip") or "").strip())
+        if not host:
+            continue
+        for role in dynamic.roles_of(inst["type"]):
+            if role in SHARED_ROLES:
+                out.setdefault(host.lower(), []).append((role, inst["name"]))
+    return out
+
+
+def hardware(status_cache: dict | None = None) -> dict:
+    status_cache = status_cache or {}
+    entries = db.list_entries()
+    rows = {e["id"]: e for e in entries}
+    children: dict[int, list[int]] = {}
+    for r in db.conn().execute("SELECT src, dst FROM edges WHERE type='runs_on'").fetchall():
+        if r["src"] in rows and r["dst"] in rows and r["src"] != r["dst"]:
+            children.setdefault(r["dst"], []).append(r["src"])
+
+    def below(root: int) -> list[dict]:
+        seen, todo = {root}, list(children.get(root, []))
+        out = []
+        while todo:
+            i = todo.pop()
+            if i in seen:
+                continue
+            seen.add(i)
+            out.append(rows[i])
+            todo.extend(children.get(i, []))
+        return out
+
+    def addrs(e: dict) -> set[str]:
+        a = {(e.get("ip") or "").strip().lower()}
+        a.add((urllib.parse.urlparse(e.get("url") or "").hostname or "").lower())
+        return a - {""}
+
+    def up(e: dict):
+        return status_cache.get(e["id"], {}).get("up")
+
+    src_hosts = _source_hosts()
+    hosts = []
+    for e in entries:
+        if e.get("kind") != "hardware":
+            continue
+        desc = below(e["id"])
+        if not desc:
+            continue
+        checkable = [d for d in desc if d.get("kind") in CHECKABLE]
+        crit = sum(1 for d in desc if d.get("criticality") == "critical")
+        roles: dict[str, str] = {}
+        for x in [e, *desc]:
+            for a in addrs(x):
+                for role, name in src_hosts.get(a, []):
+                    roles.setdefault(role, name)
+        notes = []
+        names = sorted(set(roles.values()))
+        if len(names) >= 2:          # two systems the network leans on, one box
+            notes.append({"text": ", ".join(names[:-1]) + " and " + names[-1]
+                                  + " share this host", "risk": True})
+        if crit >= CRITICAL_MANY:
+            notes.append({"text": f"{crit} critical entries depend on it", "risk": True})
+        elif crit:
+            notes.append({"text": f"{crit} critical entr{'y depends' if crit == 1 else 'ies depend'} on it",
+                          "risk": False})
+        if any(t.lower() == "backup:none" for t in (e.get("tags") or [])):
+            notes.append({"text": "backup:none", "risk": True})
+        hosts.append({
+            "id": e["id"], "name": e["name"], "ip": e.get("ip") or "", "up": up(e),
+            "dependents": len(desc),
+            "checkable": len(checkable),
+            "monitored": sum(1 for d in checkable if _watched(d)),
+            "notes": notes,
+        })
+    hosts.sort(key=lambda h: (-h["dependents"], h["name"].lower()))
+
+    gear = [e for e in entries
+            if e.get("kind") == "hardware" and (e.get("category") or "") == NETWORK_GEAR]
+    return {
+        "hosts": hosts,
+        "gear": {
+            "total": len(gear),
+            "monitored": sum(1 for e in gear if e.get("monitor")),
+            "up": sum(1 for e in gear if e.get("monitor") and up(e) is True),
+            "items": [{"id": e["id"], "name": e["name"], "ip": e.get("ip") or "",
+                       "monitor": bool(e.get("monitor")), "up": up(e)}
+                      for e in sorted(gear, key=lambda x: x["name"].lower())],
+        },
+    }
+
+
 # ---- layout ------------------------------------------------------------------
 # Which cards the Overview shows, and in what order. One layout for the whole
 # instance, kept in kv, so every device and every login sees the same page.
@@ -506,9 +622,10 @@ def snapshot(status_cache: dict | None = None) -> dict:
 # sight.
 CARDS = [
     ("exposure", "Reachable from outside"),
+    ("hardware", "Hardware & blast radius"),
+    ("categories", "Inventory by category"),
     ("quicklinks", "Quick links"),
     ("changes", "Recent changes"),
-    ("categories", "Inventory by category"),
     ("addresses", "Address space"),
 ]
 LAYOUT_KEY = "overview_layout"

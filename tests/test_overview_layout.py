@@ -3,7 +3,7 @@ instance. The status strip is not in the list and cannot be hidden."""
 import json
 
 TOKEN = {"authorization": "Bearer full-token"}
-DEFAULT = ["exposure", "quicklinks", "changes", "categories", "addresses"]
+DEFAULT = ["exposure", "hardware", "categories", "quicklinks", "changes", "addresses"]
 
 
 def _ids(r):
@@ -23,7 +23,7 @@ def test_order_and_visibility_are_saved_and_logged(make_app):
     r = c.put("/api/settings/overview", headers=TOKEN, json={"cards": cards})
     assert r.status_code == 200 and _ids(r) == list(reversed(DEFAULT))
     got = c.get("/api/settings/overview", headers=TOKEN).json()["cards"]
-    assert [x["show"] for x in got] == [False, True, True, True, True]
+    assert [x["show"] for x in got] == [False, True, True, True, True, True]
     audit = c.get("/api/audit?limit=5", headers=TOKEN).json()
     assert any(a["action"] == "setting" and a["name"] == "overview layout" for a in audit)
 
@@ -49,8 +49,9 @@ def test_a_card_missing_from_the_saved_layout_appears_after_its_default_neighbou
         [{"id": "addresses", "show": True}, {"id": "exposure", "show": False},
          {"id": "categories", "show": True}, {"id": "quicklinks", "show": True}]))
     got = c.get("/api/settings/overview", headers=TOKEN).json()["cards"]
-    assert [x["id"] for x in got] == ["addresses", "exposure", "categories", "quicklinks", "changes"]
-    assert [x["show"] for x in got] == [True, False, True, True, True]
+    assert [x["id"] for x in got] == ["addresses", "exposure", "hardware", "categories",
+                                      "quicklinks", "changes"]
+    assert [x["show"] for x in got] == [True, False, True, True, True, True]
 
 
 def test_reset_restores_the_default(make_app):
