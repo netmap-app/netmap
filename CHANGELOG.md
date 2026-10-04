@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.5.2 - 2026-10-04
+
+- Every Overview card now uses the card shell from Quick launch: Reachable from outside, Hardware & blast radius, Inventory by category, Changes and Address space have their title inside a panel, their content on the darker shade, and no panel inside the panel. The status strip takes the same corners and padding with its own tint.
+
 ## 2.5.1 - 2026-10-04
 
 - Quick launch is drawn as a card: a panel with its title and "N pinned · by name" inside, rows a shade darker than the panel, larger names. New Overview cards use the same shell (CONTRIBUTING.md says how).

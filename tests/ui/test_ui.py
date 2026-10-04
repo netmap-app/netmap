@@ -1294,6 +1294,8 @@ def _ov_cards(page):
 
 def test_overview_cards_can_be_hidden_reordered_and_reset(page, server):
     assert _ov_cards(page) == ["exposure", "hardware", "categories", "quicklinks", "changes", "addresses"]
+    # Every card is drawn with the card shell.
+    expect(page.locator("#overview [data-ovcard]:not(.ovcard)")).to_have_count(0)
     page.click("#ovCustomize")
     dlg = page.locator("#layoutModal")
     expect(dlg).to_be_visible()

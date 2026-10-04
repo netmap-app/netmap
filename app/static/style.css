@@ -1344,7 +1344,17 @@ button.hwcard:hover{border-color:var(--accent)}
 .ovcard .ovhead h2{font-size:13px;letter-spacing:.08em;color:var(--dim)}
 .ovcard .cardnote{margin-left:auto;font-size:12.5px;color:var(--faint)}
 .ovcard .empty-hint{background:var(--bg)}
-@media (max-width:640px){ .ovsec.ovcard{padding:16px} }
+/* What sits inside a card sits on the darker shade, never on a second panel. */
+.ovcard :is(.exgrid,.hwcard){background:var(--bg)}
+.ovcard .hwgrid{gap:10px}
+.ovcard .feed .chrow{border-radius:6px;padding-left:6px;padding-right:6px}
+.ovcard .feed .chrow:hover{background:var(--bg)}
+/* The status strip is a card too: same corners and padding, its own tint. */
+.verdict{border-radius:12px;padding:20px}
+.verdict .attn{background:var(--line)}
+.verdict .attn .at{background:var(--bg)}
+.verdict .attn .at:hover{background:var(--panel2)}
+@media (max-width:640px){ .ovsec.ovcard,.verdict{padding:16px} }
 
 /* ---------- quick launch ---------- */
 .qlgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}

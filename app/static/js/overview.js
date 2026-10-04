@@ -242,12 +242,12 @@ async function renderOverview(all) {
    overview.py); the status strip above them is not in it and always shows. */
 const OV_CARDS = {
   exposure: () => `
-    <div class="ovsec wide2" data-ovcard="exposure">
-      <div class="ovhead"><h2>Reachable from outside</h2>
+    <section class="ovsec ovcard wide2" data-ovcard="exposure" aria-labelledby="exHead">
+      <div class="ovhead"><h2 id="exHead">Reachable from outside</h2>
         <span class="hint" data-tip>What the edge actually says - the firewall, proxy and
           tunnel sources, not the inventory.</span></div>
       ${exposureHtml(OV.exposure)}
-    </div>`,
+    </section>`,
   quicklinks: (all, pinned) => `
     <section class="ovsec ovcard" data-ovcard="quicklinks" aria-labelledby="qlHead">
       <div class="ovhead"><h2 id="qlHead">Quick launch</h2>
@@ -259,34 +259,34 @@ const OV_CARDS = {
       ${qlSuggest(all)}
     </section>`,
   changes: () => `
-    <div class="ovsec" data-ovcard="changes">
-      <div class="ovhead"><h2>Changes</h2>
+    <section class="ovsec ovcard" data-ovcard="changes" aria-labelledby="chHead">
+      <div class="ovhead"><h2 id="chHead">Changes</h2>
         <span class="chfilters" role="group" aria-label="Show">${CHG_FILTERS.map(([k, label]) =>
           `<button class="chip chf${CHG_FILTER === k ? " on" : ""}" data-chf="${k}" aria-pressed="${
             CHG_FILTER === k}">${label}</button>`).join("")}</span></div>
-      <div class="card2"><div class="feed" id="ovFeed"><div class="empty-hint">Loading…</div></div>
-        <button class="linkbtn chall" id="ovHist">All changes</button></div>
-    </div>`,
+      <div class="feed" id="ovFeed"><div class="empty-hint">Loading…</div></div>
+      <button class="linkbtn chall" id="ovHist">All changes</button>
+    </section>`,
   hardware: () => `
-    <div class="ovsec" data-ovcard="hardware">
-      <div class="ovhead"><h2>Hardware &amp; blast radius</h2>
+    <section class="ovsec ovcard" data-ovcard="hardware" aria-labelledby="hwHead">
+      <div class="ovhead"><h2 id="hwHead">Hardware &amp; blast radius</h2>
         <span class="hint" data-tip>What runs on each physical box, directly or through
           a VM or container, and how much of it a health check watches.</span>
         <button class="more linkbtn" data-goto="network">Open topology</button></div>
       <div id="ovHw"><div class="empty-hint">Loading…</div></div>
-    </div>`,
+    </section>`,
   categories: (all) => `
-    <div class="ovsec" data-ovcard="categories">
-      <div class="ovhead"><h2>Inventory by category</h2>
-        <span class="hint">${all.length} tracked · solid = monitored</span></div>
-      <div class="card2">${catCardHtml(all)}</div>
-    </div>`,
+    <section class="ovsec ovcard" data-ovcard="categories" aria-labelledby="catHead">
+      <div class="ovhead"><h2 id="catHead">Inventory by category</h2>
+        <span class="cardnote">${all.length} tracked · solid = monitored</span></div>
+      ${catCardHtml(all)}
+    </section>`,
   addresses: (all) => `
-    <div class="ovsec wide2" data-ovcard="addresses">
-      <div class="ovhead"><h2>Address space</h2>
+    <section class="ovsec ovcard wide2" data-ovcard="addresses" aria-labelledby="adHead">
+      <div class="ovhead"><h2 id="adHead">Address space</h2>
         <span class="hint" data-tip>Every /24 in the inventory.</span></div>
-      <div class="card2">${addrCardHtml(all)}</div>
-    </div>`,
+      ${addrCardHtml(all)}
+    </section>`,
 };
 // Until the saved layout arrives (or if it cannot), every card in this order.
 let OV_LAYOUT = null;
