@@ -30,9 +30,8 @@ def _overview_with(page, server, **changes):
 def test_overview_all_clear(page, server):
     _overview_with(page, server, level="ok", attention=[], verdict="Nothing needs you.")
     expect(page.locator("#overview .verdict")).to_have_class(re.compile(r"\bok\b"))
-    expect(page.locator("#overview .vhead")).to_have_text("All clear")
-    expect(page.locator("#overview .vlevels")).to_have_count(0)
-    expect(page.locator("#overview")).not_to_contain_text("Needs you")
+    expect(page.locator("#overview .vhead")).to_have_text("All clear - nothing needs you")
+    expect(page.locator("#overview .attn")).to_have_count(0)
 
 
 def test_overview_queue_worst_first(page, server):
@@ -43,12 +42,13 @@ def test_overview_queue_worst_first(page, server):
     ]
     _overview_with(page, server, level="critical", attention=items,
                    verdict="NPM is not answering.")
-    expect(page.locator("#overview .vhead")).to_have_text("1 critical")
-    expect(page.locator("#overview .vstate")).to_have_attribute("title", "NPM is not answering.")
-    expect(page.locator("#overview .vlv")).to_have_text(["1 critical", "1 to look at"])
+    expect(page.locator("#overview .verdict")).to_have_class(re.compile(r"\bcritical\b"))
+    expect(page.locator("#overview .vhead")).to_have_text("2 things need you")
+    expect(page.locator("#overview .vhead")).to_have_attribute("title", "NPM is not answering.")
     rows = page.locator("#overview .attn .at")
     expect(rows).to_have_count(2)
     expect(rows.nth(0)).to_have_class(re.compile(r"\bcritical\b"))
+    expect(rows.locator(".atrank")).to_have_text(["1", "2"])
     expect(rows.nth(0).locator(".atn")).to_have_text("NPM is not answering")
     expect(rows.nth(1).locator(".atn")).to_have_text("x.example.org has no Access application")
 
@@ -1198,25 +1198,22 @@ def test_a_source_is_stale_after_the_hours_set(page, server):
 
 
 # ---- the banner and "not verified" -------------------------------------------------------------
-def test_the_banner_is_glyphs_and_numbers(page, server):
-    later = [{"key": "unverified", "level": "note", "order": 7, "title": "2 entries not verified"}]
-    _overview_with(page, server, level="note", attention=later,
-                   counts={"entries": 0, "monitored": 4, "up": 3, "down": 1, "critical_down": 0,
-                           "unverified": 2})
-    expect(page.locator("#overview .vhead")).to_have_text("All clear")
-    expect(page.locator("#overview .vlv.note")).to_have_text("1 for later")
-    facts = page.locator("#overview .vfact")
+def test_the_status_strip_is_one_row_of_numbers_when_clear(page, server):
+    _overview_with(page, server, level="ok", attention=[],
+                   counts={"entries": 9, "monitored": 4, "up": 3, "down": 1, "critical_down": 0,
+                           "unverified": 0, "unmonitored": 2})
+    strip = page.locator("#overview .verdict")
+    expect(strip).to_have_class(re.compile(r"\bok\b"))
+    expect(strip.locator(".vhead")).to_have_text("All clear - nothing needs you")
+    facts = strip.locator(".vfact")
     expect(facts).to_have_count(4)
-    expect(facts.nth(0)).to_have_class(re.compile(r"\bbad\b"))
-    expect(facts.nth(0).locator("b")).to_have_text("3/4")
+    expect(facts.nth(0)).to_have_text(re.compile(r"3/4\s*monitored up"))
+    expect(facts.nth(0)).to_have_class(re.compile(r"\bwarn\b"))        # not at 100%
     assert facts.nth(0).get_attribute("title") == "3 of 4 monitored entries answering"
+    expect(facts.nth(2)).to_have_text(re.compile(r"9\s*entries ·\s*2\s*unmonitored"))
+    expect(facts.nth(3)).to_contain_text("sightings")
     page.set_viewport_size({"width": 375, "height": 812})
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
-    _overview_with(page, server, level="critical", attention=[],
-                   counts={"entries": 0, "monitored": 4, "up": 2, "down": 2, "critical_down": 2,
-                           "unverified": 0})
-    expect(page.locator("#overview .verdict")).to_have_class(re.compile(r"\bdown\b"))
-    expect(page.locator("#overview .vhead")).to_have_text("2 down")
 
 
 def test_not_verified_lists_the_entries_and_marks_them_verified(page, server):
@@ -1364,3 +1361,64 @@ def test_header_shows_freshness_and_drops_the_csv_button(page, server):
     page.click("#ovCustomize")
     page.wait_for_timeout(100)
     assert page.evaluate("document.documentElement.scrollWidth") <= 375
+
+
+# ---- status strip, degraded ----------------------------------------------------------------------
+def test_status_strip_ranks_and_acts_on_what_needs_you(page, server):
+    """Rows keep the server's order (a dead source first), each with a rank,
+    a type pill, an action and Snooze; snoozed ones sit behind a link."""
+    e = server.api("POST", "/api/entries", {"name": "Wiki"})["id"]
+    items = [
+        {"key": "source:npm", "type": "source", "level": "critical", "order": 0,
+         "title": "NPM is not answering", "detail": "login refused"},
+        {"key": "open:wiki.example.org", "type": "exposure", "level": "warn", "order": 3,
+         "accept": "cloudflare:access:wiki.example.org", "entry_id": e,
+         "title": "wiki.example.org has no Access application"},
+        {"key": "findings", "type": "mismatch", "level": "warn", "order": 4, "goto": "network",
+         "title": "3 mismatches between NetMap and the systems it reads"},
+    ]
+    hidden = [{"key": "conflicts", "type": "conflict", "level": "note",
+               "title": "1 conflict in the inventory", "dismissed_at": "2026-10-01T10:00:00"}]
+    _overview_with(page, server, level="critical", attention=items, dismissed=hidden)
+    strip = page.locator("#overview .verdict")
+    expect(strip).to_have_class(re.compile(r"\bcritical\b"))
+    expect(strip.locator(".vhead")).to_have_text("3 things need you")
+    rows = strip.locator(".attn > .at")
+    expect(rows.locator(".atpill")).to_have_text(["source", "exposure", "mismatch"])
+    expect(rows.nth(0).get_by_role("button", name="Retry scan")).to_be_visible()
+    expect(rows.nth(1).get_by_role("button", name="Accept")).to_be_visible()
+    expect(rows.nth(2).get_by_role("button", name="Review")).to_be_visible()
+    expect(rows.get_by_role("button", name="Snooze")).to_have_count(3)
+
+    # Retry scan asks that one source again.
+    page.route("**/api/discovery/npm*", lambda r: r.fulfill(
+        status=200, content_type="application/json",
+        body='{"source":"npm","findings":[],"error":null}'))
+    with page.expect_request("**/api/discovery/npm*"):
+        rows.nth(0).get_by_role("button", name="Retry scan").click()
+
+    # Accept ignores the edge finding, after a confirmation.
+    rows.nth(1).get_by_role("button", name="Accept").click()
+    expect(page.locator("#confirmTitle")).to_have_text("Accept wiki.example.org as open on purpose?")
+    page.click("#confirmOk")
+    expect(toast(page)).to_contain_text("wiki.example.org accepted as open on purpose")
+    assert "cloudflare:access:wiki.example.org" in server.api("GET", "/api/discovery/ignores")
+
+    # Snoozed items: a count, then the list, each one can come back.
+    link = strip.get_by_role("button", name="1 snoozed")
+    expect(link).to_have_attribute("aria-expanded", "false")
+    link.click()
+    expect(strip.locator(".attn.dis .at")).to_have_text(re.compile("1 conflict in the inventory"))
+    expect(strip.get_by_role("button", name="Bring back")).to_be_visible()
+
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375
+
+
+def test_only_for_later_items_tint_the_strip_neutral(page, server):
+    later = [{"key": "unverified", "type": "verify", "level": "note", "order": 7,
+              "title": "2 entries not verified"}]
+    _overview_with(page, server, level="note", attention=later)
+    expect(page.locator("#overview .verdict")).to_have_class(re.compile(r"\bnote\b"))
+    expect(page.locator("#overview .vhead")).to_have_text("1 thing needs you")

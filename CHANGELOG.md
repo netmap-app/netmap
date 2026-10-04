@@ -4,6 +4,14 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.3.0 - 2026-10-04
+
+- The Overview opens with a status strip instead of the big banner: "All clear - nothing needs you" as one row with the numbers when nothing does, otherwise "N things need you" with the queue folded in, tinted by the worst level (red critical, amber to look at, neutral for later).
+- Each queue row shows its rank, a type pill (source, down, certificate, exposure, mismatch, conflict, coverage, verify), when it started, an action (Retry scan, Open entry, Accept, Review) and Snooze. The order is the server's, unchanged: a dead source still ranks above what it would have reported.
+- Accept marks a hostname with no Access application as open on purpose (it ignores that edge finding, after a confirmation).
+- "Set aside" is now Snooze, and snoozed items sit behind an "N snoozed" link in the strip rather than in a card of their own.
+- New numbers: "unmonitored" counts entries a health check could probe (hardware, VM, container, service) that have none and no `ha:` expectation; "seen" is now "sightings". `/api/overview` items carry `type` (and `accept` for exposure), and `counts` carries `unmonitored`.
+
 ## 2.2.0 - 2026-10-04
 
 - Customize overview: show, hide and reorder the Overview's cards (button at the bottom of the page). The layout is stored on the server, one for the instance; the status and Needs you always show first. API: `GET`/`PUT /api/settings/overview`.

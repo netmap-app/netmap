@@ -835,39 +835,28 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 .exl li{font-size:13px;line-height:1.5;color:var(--dim)}
 .exfoot{font-size:11.5px;color:var(--faint);border-top:1px solid var(--hair);padding-top:9px}
 
-/* ---------- control room ---------- */
-/* The state on the left - a glyph and a few words, coloured by how bad -
-   and the numbers on the right, each led by its own mark. */
-.verdict{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  padding:14px 18px;display:flex;align-items:center;gap:18px 28px;flex-wrap:wrap;
-  border-left:3px solid var(--up);margin-bottom:22px;--vtone:var(--up)}
+/* ---------- control room: the status strip ---------- */
+/* One tinted row when all is clear; a tinted card with the ranked queue when
+   not. The tint follows the worst level: red for critical, amber for "to
+   look at", neutral when everything left is "for later". */
+.verdict{--vtone:var(--up);background:color-mix(in srgb,var(--vtone) 7%,var(--panel));
+  border:1px solid color-mix(in srgb,var(--vtone) 35%,var(--line));border-radius:var(--radius);
+  padding:14px 18px;margin-bottom:22px;display:flex;flex-direction:column;gap:12px}
 .verdict.warn{--vtone:var(--warn)}
-.verdict.critical,.verdict.down{--vtone:var(--down)}
-.verdict{border-left-color:var(--vtone)}
-.vstate{display:flex;align-items:center;gap:13px;flex:1 1 220px;min-width:0}
-.vglyph{width:38px;height:38px;flex:none;fill:none;stroke:var(--vtone);
-  stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.vwords{display:flex;flex-direction:column;gap:4px;min-width:0}
-.vhead{font-size:20px;font-weight:650;line-height:1.15;color:var(--vtone)}
-.vlevels{display:flex;gap:10px;flex-wrap:wrap}
-.vlv{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;
-  color:var(--faint);font-variant-numeric:tabular-nums}
-.vlv .lvico{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;
-  stroke-linecap:round;stroke-linejoin:round}
-.vlv.critical{color:var(--down)}
-.vlv.critical .lvico{fill:currentColor}
-.vlv.warn{color:var(--warn)}
-.vfacts{display:grid;grid-template-columns:repeat(4,auto);gap:6px 26px;align-items:center}
-.vfact{display:inline-flex;align-items:baseline;gap:7px;white-space:nowrap;cursor:default}
-.vfact .tico{width:17px;height:17px;flex:none;align-self:center;color:var(--faint);
-  fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.vfact b{font-size:19px;font-weight:650;line-height:1.1;font-variant-numeric:tabular-nums}
+.verdict.critical{--vtone:var(--down)}
+.verdict.note{--vtone:var(--faint);background:var(--panel);border-color:var(--line)}
+.sthead{display:flex;align-items:center;gap:12px 28px;flex-wrap:wrap}
+.vstate{display:flex;align-items:center;gap:10px;flex:1 1 240px;min-width:0}
+.stdot{width:10px;height:10px;border-radius:50%;background:var(--vtone);flex:none}
+.vhead{font-size:16px;font-weight:650;line-height:1.25;margin:0;color:var(--fg)}
+.vfacts{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline}
+.vfact{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap;cursor:default}
+.vfact b{font-size:17px;font-weight:650;line-height:1.1;font-variant-numeric:tabular-nums}
 .vfact small{font-size:11.5px;color:var(--faint)}
-.vfact.good .tico,.vfact.good b{color:var(--up)}
-.vfact.bad .tico,.vfact.bad b{color:var(--warn)}
+.vfact.warn b,.vfact .warnc{color:var(--warn)}
 @media (max-width:640px){
   .verdict{padding:13px 14px}
-  .vfacts{grid-template-columns:1fr 1fr;width:100%;gap:10px 14px}
+  .vfacts{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:10px 14px}
 }
 .atact{margin-top:6px}
 .srcstrip{display:flex;flex-wrap:wrap;gap:5px;padding-top:3px}
@@ -877,18 +866,24 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 .src.bad{color:var(--down);border-color:var(--down)}
 .src.bad i{background:var(--down)}
 
-.attn{display:flex;flex-direction:column;gap:1px;background:var(--line);
-  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-.at{display:flex;gap:12px;align-items:baseline;background:var(--panel);
-  padding:11px 14px;cursor:pointer}
+.attn{display:flex;flex-direction:column;gap:1px;background:var(--line);list-style:none;
+  margin:0;padding:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.at{display:flex;gap:12px;align-items:center;background:var(--panel);padding:10px 14px;cursor:pointer}
 .at:hover{background:var(--panel2)}
-.atl{flex:none;width:64px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
-  color:var(--faint)}
-.at.critical .atl{color:var(--down)}
-.at.warn .atl{color:var(--warn)}
-.att{display:flex;flex-direction:column;gap:2px;min-width:0}
+.atrank{flex:none;width:18px;text-align:right;font-size:12px;color:var(--faint)}
+.atpill{flex:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;
+  border:1px solid currentColor;border-radius:999px;padding:1px 8px;color:var(--faint);
+  min-width:92px;text-align:center}
+.atpill.critical{color:var(--down)}
+.atpill.warn{color:var(--warn)}
+.att{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
 .atn{font-size:13.5px;color:var(--fg);font-weight:500}
 .atd{font-size:12px;color:var(--dim);overflow-wrap:anywhere}
+.atbtns{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.stsnz{display:flex;flex-direction:column;gap:8px}
+.linkbtn{background:none;border:none;padding:0;color:var(--accent);cursor:pointer;
+  font:inherit;font-size:12.5px;align-self:flex-start}
+.linkbtn:hover{text-decoration:underline}
 .allclear{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
   padding:16px 18px;font-size:13.5px;color:var(--dim);line-height:1.5}
 
@@ -898,21 +893,14 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 .exchips{display:flex;gap:6px;flex-wrap:wrap}
 .lchip.bad{border-color:var(--down);color:var(--down)}
 @media (max-width:640px){
-  .at{flex-direction:column;gap:3px}
-  .atl{width:auto}
+  .at{flex-wrap:wrap;gap:6px 10px}
+  .att{flex-basis:100%;order:3}
+  .atbtns{order:4;justify-content:flex-start}
 }
-
-/* ---------- setting an attention item aside ---------- */
-.at{position:relative}
-.at .atx{position:absolute;right:10px;top:9px;opacity:0;transition:opacity .12s;
-  font-size:12px;line-height:1}
-.at:hover .atx,.at .atx:focus-visible{opacity:.75}
-.at .atx:hover{opacity:1;color:var(--fg)}
-.attn.dis .at{opacity:.62}
-.attn.dis .at .atx{opacity:.75;font-size:14px}
 .again{margin-left:8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;
   color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:1px 5px;
   vertical-align:1px}
+.attn.dis .at{opacity:.7}
 
 /* ---------- deep scan ---------- */
 .dshead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -1018,12 +1006,8 @@ body.railmin .railcheck{display:none}
 /* Right-aligned and quiet: it is the third thing you read on a row, after
    how bad and what. A leading ~ marks an age NetMap inferred from when it
    first noticed rather than from a recorded event. */
-.atage{margin-left:auto;padding-left:14px;flex:none;align-self:center;
-  font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums;
+.atage{flex:none;font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums;
   white-space:nowrap}
-/* The dismiss ✕ is absolutely positioned at the row's right edge, so the row
-   needs a gutter of its own or the age would sit underneath it. */
-.attn .at{padding-right:38px}
 
 /* ---------- address rows ---------- */
 .addr{flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap}
@@ -1302,7 +1286,7 @@ td,.qlink,.lchip,.kv{overflow-wrap:anywhere}
 .srcform .ckf.formon{font-weight:600}
 /* What the page shows is old (core.js pageFreshness): every status colour
    goes grey until fresh data arrives, so an old green is never read as now. */
-body.pagestale :is(.dot, .srcline .s, .vfact, .vstate, .vlv, .at .atl, .cs, .gu, .gd, .lat){filter:grayscale(1);opacity:.6}
+body.pagestale :is(.dot, .srcline .s, .vfact, .vstate, .atpill, .cs, .gu, .gd, .lat){filter:grayscale(1);opacity:.6}
 .stalebanner{cursor:pointer}
 
 /* ---------- header freshness ---------- */

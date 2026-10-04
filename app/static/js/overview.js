@@ -16,64 +16,34 @@
 let OV = null;
 let OVSHOW = false;                     // is the "set aside" list expanded
 
-const LEVEL_WORD = { critical: "critical", warn: "attention", note: "later" };
-
-/* The banner. A state you read from across the room - a glyph and two or
-   three words - then the numbers, each led by its own mark. The full
-   sentence (app/overview.py, the same one MCP answers with) is the hover. */
-const TILE_ICON = {
-  assets: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
-  responding: '<path d="M2 12h4l2.5-6 4 13 3-9 2 2h4.5"/>',
-  sources: '<path d="M12 3v9"/><path d="M8 8.5L12 12l4-3.5"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>',
-  observations: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="8.5"/>',
-};
-const STATE_ICON = {
-  ok: '<circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.5 3.5L17 9"/>',
-  warn: '<path d="M12 3.2L22 20.5H2z"/><path d="M12 10v4.5M12 17.6v.1"/>',
-  critical: '<path d="M8.2 2.5h7.6l5.7 5.7v7.6l-5.7 5.7H8.2l-5.7-5.7V8.2z"/><path d="M12 7.5v5.5M12 16.3v.1"/>',
-  down: '<circle cx="12" cy="12" r="10"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/>',
-};
-// The queue by level, one glyph each - what the rows below are, counted.
-const LEVEL_ICON = {
-  critical: '<circle cx="12" cy="12" r="6"/>',
-  warn: '<path d="M12 5l8 14H4z"/>',
-  note: '<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/>',
-};
-const LEVEL_TIP = { critical: "critical", warn: "to look at", note: "for later" };
+/* The status strip. One row when nothing needs you; otherwise a ranked list
+   of what does, in the order the server ranked it (app/overview.py, the same
+   ranking MCP answers with) - never re-sorted here. A dead source ranks above
+   what it would have reported, because the server says so. Colour is never
+   the only signal: every stat is a number and every row names its type. */
 const svgi = (paths, cls) => `<svg viewBox="0 0 24 24" class="ico ${cls}" aria-hidden="true">${paths}</svg>`;
-const tile = (icon, value, label, tone = "", tip = "") => `
-  <span class="vfact ${tone}" title="${esc(tip || label)}">
-    ${svgi(TILE_ICON[icon] || "", "tico")}
-    <b class="num">${value}</b><small>${label}</small>
-  </span>`;
+const LEVEL_WORD = { critical: "critical", warn: "to look at", note: "for later" };
 
-function verdictHtml(all, c) {
-  const items = OV.attention || [];
-  const n = (lv) => items.filter(it => it.level === lv).length;
-  const [state, head] = c.critical_down ? ["down", `${c.critical_down} down`]
-    : OV.level === "critical" ? ["critical", `${n("critical")} critical`]
-    : OV.level === "warn" ? ["warn", `${n("warn")} to check`]
-    : ["ok", "All clear"];
-  const levels = ["critical", "warn", "note"].filter(lv => n(lv)).map(lv =>
-    `<span class="vlv ${lv}" title="${n(lv)} ${LEVEL_TIP[lv]}">${svgi(LEVEL_ICON[lv], "lvico")}${n(lv)}<span class="vh"> ${LEVEL_TIP[lv]}</span></span>`).join("");
-  const srcTone = !OV.sources.total ? "" : OV.sources.ok === OV.sources.total ? "good" : "bad";
-  return `
-    <div class="verdict ${esc(state)}">
-      <div class="vstate" title="${esc(OV.verdict)}">
-        ${svgi(STATE_ICON[state], "vglyph")}
-        <div class="vwords"><div class="vhead">${esc(head)}</div>
-          ${levels ? `<div class="vlevels">${levels}</div>` : ""}</div>
-      </div>
-      <div class="vfacts">
-        ${tile("responding", `${c.up}/${c.monitored}`, "up", c.up === c.monitored ? "good" : "bad",
-               `${c.up} of ${c.monitored} monitored entries answering`)}
-        ${tile("sources", `${OV.sources.ok}/${OV.sources.total}`, "sources", srcTone,
-               `${OV.sources.ok} of ${OV.sources.total} sources reporting`)}
-        ${tile("assets", all.length, "entries", "", `${all.length} entries, ${c.monitored} monitored`)}
-        ${tile("observations", OV.sightings.rows, "seen", "",
-               `${OV.sightings.rows} observations from the sources`)}
-      </div>
-    </div>`;
+// One stat: the number first, then what it counts. `tone` is "warn" when it
+// is not at 100% - the number already says so, the colour only repeats it.
+const stat = (value, label, tone = "", tip = "") => `
+  <span class="vfact ${tone}" title="${esc(tip || label)}">
+    <b class="num mono">${value}</b><small>${label}</small></span>`;
+
+function statsHtml(c) {
+  const s = OV.sources;
+  const unmon = c.unmonitored || 0;
+  return `<div class="vfacts">
+    ${stat(`${c.up}/${c.monitored}`, "monitored up", c.up < c.monitored ? "warn" : "",
+           `${c.up} of ${c.monitored} monitored entries answering`)}
+    ${s.total ? stat(`${s.ok}/${s.total}`, "sources fresh", s.ok < s.total ? "warn" : "",
+                     `${s.ok} of ${s.total} sources reporting`)
+              : `<span class="vfact" title="No discovery source is added"><small>no sources added</small></span>`}
+    <span class="vfact" title="${esc(`${c.entries} entries; ${unmon} that could have a health check have none`)}">
+      <b class="num mono">${c.entries}</b><small>entries${unmon ? " ·" : ""}</small>${
+      unmon ? `<b class="num mono warnc">${unmon}</b><small class="warnc">unmonitored</small>` : ""}</span>
+    ${stat(OV.sightings.rows, "sightings", "", `${OV.sightings.rows} observations from the sources`)}
+  </div>`;
 }
 
 /* How long, in one token. A queue row has room for "9m" and not for
@@ -90,16 +60,35 @@ function ago(ts) {
   return Math.round(s / 604800) + "w";
 }
 
-function attnHtml(items) {
-  if (!items.length) return "";
-  return `<div class="attn">${items.map(it => `
-    <div class="at ${esc(it.level)}"${it.entry_id ? ` data-card="${it.entry_id}"` : ""}${
+// The one thing to do about a row, as a real button. Rows without an
+// obvious action (a count of entries nothing has seen) get none.
+function attnAction(it) {
+  const k = it.key || "";
+  if (k.startsWith("source:") || k.startsWith("source-pending:")) {
+    const src = k.slice(k.indexOf(":") + 1);
+    return `<button class="btn sm" data-rescan="${esc(src)}">${k.startsWith("source:") ? "Retry scan" : "Scan now"}</button>`;
+  }
+  if (k === "secrets-undecryptable") return `<button class="btn sm" data-goto-sources>Open Sources</button>`;
+  if (it.accept) return `<button class="btn sm" data-accept="${esc(it.accept)}" data-label="${esc(it.accept.split(":access:").pop())}">Accept</button>`;
+  if (it.entry_id) return `<button class="btn sm" data-card="${it.entry_id}">Open entry</button>`;
+  if (it.goto) return `<button class="btn sm" data-goto="${esc(it.goto)}">Review</button>`;
+  return "";
+}
+
+function attnRow(it, i) {
+  const age = it.since ? `<span class="atage" title="${esc(it.since_exact
+      ? "since " + when(it.since)
+      : "first seen by NetMap " + when(it.since) + " - nothing records when this actually began")}">${
+      it.since_exact || ago(it.since) === "now" ? "" : "~"}${ago(it.since)}</span>` : "";
+  return `
+    <li class="at ${esc(it.level)}"${it.entry_id ? ` data-card="${it.entry_id}"` : ""}${
       it.goto ? ` data-goto="${esc(it.goto)}"` : ""}>
-      <span class="atl">${esc(LEVEL_WORD[it.level] || it.level)}</span>
+      <span class="atrank mono" aria-label="rank ${i + 1}">${i + 1}</span>
+      <span class="atpill ${esc(it.level)}" title="${esc(LEVEL_WORD[it.level] || it.level)}">${esc(it.type || "other")}</span>
       <div class="att">
         <span class="atn">${esc(it.title)}${
           it.changed_since_dismissed
-            ? `<span class="again" title="You set this aside; it has changed since">changed</span>` : ""}${
+            ? `<span class="again" title="You snoozed this; it has changed since">changed</span>` : ""}${
           it.was_snoozed
             ? `<span class="again" title="Snoozed earlier; still here a day later">still here</span>` : ""}</span>
         ${it.detail ? `<span class="atd">${esc(it.detail)}</span>` : ""}
@@ -110,42 +99,49 @@ function attnHtml(items) {
         ${it.verify ? `<span class="atact"><button class="btn sm" data-verify="${esc(it.verify.join(","))}">Mark ${
           it.verify.length === 1 ? "" : "all "}verified</button></span>` : ""}
       </div>
-      ${it.since ? `<span class="atage" title="${esc(it.since_exact
-          ? "since " + when(it.since)
-          : "first seen by NetMap " + when(it.since) +
-            " - nothing records when this actually began")}">${
-          it.since_exact || ago(it.since) === "now" ? "" : "~"}${ago(it.since)}</span>` : ""}
-      <button class="iconbtn atx" title="${esc(it.level === "critical"
-          ? "Set aside for a day"
-          : "Set aside until this changes")}"
-        data-dismiss="${esc(it.key)}"
-        data-fp="${esc(it.fingerprint || "")}"
-        data-title="${esc(it.title)}">\u2715</button>
-    </div>`).join("")}</div>`;
+      ${age}
+      <span class="atbtns">${attnAction(it)}
+        <button class="btn sm" data-dismiss="${esc(it.key)}" data-fp="${esc(it.fingerprint || "")}"
+          data-title="${esc(it.title)}" title="${esc(it.level === "critical"
+            ? "Snooze for a day" : "Snooze until this changes")}">Snooze</button></span>
+    </li>`;
 }
 
-// Set-aside items stay one click away. A dismissal that cannot be seen or
+// Snoozed items stay one click away. A dismissal that cannot be seen or
 // undone is indistinguishable from a bug.
-function dismissedHtml(hidden) {
+function snoozedHtml(hidden) {
   if (!hidden || !hidden.length) return "";
-  const open = OVSHOW;
   return `
-    <div class="ovsec">
-      <div class="ovhead"><h2>Set aside</h2>
-        <span class="hint" data-tip>They return if the situation changes.</span>
-        <span class="hint">${hidden.length} hidden</span>
-        <span class="more" id="ovShowDis">${open ? "Hide" : "Show"}</span></div>
-      ${open ? `<div class="attn dis">${hidden.map(it => `
-        <div class="at ${esc(it.level)}">
-          <span class="atl">${esc(LEVEL_WORD[it.level] || it.level)}</span>
+    <div class="stsnz">
+      <button class="linkbtn" id="ovShowDis" aria-expanded="${OVSHOW}">${hidden.length} snoozed</button>
+      ${OVSHOW ? `<ul class="attn dis">${hidden.map(it => `
+        <li class="at ${esc(it.level)}">
+          <span class="atpill ${esc(it.level)}">${esc(it.type || "other")}</span>
           <div class="att">
             <span class="atn">${esc(it.title)}</span>
-            <span class="atd">set aside ${esc(when(it.dismissed_at || ""))}</span>
+            <span class="atd">snoozed ${esc(when(it.dismissed_at || ""))} - returns if it changes</span>
           </div>
-          <button class="iconbtn atx" title="Bring this back"
-            data-undismiss="${esc(it.key)}">\u21ba</button>
-        </div>`).join("")}</div>` : ""}
+          <span class="atbtns"><button class="btn sm" data-undismiss="${esc(it.key)}">Bring back</button></span>
+        </li>`).join("")}</ul>` : ""}
     </div>`;
+}
+
+function statusHtml(c) {
+  const items = OV.attention || [];
+  const ok = !items.length;
+  const tone = ok ? "ok" : OV.level === "critical" ? "critical" : OV.level === "warn" ? "warn" : "note";
+  const head = ok ? "All clear - nothing needs you"
+    : `${items.length} thing${items.length === 1 ? " needs" : "s need"} you`;
+  return `
+    <section class="verdict ${tone}" aria-labelledby="stHead">
+      <div class="sthead">
+        <div class="vstate"><span class="stdot" aria-hidden="true"></span>
+          <h2 class="vhead" id="stHead" title="${esc(OV.verdict)}">${esc(head)}</h2></div>
+        ${statsHtml(c)}
+      </div>
+      ${ok ? "" : `<ol class="attn">${items.map(attnRow).join("")}</ol>`}
+      ${snoozedHtml(OV.dismissed)}
+    </section>`;
 }
 
 /* Open hostnames split two ways: ones nobody has looked at (red - a real
@@ -284,16 +280,7 @@ const ovLayout = () => OV_LAYOUT || Object.keys(OV_CARDS).map(id => ({ id, show:
 function overviewHtml(all, pinned, c, ok) {
   const cards = ovLayout().filter(x => x.show && OV_CARDS[x.id]);
   return `
-    ${verdictHtml(all, c)}
-
-    ${OV.attention.length ? `
-    <div class="ovsec">
-      <div class="ovhead"><h2>Needs you</h2>
-        <span class="hint" data-tip>Worst first.</span></div>
-      ${attnHtml(OV.attention)}
-    </div>` : ""}
-
-    ${dismissedHtml(OV.dismissed)}
+    ${statusHtml(c)}
 
     ${cards.length ? `<div class="ovgrid">${cards.map(x => OV_CARDS[x.id](all, pinned)).join("")}</div>` : ""}
 
@@ -315,7 +302,7 @@ function layoutListHtml() {
     d === "up" ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"}"/></svg>`;
   return `
     <li class="lrow fixed"><span class="lchk"><input type="checkbox" checked disabled
-      id="lyStatus"><label for="lyStatus">Status and Needs you</label></span>
+      id="lyStatus"><label for="lyStatus">Status</label></span>
       <span class="hint">always shown, always first</span></li>
     ${rows.map((x, i) => `
     <li class="lrow" data-lid="${esc(x.id)}">
@@ -412,6 +399,33 @@ function wireOverview(box, all) {
       renderOverview(ALL.length ? ALL : ENTRIES);
     };
   });
+  box.querySelectorAll("[data-rescan]").forEach(b => {
+    b.onclick = async (ev) => {
+      ev.stopPropagation();
+      b.disabled = true; b.textContent = "Scanning…";
+      await scanOne(b.dataset.rescan);
+      await load();
+    };
+  });
+  box.querySelectorAll("[data-accept]").forEach(b => {
+    b.onclick = async (ev) => {
+      ev.stopPropagation();
+      const host = b.dataset.label;
+      if (!(await confirmDialog({
+        title: `Accept ${host} as open on purpose?`,
+        body: "It stays listed under Reachable from outside, marked open on purpose, "
+            + "and leaves this list. Undo it from the source's ignored findings on Network.",
+        ok: "Accept", danger: false }))) return;
+      try {
+        await api("/api/discovery/ignores", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ key: b.dataset.accept, label: host, reason: "accepted on the Overview" }),
+        });
+      } catch { return; }
+      toast(`${host} accepted as open on purpose`);
+      renderOverview(ALL.length ? ALL : ENTRIES);
+    };
+  });
   const sd = $("#ovShowDis");
   if (sd) sd.onclick = () => { OVSHOW = !OVSHOW; renderOverview(ALL.length ? ALL : ENTRIES); };
 
@@ -421,6 +435,7 @@ function wireOverview(box, all) {
   box.querySelectorAll("[data-goto]").forEach(el => {
     el.onclick = (ev) => {
       if (ev.target.closest("[data-card]")) return;
+      ev.stopPropagation();
       view = el.dataset.goto; applyView(); renderNetwork();
     };
   });

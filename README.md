@@ -325,18 +325,23 @@ back to *Immediately* sends what was waiting straight away.
 
 ## 6. The three views
 
-**Overview** is the landing view: a banner with the state as a glyph and a few
-words (All clear, *N* to check, *N* critical, *N* down - the full sentence on
-hover), the queue counted by level, and four numbers each led by its mark
-(entries up, sources reporting, entries, observations); then **Needs you**,
-where *not verified* lists the entries and offers **Mark all verified**; a
+**Overview** is the landing view. It opens with the status strip: when
+nothing needs you, one row - "All clear - nothing needs you" - with the
+numbers (monitored entries up, sources fresh, entries and how many of them
+could have a health check and have none, sightings); otherwise "*N* things
+need you" and the queue, worst first in the order the server ranks it (a dead
+source above what it would have reported). Each row has its rank, a type
+(source, down, certificate, exposure, mismatch, conflict, coverage, verify),
+when it started, an action (Retry scan, Open entry, Accept, Review, *Mark all
+verified*) and **Snooze**; snoozed rows sit behind "*N* snoozed" and come back
+when the situation changes. Below it come a
 **Quick links** row of pinned services, an
-inventory-by-category breakdown, and the six most recent changes. The tiles and
+inventory-by-category breakdown, and the six most recent changes. The numbers and
 the breakdown always describe the whole inventory, never the current filter.
 Clicking a category jumps to Inventory filtered to it. **Customize overview**
 at the bottom of the page shows, hides and reorders the cards below the status;
-the layout is stored on the server, one for the instance. The status and
-**Needs you** are always shown, first.
+the layout is stored on the server, one for the instance. The status strip is
+always shown, first.
 
 The header says when the sources were last scanned and when the next automatic
 scan is due ("Scanned 12:15 · next in 40 min").

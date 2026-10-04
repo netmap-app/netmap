@@ -112,6 +112,22 @@ def undismiss(key: str) -> bool:
     return db.clear_ignore(f"{DISMISS_SOURCE}:{key}")
 
 
+# What an item is about, as one word for the Overview's pill. Read from the
+# key the item already has, so a new kind of item without a word here is
+# still shown, as "other".
+TYPES = [("source-pending:", "source"), ("source:", "source"),
+         ("secrets-undecryptable", "source"), ("down:", "down"),
+         ("cert:", "certificate"), ("open:", "exposure"), ("findings", "mismatch"),
+         ("conflicts", "conflict"), ("unmonitored", "coverage"), ("stale", "coverage"),
+         ("unverified", "verify")]
+# Kinds of entry a health check can probe.
+CHECKABLE = {"hardware", "vm", "container", "service"}
+
+
+def _type(key: str) -> str:
+    return next((t for p, t in TYPES if key.startswith(p)), "other")
+
+
 def _rank(item: dict) -> tuple:
     """Worst level, then the item's order, then the widest (a machine with
     twenty services down before one with two), then by title."""
@@ -144,7 +160,7 @@ def exposure() -> dict:
         published.add(host)
         if "no Access" in (r["value"] or "") and host not in naked:
             naked[host] = {"host": host, "entry_id": r["entry_id"],
-                           "entry": names.get(r["entry_id"], "")}
+                           "entry": names.get(r["entry_id"], ""), "source": r["source"]}
 
     forwards = [{"port": r["fact"][5:], "entry_id": r["entry_id"],
                  "entry": names.get(r["entry_id"], ""), "detail": r["value"]}
@@ -332,6 +348,9 @@ def snapshot(status_cache: dict | None = None) -> dict:
             continue
         items.append({
             "level": "warn", "order": 3, "key": f"open:{n['host']}",
+            # The finding the edge source raised; ignoring it is "open on
+            # purpose", which the Overview offers as Accept.
+            "accept": f"{n['source']}:access:{n['host']}",
             "title": f"{n['host']} has no Access application",
             "detail": ("published through the tunnel with nothing in front of "
                        "it: whatever answers there answers the open internet"),
@@ -401,6 +420,12 @@ def snapshot(status_cache: dict | None = None) -> dict:
             "entries": gone,
         })
 
+    # Entries that could have a health check and have none: a rule or a
+    # network has nothing to probe, and an `ha:` expectation is a check.
+    unwatched = [e for e in entries
+                 if e.get("kind") in CHECKABLE and not e.get("monitor")
+                 and not any(t.lower().startswith("ha:") for t in (e.get("tags") or []))]
+
     unver = [e for e in entries if not e.get("verified")]
     if unver:
         items.append({
@@ -415,6 +440,8 @@ def snapshot(status_cache: dict | None = None) -> dict:
             "fingerprint": ",".join(str(e["id"]) for e in sorted(unver, key=lambda x: x["id"])),
         })
 
+    for it in items:
+        it["type"] = _type(it["key"])
     items.sort(key=_rank)
     items, hidden = _dismissed(items)
     for it in items:
@@ -455,7 +482,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
         "counts": {
             "entries": len(entries), "monitored": len(monitored),
             "up": len(up), "down": len(down), "critical_down": len(crit_down),
-            "unverified": len(unver),
+            "unverified": len(unver), "unmonitored": len(unwatched),
         },
         "sources": {"ok": summary.get("sources_ok", 0),
                     "total": summary.get("sources_total", 0),
