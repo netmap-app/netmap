@@ -851,7 +851,7 @@ section at the top of the Overview, both with the finding's own action buttons.
 That badge needs a number continuously, and scanning on every page load would
 mean three HTTP calls to the firewall every time somebody switches tabs. So a
 background task re-scans every configured source every
-`NETMAP_DISCOVERY_INTERVAL` seconds (default 900) into an in-process cache, and
+`NETMAP_DISCOVERY_INTERVAL` seconds (default 86400, i.e. daily) into an in-process cache, and
 `/api/discovery/summary` and `/api/discovery/findings` answer from that cache
 for free. Acting on a finding re-scans that one source immediately, so the badge
 is right straight away rather than at the next sweep.
