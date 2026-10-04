@@ -271,15 +271,6 @@ main{padding:20px;max-width:1500px;margin:0 auto}
 .cg.tools{--c:var(--c-tools)}    .cg.misc{--c:var(--c-misc)}
 
 .cats{display:flex;flex-direction:column;gap:9px}
-.addrs{display:flex;flex-direction:column;gap:14px}
-.addr{display:flex;flex-direction:column;gap:6px;cursor:pointer}
-.ah{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-.ah .hint{font-size:11.5px;color:var(--faint)}
-.abar{display:flex;height:9px;border-radius:999px;overflow:hidden;background:var(--panel2)}
-.abar i{display:block;height:100%}
-.abar i.on{background:var(--accent)}
-.abar i.seen{background:var(--warn)}
-.addr:hover .ah b{color:var(--accent)}
 
 .qwrap{padding:14px}
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:10px}
@@ -1002,7 +993,6 @@ body.railmin .railcheck{display:none}
   text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
 
 /* ---------- address space ---------- */
-.abar i.dup{background:var(--down)}
 .resw{color:var(--accent)}
 
 
@@ -1013,15 +1003,6 @@ body.railmin .railcheck{display:none}
 .atage{flex:none;font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums;
   white-space:nowrap}
 
-/* ---------- address rows ---------- */
-.addr{flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap}
-.addr .an{flex:none;min-width:132px}
-.addr .abar{flex:none;width:200px;display:flex;height:9px;border-radius:999px;
-  overflow:hidden;background:var(--panel2)}
-.addr .ac{flex:1 1 auto;min-width:0}
-@media (max-width:560px){
-  .addr .abar{width:100%}
-}
 
 /* ---------- the hairline grid ---------- */
 /* One device, used by Quick links and by the exposure panel: a bordered box
@@ -1386,3 +1367,27 @@ button.hwcard:hover{border-color:var(--accent)}
 .chmerged[aria-expanded="true"] .chm::after{content:" ▾"}
 .chsubs{margin-left:52px;border-left:2px solid var(--line);padding-left:10px}
 .chall{margin-top:8px}
+
+/* ---------- address space grid ---------- */
+.alegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--faint)}
+.alegend span{display:inline-flex;align-items:center;gap:6px}
+.alegend .acell{width:11px;height:11px}
+.ablocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px 28px}
+.ablock{display:flex;flex-direction:column;gap:9px;min-width:0}
+.ahead{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+.ahead .azone{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);
+  border:1px solid var(--line);border-radius:999px;padding:0 7px}
+.ahead .ac{font-size:12px}
+.agrid{display:grid;grid-template-columns:repeat(32,minmax(0,1fr));gap:2px}
+.acell,.ac0{display:block;aspect-ratio:1;border-radius:2px;border:0;padding:0;margin:0;
+  background:var(--panel2);font:inherit}
+.acell.free{background:var(--panel2)}
+.ac0{background:transparent;border:1px dashed var(--line)}
+.acell.used{background:var(--accent)}
+.acell.dup{background:var(--down)}
+.acell.seen{background:var(--warn)}
+.acell.resv{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.acell.used.resv{box-shadow:inset 0 0 0 1.5px var(--fg)}
+button.acell{cursor:pointer}
+button.acell:hover,button.acell:focus-visible{outline:2px solid var(--fg);outline-offset:1px}
+.ovcard .acell.free,.ovcard .acell:not(.used):not(.dup):not(.seen){background:var(--bg)}

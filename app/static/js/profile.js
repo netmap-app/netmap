@@ -79,7 +79,7 @@ $("#groupSeg").addEventListener("click", (ev) => {
 $("#chipsrow").addEventListener("click", (ev) => {
   const c = ev.target.closest(".chip:not(#filterBtn)"); if (!c) return;
   const only = (key, val) => {
-    for (const k of ["category", "tag", "kind", "criticality", "zone"]) filter[k] = "";
+    for (const k of ["category", "tag", "kind", "criticality", "zone", "ip"]) filter[k] = "";
     if (key) filter[key] = val;
   };
   const d = c.dataset;
@@ -87,6 +87,7 @@ $("#chipsrow").addEventListener("click", (ev) => {
   else if (d.kindchip !== undefined) only(filter.kind === d.kindchip ? null : "kind", d.kindchip);
   else if (d.critchip !== undefined) only(filter.criticality === d.critchip ? null : "criticality", d.critchip);
   else if (d.zonechip !== undefined) only(filter.zone === d.zonechip ? null : "zone", d.zonechip);
+  else if (d.ipchip !== undefined) only(null);
   else only(d.cat ? "category" : null, d.cat);
   closeFilterPop();
   load();
@@ -113,10 +114,10 @@ document.addEventListener("keydown", ev => {
 document.addEventListener("click", async (ev) => {
   const cat = ev.target.closest("[data-cat]");
   if (cat && (cat.classList.contains("cn") || cat.classList.contains("catrow"))) {
-    filter.category = cat.dataset.cat; filter.tag = ""; view = "inventory"; applyView(); load(); return;
+    filter.category = cat.dataset.cat; filter.tag = ""; filter.ip = ""; view = "inventory"; applyView(); load(); return;
   }
   const tg = ev.target.closest("[data-tag]");
-  if (tg) { filter.tag = tg.dataset.tag; filter.category = ""; view = "inventory"; applyView(); load(); return; }
+  if (tg) { filter.tag = tg.dataset.tag; filter.category = ""; filter.ip = ""; view = "inventory"; applyView(); load(); return; }
   if (ev.target.closest("#ovHist")) { view = "changes"; applyView(); return; }
   const bulk = ev.target.closest("[data-fignoreall]");
   if (bulk) { await ignoreAll(bulk.dataset.fignoreall); return; }

@@ -80,7 +80,7 @@ let ENTRIES = [], META = { categories: [], tags: [] };
 let ALL = [];                       // the whole inventory, ignoring filters
 let CONFLICTS = { count: 0, conflicts: [] };
 let FINDINGS = { total: 0, findings: [] };   // from the cached scan, never live
-let filter = { q: "", category: "", tag: "", kind: "", criticality: "", zone: "" };
+let filter = { q: "", category: "", tag: "", kind: "", criticality: "", zone: "", ip: "" };
 let editingId = null;
 /* Inventory grouping: category is what a thing does, host is where it runs,
    kind is what it is. Same rows, three ways of looking at them. */

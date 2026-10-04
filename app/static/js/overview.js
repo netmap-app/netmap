@@ -284,7 +284,8 @@ const OV_CARDS = {
   addresses: (all) => `
     <section class="ovsec ovcard wide2" data-ovcard="addresses" aria-labelledby="adHead">
       <div class="ovhead"><h2 id="adHead">Address space</h2>
-        <span class="hint" data-tip>Every /24 in the inventory.</span></div>
+        <span class="hint" data-tip>Every /24 in the inventory, one cell per address.</span>
+        <button class="more linkbtn" data-goto="network">Open addresses</button></div>
       ${addrCardHtml(all)}
     </section>`,
 };
@@ -455,6 +456,13 @@ function wireOverview(box, all) {
     };
   });
 
+  box.querySelectorAll(".agrid [data-ip]").forEach(b => {
+    b.onclick = () => {
+      for (const k of ["category", "tag", "kind", "criticality", "zone"]) filter[k] = "";
+      filter.ip = b.dataset.ip;
+      view = "inventory"; applyView(); load();
+    };
+  });
   const hw = $("#ovHw");
   if (hw) api("/api/overview/hardware").then(h => { hw.innerHTML = hwHtml(h); })
     .catch(() => { hw.innerHTML = `<div class="empty-hint">The hardware view could not load.</div>`; });
@@ -569,35 +577,55 @@ function catCardHtml(all) {
    handing it to something else. OPNsense says so in its `dhcp` sightings. */
 let RESV = new Set();
 
+/* One block per /24: its 256 addresses as a 32x8 grid, each cell coloured by
+   what holds it - used, shared (two or more entries), seen (a source sees
+   something there that the inventory does not have), reserved (a DHCP
+   reservation) or free. Every cell names its address and state on hover;
+   the ones with entries are buttons that open Inventory on exactly that
+   address. .0 and .255 are the network and broadcast addresses. */
+const ADDR_STATES = [["used", "used"], ["dup", "shared"], ["seen", "seen"], ["resv", "reserved"], ["free", "free"]];
+
+function addrCell(base, i, here) {
+  const ip = base + i;
+  const resv = RESV.has(ip);
+  if (i === 0 || i === 255)
+    return `<i class="ac0" title="${esc(`${ip} · ${i ? "broadcast" : "network"} address`)}"></i>`;
+  if (here.length) {
+    const st = here.length > 1 ? "dup" : "used";
+    const names = here.slice(0, 3).map(e => e.name).join(", ") + (here.length > 3 ? ` +${here.length - 3}` : "");
+    const tip = `${ip} · ${here.length} entr${here.length === 1 ? "y" : "ies"}: ${names}${resv ? " · reserved" : ""}`;
+    return `<button class="acell ${st}${resv ? " resv" : ""}" data-ip="${esc(ip)}" title="${esc(tip)}"
+      aria-label="${esc(tip)}"></button>`;
+  }
+  if (SEEN[ip]) return `<i class="acell seen${resv ? " resv" : ""}" title="${esc(`${ip} · seen by a source, not in the inventory${resv ? " · reserved" : ""}`)}"></i>`;
+  if (resv) return `<i class="acell resv" title="${esc(`${ip} · reserved, nothing recorded`)}"></i>`;
+  return `<i class="acell free" title="${esc(`${ip} · free`)}"></i>`;
+}
+
 function addrCardHtml(all) {
   const nets = subnets(all);
   if (!nets.length) return `<div class="empty-hint">No addresses recorded yet.</div>`;
-  return `<div class="addrs">${nets.map(n => {
+  const legend = `<div class="alegend">${ADDR_STATES.map(([k, label]) =>
+    `<span><i class="acell ${k}" aria-hidden="true"></i>${label}</span>`).join("")}</div>`;
+  return legend + `<div class="ablocks">${nets.map(n => {
     const free = Math.max(0, n.free - n.seen);
-    const pc = (v) => (100 * v / 254).toFixed(1) + "%";
     const base = n.net.replace(/0\/24$/, "");
     let res = 0;
-    for (const k of Object.keys(n.addrs)) if (RESV.has(base + k)) res++;
-    // Shared addresses get their own band in the bar rather than only a
-    // number at the end of a sentence: two things on one address is the kind
-    // of fact that should be visible in the shape, not just readable in the
-    // caption.
-    // The track is fixed rather than fluid. A 1600px bar holding one blue
-    // pixel does not read as "one address in use", it reads as an empty
-    // section - the proportion is the information, and the proportion is the
-    // same at 200px.
+    for (let i = 1; i <= 254; i++) if (RESV.has(base + i)) res++;
+    // The zone most of its entries say they are in.
+    const zc = {};
+    for (const e of Object.values(n.addrs).flat()) if (e.zone) zc[e.zone] = (zc[e.zone] || 0) + 1;
+    const zone = Object.entries(zc).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+    const cells = [];
+    for (let i = 0; i < 256; i++) cells.push(addrCell(base, i, n.addrs[i] || []));
     return `
-    <div class="addr" data-goto="network">
-      <b class="mono an">${esc(n.net)}</b>
-      <span class="abar">
-        <i class="on" style="width:${pc(Math.max(0, n.used - n.dup))}"></i>
-        <i class="dup" style="width:${pc(n.dup)}"></i>
-        <i class="seen" style="width:${pc(n.seen)}"></i>
-      </span>
-      <span class="hint ac">${n.used} used · ${free} free${
-        res ? ` · <span class="resw">${res} reserved</span>` : ""}${
-        n.seen ? ` · <span class="seenw">${n.seen} seen</span>` : ""}${
-        n.dup ? ` · <span class="dupw">${n.dup} shared</span>` : ""}</span>
+    <div class="ablock">
+      <div class="ahead"><b class="mono">${esc(n.net)}</b>${zone ? `<span class="azone">${esc(zone)}</span>` : ""}
+        <span class="hint ac">${n.used} used · ${free} free${
+          res ? ` · <span class="resw">${res} reserved</span>` : ""}${
+          n.seen ? ` · <span class="seenw">${n.seen} seen</span>` : ""}${
+          n.dup ? ` · <span class="dupw">${n.dup} shared</span>` : ""}</span></div>
+      <div class="agrid" role="group" aria-label="${esc(n.net)} addresses">${cells.join("")}</div>
     </div>`;
   }).join("")}</div>`;
 }

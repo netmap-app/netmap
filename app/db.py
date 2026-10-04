@@ -588,7 +588,8 @@ def row_to_dict(r: sqlite3.Row) -> dict:
 
 
 def list_entries(query: str = "", category: str = "", tag: str = "",
-                 kind: str = "", criticality: str = "", zone: str = "") -> list[dict]:
+                 kind: str = "", criticality: str = "", zone: str = "",
+                 ip: str = "") -> list[dict]:
     sql = "SELECT * FROM entries WHERE 1=1"
     args: list[Any] = []
     if query:
@@ -616,6 +617,10 @@ def list_entries(query: str = "", category: str = "", tag: str = "",
     if zone:
         sql += " AND zone = ?"
         args.append(zone)
+    if ip:
+        # Exact, unlike the search: "10.0.0.1" must not find .15.
+        sql += " AND trim(ip) = ?"
+        args.append(ip.strip())
     sql += " ORDER BY category, name COLLATE NOCASE"
     rows = [row_to_dict(r) for r in conn().execute(sql, args).fetchall()]
     if tag:

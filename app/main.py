@@ -28,7 +28,7 @@ from .sources import dynamic
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
 CHANGELOG_PATH = os.path.join(os.path.dirname(HERE), "CHANGELOG.md")
-VERSION = "2.5.2"
+VERSION = "2.6.0"
 STARTED = time.time()
 notify.VERSION = VERSION
 
@@ -735,8 +735,8 @@ def actor(request: Request) -> str:
 
 @app.get("/api/entries")
 def api_list(q: str = "", category: str = "", tag: str = "", kind: str = "",
-             criticality: str = "", zone: str = ""):
-    rows = db.list_entries(q, category, tag, kind, criticality, zone)
+             criticality: str = "", zone: str = "", ip: str = ""):
+    rows = db.list_entries(q, category, tag, kind, criticality, zone, ip)
     for r in rows:
         r["status"] = status.CACHE.get(r["id"], {})
     # The 30-day figure for the entries the uptime rule shows it on.

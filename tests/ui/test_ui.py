@@ -1574,3 +1574,41 @@ def test_changes_show_at_most_six_groups_and_say_what_failed(page, server):
     page.set_viewport_size({"width": 375, "height": 812})
     page.wait_for_timeout(100)
     assert page.evaluate("document.documentElement.scrollWidth") <= 375
+
+
+# ---- address space ---------------------------------------------------------------------------
+def test_address_space_draws_every_address_and_opens_one(page, server):
+    for name, ip in (("Router", "10.0.0.1"), ("NAS", "10.0.0.5"), ("Plex", "10.0.0.5"), ("Cam", "10.0.0.9")):
+        server.api("POST", "/api/entries", {"name": name, "ip": ip, "zone": "LAN"})
+    server.api("POST", "/api/entries", {"name": "Fifteen", "ip": "10.0.0.15"})
+    page.route("**/api/presence", lambda r: r.fulfill(status=200, content_type="application/json",
+        body=json.dumps({"presence": [{"ip": "10.0.0.7"}]})))
+    page.route("**/api/sightings/dhcp", lambda r: r.fulfill(status=200, content_type="application/json",
+        body=json.dumps({"sightings": [{"value": "reserved 10.0.0.20"}, {"value": "reserved 10.0.0.9"}]})))
+    page.evaluate("SEEN = {}; RESV = new Set()")
+    page.reload()
+    card = page.locator('#overview [data-ovcard="addresses"]')
+    expect(card.locator(".alegend span")).to_have_text(["used", "shared", "seen", "reserved", "free"])
+    block = card.locator(".ablock").first
+    expect(block.locator(".ahead")).to_contain_text("10.0.0.0/24")
+    expect(block.locator(".azone")).to_have_text("LAN")
+    cells = block.locator(".agrid > *")
+    expect(cells).to_have_count(256)
+    cls = lambda i: cells.nth(i).get_attribute("class")      # noqa: E731
+    assert "ac0" in cls(0) and "ac0" in cls(255)
+    assert "used" in cls(1) and "dup" in cls(5) and "seen" in cls(7)
+    assert "used" in cls(9) and "resv" in cls(9) and "resv" in cls(20) and "free" in cls(2)
+    expect(cells.nth(5)).to_have_attribute("title", "10.0.0.5 · 2 entries: NAS, Plex")
+    expect(cells.nth(20)).to_have_attribute("title", "10.0.0.20 · reserved, nothing recorded")
+    expect(block.locator(".agrid button")).to_have_count(4)          # only addresses with entries
+    # A cell opens Inventory on exactly that address, not .15 as well.
+    cells.nth(1).click()
+    expect(page.locator("#list")).to_be_visible()
+    expect(page.locator("#chips")).to_contain_text("IP: 10.0.0.1 ✕")
+    expect(page.locator("#count")).to_contain_text("1 of 5 entries")
+    page.locator("#chips [data-ipchip]").click()
+    expect(page.locator("#count")).to_have_text("5 entries")
+    page.click('#railnav [data-view="overview"]')
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375

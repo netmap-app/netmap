@@ -177,13 +177,15 @@ const FILTER_GROUPS = [
   ["criticality", "Criticality", () => META.criticalities, "critchip", ""],
   ["zone", "Zone", () => META.zones, "zonechip", ""],
   ["tag", "Tag", () => META.tags, "tagchip", "#"],
+  // Set from the Overview's address grid; nothing to pick from in the panel.
+  ["ip", "IP", () => [], "ipchip", ""],
 ];
 
 function renderChips() {
   document.querySelectorAll("[data-group]").forEach(b =>
     b.classList.toggle("on", b.dataset.group === groupBy));
   if (view !== "inventory") { $("#chips").innerHTML = ""; return; }
-  const anyFilter = filter.category || filter.tag || filter.kind || filter.criticality || filter.zone;
+  const anyFilter = filter.category || filter.tag || filter.kind || filter.criticality || filter.zone || filter.ip;
   // The strip carries the categories - the one filter everything has. Kind,
   // criticality, zone and tags (thirty-odd more chips, two-thirds of them
   // scrolled out of sight) moved behind "Filters"; whichever of those is
@@ -280,6 +282,7 @@ async function load(opts = {}) {
   if (filter.kind) qs.set("kind", filter.kind);
   if (filter.criticality) qs.set("criticality", filter.criticality);
   if (filter.zone) qs.set("zone", filter.zone);
+  if (filter.ip) qs.set("ip", filter.ip);
   const [rows, meta, cf, fnd] = await Promise.all([
     api("/api/entries?" + qs), api("/api/meta"),
     api("/api/conflicts").catch(() => ({ count: 0, conflicts: [] })),
@@ -302,7 +305,7 @@ async function load(opts = {}) {
   badge("network", FINDINGS.total);
   // the overview always describes the whole inventory, never the current filter
   const filtered = filter.q || filter.category || filter.tag || filter.kind
-    || filter.criticality || filter.zone;
+    || filter.criticality || filter.zone || filter.ip;
   // Before renderList: the category order is ranked over the whole inventory.
   ALL = filtered ? await api("/api/entries") : rows;
   renderList();

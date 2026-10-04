@@ -66,3 +66,11 @@ def test_summary_and_overview_carry_the_next_scan(make_app):
     _, c = make_app(NETMAP_API_TOKEN="full-token")
     assert "next_scan" in c.get("/api/discovery/summary", headers=TOKEN).json()
     assert "next_scan" in c.get("/api/overview", headers=TOKEN).json()["sources"]
+
+
+def test_inventory_filters_by_exact_ip(make_app):
+    _, c = make_app(NETMAP_API_TOKEN="full-token")
+    for name, ip in (("One", "10.0.0.1"), ("Fifteen", "10.0.0.15"), ("Also one", " 10.0.0.1 ")):
+        c.post("/api/entries", headers=TOKEN, json={"name": name, "ip": ip})
+    names = sorted(e["name"] for e in c.get("/api/entries?ip=10.0.0.1", headers=TOKEN).json())
+    assert names == ["Also one", "One"]

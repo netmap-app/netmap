@@ -348,7 +348,12 @@ plus up to two critical entries with a URL worth pinning, one click each), and
 **Changes**: the change log and status changes grouped by day, a run of
 changes by one actor to one entry (or to entries on one address) within two
 hours folded into one row that opens, with All / Discovered / Edits / State
-filters and the six newest groups. The numbers and
+filters and the six newest groups. **Address space** draws every /24 in the
+inventory as a 32 x 8 grid, one cell per address, coloured used, shared (two or
+more entries), seen (a source sees something the inventory does not have),
+reserved (a DHCP reservation, outlined) or free; each cell names its address
+and state on hover, and one with entries opens Inventory filtered to exactly
+that address (`/api/entries?ip=`, shown as a removable "IP" chip). The numbers and
 the breakdown always describe the whole inventory, never the current filter.
 Clicking a category jumps to Inventory filtered to it. **Customize overview**
 at the bottom of the page shows, hides and reorders the cards below the status;
