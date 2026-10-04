@@ -249,15 +249,15 @@ const OV_CARDS = {
       ${exposureHtml(OV.exposure)}
     </div>`,
   quicklinks: (all, pinned) => `
-    <div class="ovsec" data-ovcard="quicklinks">
-      <div class="ovhead"><h2>Quick launch</h2><span class="hint" data-tip>Pinned services,
-        by name. Pin any entry from its card.</span></div>
+    <section class="ovsec ovcard" data-ovcard="quicklinks" aria-labelledby="qlHead">
+      <div class="ovhead"><h2 id="qlHead">Quick launch</h2>
+        <span class="cardnote">${pinned.length ? `${pinned.length} pinned · by name` : "pin any entry from its card"}</span></div>
       ${pinned.length ? `<div class="qlgrid">${[...pinned]
           .sort((a, b) => a.name.localeCompare(b.name)).map(qlRow).join("")}</div>`
       : `<div class="empty-hint">Nothing pinned yet - open any entry and tick
            <strong>Pin to Quick links</strong> to put it here.</div>`}
       ${qlSuggest(all)}
-    </div>`,
+    </section>`,
   changes: () => `
     <div class="ovsec" data-ovcard="changes">
       <div class="ovhead"><h2>Changes</h2>
@@ -631,7 +631,7 @@ function qlSuggest(all) {
   const s = all.filter(e => e.criticality === "critical" && e.url && !e.pinned)
     .sort((a, b) => a.name.localeCompare(b.name)).slice(0, 2);
   if (!s.length) return "";
-  return `<div class="qlsug"><span class="hint">Suggested to pin:</span>${s.map(e => `
+  return `<div class="qlsug"><span title="Critical entries with a URL that are not pinned">Suggested to pin:</span>${s.map(e => `
     <span class="qlsugi">${esc(e.name)}<button class="btn sm" data-pin="${e.id}"
       aria-label="Pin ${esc(e.name)}">Pin</button></span>`).join("")}</div>`;
 }

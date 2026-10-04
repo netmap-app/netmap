@@ -103,6 +103,13 @@ once. A new file goes into `index.html` in the right place. `renderOverview`
 builds its HTML in `overviewHtml()` and swaps it in, so a render exception
 shows an error instead of a permanent "Loading…".
 
+An Overview card is an entry in `OV_CARDS` (`app/static/js/overview.js`) and
+in `CARDS` (`app/overview.py`, which the Customize dialog and the saved layout
+read). New cards use the card shell: `<section class="ovsec ovcard"
+data-ovcard="<id>">` with the `ovhead` title inside and an optional
+`<span class="cardnote">` on the right; rows inside sit on `var(--bg)`, a shade
+darker than the panel. Quick launch is the reference.
+
 ### Icons
 
 Icons come from dashboard-icons (apps) and simple-icons (hardware brands),

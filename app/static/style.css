@@ -1334,19 +1334,32 @@ button.hwcard:hover{border-color:var(--accent)}
 .hwitems{display:flex;flex-wrap:wrap;gap:4px 6px}
 .hwitems .lchip{display:inline-flex;align-items:center;gap:5px}
 
+/* ---------- overview card shell ---------- */
+/* The look every Overview card built from 2.5.1 on takes: a panel with its
+   title inside, a note on the right, and its rows a shade darker than the
+   panel. Add `ovcard` to the card's `ovsec`; see CONTRIBUTING.md. */
+.ovsec.ovcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:20px;gap:14px}
+.ovcard .ovhead{align-items:center}
+.ovcard .ovhead h2{font-size:13px;letter-spacing:.08em;color:var(--dim)}
+.ovcard .cardnote{margin-left:auto;font-size:12.5px;color:var(--faint)}
+.ovcard .empty-hint{background:var(--bg)}
+@media (max-width:640px){ .ovsec.ovcard{padding:16px} }
+
 /* ---------- quick launch ---------- */
 .qlgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (max-width:640px){ .qlgrid{grid-template-columns:minmax(0,1fr)} }
-.qlrow{display:flex;align-items:center;gap:11px;min-width:0;padding:9px 12px;
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+.qlrow{display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
   color:inherit;text-decoration:none;font:inherit;text-align:left;cursor:pointer}
 .qlrow:hover{border-color:var(--accent);text-decoration:none}
 .qlrow .cg{width:32px;height:32px;border-radius:9px}
 .qlrow .cg .svc{width:22px;height:22px}
 .qlrow .t{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-.qlrow .n{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qlrow .n{font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qlrow .a{font-size:12px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.qlsug{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:10px;font-size:12.5px}
+.qlsug{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:12.5px;color:var(--faint)}
+.qlsugi{color:var(--fg)}
 .qlsugi{display:inline-flex;align-items:center;gap:6px}
 
 /* ---------- changes ---------- */

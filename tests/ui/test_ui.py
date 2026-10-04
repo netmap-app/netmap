@@ -1485,6 +1485,12 @@ def test_quick_launch_lists_pins_by_name_with_their_host(page, server):
                                         "url": "https://router.example.org"})
     page.reload()
     card = page.locator('#overview [data-ovcard="quicklinks"]')
+    # The card shell: a panel with its title and note inside, rows a shade darker.
+    expect(card).to_have_class(re.compile(r"\bovcard\b"))
+    expect(card.locator(".ovhead .cardnote")).to_have_text("3 pinned · by name")
+    looks = card.evaluate("""el => { const c = getComputedStyle(el), r = getComputedStyle(el.querySelector('.qlrow'));
+      return [c.borderRadius, c.backgroundColor !== 'rgba(0, 0, 0, 0)', r.backgroundColor !== c.backgroundColor]; }""")
+    assert looks == ["12px", True, True]
     rows = card.locator(".qlrow")
     expect(rows.locator(".n")).to_have_text(["Alpha", "Mid", "Zeta"])
     expect(rows.nth(2).locator(".a")).to_have_text("zeta.example.org")

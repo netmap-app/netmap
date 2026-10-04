@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.5.1 - 2026-10-04
+
+- Quick launch is drawn as a card: a panel with its title and "N pinned · by name" inside, rows a shade darker than the panel, larger names. New Overview cards use the same shell (CONTRIBUTING.md says how).
+
 ## 2.5.0 - 2026-10-04
 
 - Quick links is now Quick launch: pinned services by name in two columns, each a link showing the URL's host name (ip:port when there is no URL, and on hover) and a status dot. Pinned entries with nothing to open open their card.
