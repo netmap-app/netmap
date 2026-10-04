@@ -13,12 +13,13 @@
 #            a version published without a release gets one on the next push.
 #   deploy   optional, after publish: ask a Dockhand instance to recreate the
 #            container from the new image and wait until the new version
-#            reports healthy. Runs only when the repository variable
-#            DOCKHAND_URL is set (Settings › Secrets and variables › Actions):
-#              vars     DOCKHAND_URL, DOCKHAND_ENV (default 1), CONTAINER (default netmap)
-#              secrets  DOCKHAND_TOKEN; CF_ACCESS_CLIENT_ID and
+#            reports healthy. Deploys only when the repository secret
+#            DOCKHAND_URL is set (Settings › Secrets and variables › Actions);
+#            a secret, so the address never shows in the public logs:
+#              secrets  DOCKHAND_URL, DOCKHAND_TOKEN; CF_ACCESS_CLIENT_ID and
 #                       CF_ACCESS_CLIENT_SECRET when Dockhand is behind
 #                       Cloudflare Access
+#              vars     DOCKHAND_ENV (default 1), CONTAINER (default netmap)
 #            Without it the image is published and nothing is deployed - a
 #            fork or a plain install updates by pulling :latest.
 name: CI
@@ -38,7 +39,6 @@ permissions:
   contents: read
 
 env:
-  DOCKHAND_URL: ${{ vars.DOCKHAND_URL }}
   DOCKHAND_ENV: ${{ vars.DOCKHAND_ENV || '1' }}
   CONTAINER: ${{ vars.CONTAINER || 'netmap' }}
 
@@ -181,13 +181,16 @@ jobs:
   deploy:
     needs: [pytest, publish]
     if: >-
-      !cancelled() && needs.pytest.result == 'success' && vars.DOCKHAND_URL != ''
+      !cancelled() && needs.pytest.result == 'success'
       && (needs.publish.outputs.published == 'true'
           || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency: deploy   # never two deploys at once
+    # A job's `if` cannot read secrets, so the job runs and the step decides.
     env:
+      DOCKHAND_URL: ${{ secrets.DOCKHAND_URL }}
+      URL_IS_VAR: ${{ vars.DOCKHAND_URL != '' }}
       CF_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
       CF_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
       DH_TOKEN: ${{ secrets.DOCKHAND_TOKEN }}
@@ -196,6 +199,14 @@ jobs:
       - name: Recreate the netmap container from the new image
         run: |
           set -euo pipefail
+          if [ -z "$DOCKHAND_URL" ]; then
+            if [ "$URL_IS_VAR" = "true" ]; then
+              echo "::warning::DOCKHAND_URL is a repository variable, which public logs print. Add it as a secret and delete the variable - $WANT is published but not deployed."
+            else
+              echo "No DOCKHAND_URL secret: $WANT is published, nothing to deploy."
+            fi
+            exit 0
+          fi
           if [ -z "$DH_TOKEN" ]; then
             echo "::warning::DOCKHAND_URL is set but the DOCKHAND_TOKEN secret is not - $WANT is published but not deployed."
             exit 0

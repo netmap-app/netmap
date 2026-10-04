@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.1.1 - 2026-10-04
+
+- CI: the Dockhand address for the optional deploy is now the repository secret `DOCKHAND_URL` instead of a variable, so public CI logs no longer print it. If you deploy through Dockhand, add the secret and delete the variable.
+
 ## 2.1.0 - 2026-10-04
 
 - Network › Reconciliation shows each source as its product's mark with a status bar under it (green, amber, red, grey while scanning); the name and last answer are in the tooltip, and a source with no mark gets a drawn glyph.

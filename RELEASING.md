@@ -52,7 +52,7 @@ On a push to `main` whose `VERSION` is not yet published,
    `VERSION`, with that version's `CHANGELOG.md` bullets and the pull command
    (`.github/scripts/release-notes.sh`) - unless it already exists;
 5. optionally asks a Dockhand instance to recreate the container - only when
-   the repository variable `DOCKHAND_URL` is set. The workflow header lists the
+   the repository secret `DOCKHAND_URL` is set. The workflow header lists the
    variables and secrets it needs; none of them belong in the code.
 
 A push that does not change `VERSION` runs the tests and publishes nothing; it
