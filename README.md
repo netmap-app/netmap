@@ -23,13 +23,17 @@ open-port sweep. Where the two disagree, it says so; a person decides.
 Every source is **read-only**: NetMap never changes your router, DNS, proxy or
 containers. Credentials you add are encrypted at rest.
 
+<img alt="NetMap in 15 seconds: the overview, the inventory, an entry explained in sentences, and the topology graph" src="docs/demo.gif">
+
+*A demo inventory with made-up names and addresses.*
+
+<details>
+<summary>More screenshots - overview, inventory, topology graph, phone</summary>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/overview-dark.png">
   <img alt="Overview: what needs attention, what is up, quick links" src="docs/screenshots/overview-light.png">
 </picture>
-
-<details>
-<summary>More screenshots - inventory, topology graph, phone</summary>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/inventory-dark.png">
