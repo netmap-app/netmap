@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.6.4 - 2026-10-04
+
+- The Customize overview icon in the sidebar shows only while the Overview is open; on other pages it is gone rather than a button that switches pages.
+
 ## 2.6.3 - 2026-10-04
 
 - Customize overview is an icon button at the right of Overview in the sidebar; from any page it opens the Overview with the dialog. With the sidebar collapsed, and on narrow screens without a sidebar, the button under the cards stays the way in.

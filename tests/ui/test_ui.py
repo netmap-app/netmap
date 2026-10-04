@@ -1625,11 +1625,13 @@ def test_customize_sits_in_the_rail_next_to_overview(page, server):
     rail = page.locator("#railCustomize")
     expect(rail).to_have_attribute("aria-label", "Customize overview")
     expect(page.locator("#ovCustomize")).to_be_hidden()          # the rail is the way in here
-    # From another page it goes to the Overview and opens the dialog there.
-    page.click('#railnav [data-view="inventory"]')
+    # Only on the Overview: on another page it is not there to click.
+    for other in ("inventory", "network", "changes"):
+        page.click(f'#railnav [data-view="{other}"]')
+        expect(rail).to_be_hidden()
+    page.click('#railnav [data-view="overview"]')
     rail.click()
     expect(page.locator("#layoutModal")).to_be_visible()
-    expect(page.locator("#overview")).to_be_visible()
     page.keyboard.press("Escape")
     expect(rail).to_be_focused()
     # A collapsed rail has no room for it.

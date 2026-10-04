@@ -94,7 +94,9 @@ html{touch-action:manipulation}
 /* Overview's row carries Customize at its right edge: a sibling button, not
    one nested in the nav button, so both stay real buttons. */
 .rrow{position:relative}
-.rrow .rnav{padding-right:42px}
+.rrow:has(.rnav.on) .rnav{padding-right:42px}
+/* Only on the Overview: it customizes the page you are looking at. */
+.rrow:not(:has(.rnav.on)) .rcust{display:none}
 .rcust{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:30px;height:30px;
   display:flex;align-items:center;justify-content:center;background:none;border:none;
   border-radius:6px;cursor:pointer;color:var(--faint)}
@@ -1411,6 +1413,7 @@ button.acell{cursor:pointer}
 button.acell:hover,button.acell:focus-visible{outline:2px solid var(--fg);outline-offset:1px}
 .ovcard .acell.free,.ovcard .acell:not(.used):not(.dup):not(.seen){background:var(--bg)}
 
-/* Where the full rail is, it is the way in; the button under the cards is
-   for a collapsed rail and for narrow screens, which have no room for it. */
+/* Where the full rail is, its icon is the way in (it shows with the
+   Overview); the button under the cards is for a collapsed rail and for
+   narrow screens, which have no room for it. */
 @media (min-width:981px){ body:not(.railmin) .ovfoot{display:none} }
