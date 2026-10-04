@@ -1,7 +1,7 @@
-"""A DHCP lease file as a discovery source — the `leases` role.
+"""A DHCP lease file as a discovery source - the `leases` role.
 
 For a network whose DHCP server is not OPNsense or UniFi: dnsmasq (and
-everything built on it — Pi-hole's DHCP, OpenWrt, many routers), ISC dhcpd, or
+everything built on it - Pi-hole's DHCP, OpenWrt, many routers), ISC dhcpd, or
 Kea's memfile CSV. The file is mounted read-only into the container, e.g.
 
     volumes:
@@ -23,7 +23,7 @@ from . import _leases
 FIELDS = [
     {"key": "path", "label": "Lease file (path inside the container)", "type": "text",
      "required": True, "wide": True, "placeholder": "/leases/dnsmasq.leases"},
-    {"key": "format", "label": "Format — auto, dnsmasq, isc or kea", "type": "text",
+    {"key": "format", "label": "Format - auto, dnsmasq, isc or kea", "type": "text",
      "default": "auto", "placeholder": "auto"},
 ]
 
@@ -67,7 +67,7 @@ _ISC_BLOCK = re.compile(r"lease\s+(\S+)\s*\{(.*?)\}", re.S)
 
 
 def parse_isc(text: str, now: float) -> list[dict]:
-    """dhcpd.leases: one block per lease, appended as they change — the last
+    """dhcpd.leases: one block per lease, appended as they change - the last
     block for an address is the current one. Only `binding state active`
     (or no binding state, as older servers write) that has not ended."""
     last: dict[str, dict] = {}
@@ -130,11 +130,11 @@ def read(cfg: dict, now: float | None = None) -> tuple[str, list[dict]]:
         with open(path, encoding="utf-8", errors="replace") as fh:
             text = fh.read(MAX_BYTES + 1)
         if len(text) > MAX_BYTES:
-            raise ValueError("the file is larger than 20 MB — is this a lease file?")
+            raise ValueError("the file is larger than 20 MB - is this a lease file?")
     except FileNotFoundError:
-        raise ValueError(f"no file at {path} — is it mounted into the container?") from None
+        raise ValueError(f"no file at {path} - is it mounted into the container?") from None
     except PermissionError:
-        raise ValueError(f"cannot read {path} — NetMap runs as uid {os.getuid()}") from None
+        raise ValueError(f"cannot read {path} - NetMap runs as uid {os.getuid()}") from None
     if fmt == "auto":
         fmt = detect(text)
     return fmt, PARSERS[fmt](text, time.time() if now is None else now)
@@ -155,7 +155,7 @@ def scan(cfg: dict) -> dict:
            "scanned_at": db.now(), "host": {"path": cfg.get("path", "")},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — add the lease file's path in Settings › Sources"
+        out["error"] = "not configured - add the lease file's path in Settings › Sources"
         return out
     try:
         fmt, rows = read(cfg)

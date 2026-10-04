@@ -1,26 +1,26 @@
 """Docker (or Podman) as a discovery source.
 
-One read-only call — `GET /containers/json?all=1` on the Docker Engine API —
+One read-only call - `GET /containers/json?all=1` on the Docker Engine API -
 over whichever way the host offers it:
 
   http://docker-proxy:2375    a socket proxy (recommended: the proxy is what
                               refuses every write verb) or a daemon's plain
-                              TCP port (no authentication — avoid)
+                              TCP port (no authentication - avoid)
   https://host:2376           the daemon's TLS port; optional CA certificate,
                               and the client certificate and key a daemon
                               started with --tlsverify demands
-  unix:///var/run/docker.sock a socket mounted into the container — Docker,
+  unix:///var/run/docker.sock a socket mounted into the container - Docker,
                               rootless Docker or Podman's API service
 
 Mounting the socket itself is the least safe of the three: `:ro` restricts the
 file, not the API verbs, so anything holding it can create a privileged
 container, which is root on the host. This module only ever sends GET, and
-that promise is checkable by reading this one file — but a proxy makes it true
+that promise is checkable by reading this one file - but a proxy makes it true
 whatever the code does.
 
 Nothing here writes to the inventory. A scan returns findings; a person (or
 Claude) decides. What persists between scans is only the decision to stop being
-told about something — `db.ignores`.
+told about something - `db.ignores`.
 """
 import http.client
 import json
@@ -39,7 +39,7 @@ FIELDS = [
     {"key": "url", "label": "Docker API URL", "type": "text", "required": True,
      "wide": True, "placeholder": "http://docker-proxy:2375, https://host:2376 or unix:///var/run/docker.sock",
      "binds": True, "env": "NETMAP_DOCKER_URL"},
-    # host goes in a drafted entry's `host`, host_ip in its `ip` — and host_ip
+    # host goes in a drafted entry's `host`, host_ip in its `ip` - and host_ip
     # is what scopes this source to the entries on that machine.
     {"key": "host", "label": "Host label (shown on entries)", "type": "text",
      "wide": True, "placeholder": "docker-host", "env": "NETMAP_DOCKER_HOST"},
@@ -62,8 +62,8 @@ FIELDS = [
 ROLES = ("containers",)  # see dynamic.ROLES
 
 # No ABSENCE: "gone" is already limited to entries at this host's address, and
-# another host running a container of that name is a different fact — the
-# entry's address is wrong — not a reason to stay quiet.
+# another host running a container of that name is a different fact - the
+# entry's address is wrong - not a reason to stay quiet.
 
 PORT_RE = re.compile(r"\b(\d{1,5})\b")
 ID_LABEL = "netmap.id"
@@ -99,7 +99,7 @@ def pem(text: str, what: str) -> str:
         lines = "\n".join(body[i:i + 64] for i in range(0, len(body), 64))
         blocks.append(f"-----BEGIN {m.group(1)}-----\n{lines}\n-----END {m.group(1)}-----\n")
     if not blocks:
-        raise ValueError(f"the {what} is not PEM — paste it from -----BEGIN to -----END")
+        raise ValueError(f"the {what} is not PEM - paste it from -----BEGIN to -----END")
     return "".join(blocks)
 
 
@@ -128,7 +128,7 @@ def _tls(cfg: dict) -> ssl.SSLContext:
 
 
 class _UnixHTTP(http.client.HTTPConnection):
-    """HTTP over a Unix socket — the Docker API's own transport."""
+    """HTTP over a Unix socket - the Docker API's own transport."""
 
     def __init__(self, path: str, timeout: float):
         super().__init__("localhost", timeout=timeout)
@@ -176,27 +176,27 @@ def _why(cfg: dict, exc: Exception) -> str:
     where = cfg.get("url", "")
     if isinstance(exc, urllib.error.HTTPError):
         return {
-            401: "the Docker API wants credentials (HTTP 401) — NetMap can present a TLS "
+            401: "the Docker API wants credentials (HTTP 401) - NetMap can present a TLS "
                  "client certificate over https://",
-            403: "the Docker API refused (HTTP 403) — behind a socket proxy, allow "
+            403: "the Docker API refused (HTTP 403) - behind a socket proxy, allow "
                  "CONTAINERS=1 on it",
-            404: f"HTTP 404 — {where} does not lead to a Docker API (it should answer "
+            404: f"HTTP 404 - {where} does not lead to a Docker API (it should answer "
                  "/containers/json)",
         }.get(exc.code, f"the Docker API answered HTTP {exc.code}")
     if isinstance(exc, urllib.error.URLError) and isinstance(exc.reason, Exception):
         exc = exc.reason
     if isinstance(exc, ssl.SSLCertVerificationError):
-        return (f"the certificate at {where} did not verify ({exc.verify_message}) — add "
+        return (f"the certificate at {where} did not verify ({exc.verify_message}) - add "
                 "its CA certificate, or switch off Verify TLS")
     if isinstance(exc, ssl.SSLError):
-        return (f"TLS with {where} failed ({exc.reason or exc}) — a daemon started with "
+        return (f"TLS with {where} failed ({exc.reason or exc}) - a daemon started with "
                 "--tlsverify needs a client certificate and key")
     if isinstance(exc, ValueError):
         return str(exc)
     if where.startswith("unix://") and isinstance(exc, FileNotFoundError):
-        return f"no socket at {where[7:]} — mount it into the container"
+        return f"no socket at {where[7:]} - mount it into the container"
     if where.startswith("unix://") and isinstance(exc, PermissionError):
-        return (f"cannot open {where[7:]} — NetMap runs as uid {os.getuid()}; give that "
+        return (f"cannot open {where[7:]} - NetMap runs as uid {os.getuid()}; give that "
                 "user access, or use a socket proxy")
     return f"cannot reach the Docker API at {where}: {exc}"
 
@@ -206,7 +206,7 @@ LOOPBACK = {"127.0.0.1", "::1"}
 
 def _container_view(c: dict) -> dict:
     name = (c.get("Names") or ["/?"])[0].lstrip("/")
-    # Published means reachable at the host's address — what an entry's
+    # Published means reachable at the host's address - what an entry's
     # ip:ports claims. A port bound only to loopback (NetMap's own,
     # "127.0.0.1:8087:8087") is published to the host itself and nobody else,
     # so counting it would contradict the port sweep, which finds it closed.
@@ -245,7 +245,7 @@ def _int_or_none(v):
 
 def _is_rule(e: dict) -> bool:
     """A NAT / firewall rule. It names an address:port that belongs to a
-    service, so it will collide with that service in any port lookup — and it
+    service, so it will collide with that service in any port lookup - and it
     is never what a container is."""
     return (e.get("kind") == "rule"
             or "port-forward" in {t.lower() for t in (e.get("tags") or [])}
@@ -262,7 +262,7 @@ def _match(view: dict, entries: list[dict], by_id: dict,
     container's: its own, its Compose service, its Swarm service.
 
     Port matching is scoped to entries at this host's address. Ports repeat
-    across a homelab — 3001 is Homepage on one host and Uptime Kuma on another — and
+    across a homelab - 3001 is Homepage on one host and Uptime Kuma on another - and
     an unscoped search finds both, refuses to choose, and reports one false
     "new" and one false "gone". A published port on this host can only belong
     to something recorded at this host.
@@ -279,7 +279,7 @@ def _match(view: dict, entries: list[dict], by_id: dict,
     # Containment, uniquely: the container `nginx-proxy-manager` and the entry
     # "NPM (Nginx Proxy Manager)" are plainly the same thing, but neither
     # normalises to the other. Only accept it when exactly one entry contains
-    # the container's name — and only on this host, so a substring cannot
+    # the container's name - and only on this host, so a substring cannot
     # reach across the estate.
     for n in names:
         if len(n) >= 5:
@@ -287,7 +287,7 @@ def _match(view: dict, entries: list[dict], by_id: dict,
             if len(hits) == 1:
                 return hits[0]
 
-    # Its own address — a container on a macvlan or ipvlan network is a
+    # Its own address - a container on a macvlan or ipvlan network is a
     # machine of its own, and is recorded at that address.
     own = set(view.get("ips") or ())
     if own:
@@ -319,7 +319,7 @@ def scan(cfg: dict) -> dict:
            "host": {"host": DOCKER_HOST, "ip": DOCKER_HOST_IP, "url": cfg.get("url", "")},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = ("not configured — add the Docker API URL and host IP in "
+        out["error"] = ("not configured - add the Docker API URL and host IP in "
                         "Settings › Sources")
         return out
     try:
@@ -334,7 +334,7 @@ def scan(cfg: dict) -> dict:
     # living on this host. Anything else is none of Docker's business.
     # Everything recorded at this address, minus the NAT rules. A rule shares
     # its target's ip:port by definition, so leaving them in makes every
-    # published port ambiguous — the matcher then refuses to choose and
+    # published port ambiguous - the matcher then refuses to choose and
     # reports one false "new" plus one false "gone" for the same service.
     here = [e for e in all_entries
             if (e["ip"] or "").strip() == DOCKER_HOST_IP and not _is_rule(e)]
@@ -355,7 +355,7 @@ def scan(cfg: dict) -> dict:
         if e:
             matched_ids.add(e["id"])
             # What Docker says about this entry, agreement included. The
-            # container's own state and every port it publishes — so a screen
+            # container's own state and every port it publishes - so a screen
             # can name Docker as a witness rather than only hearing from it
             # when something is wrong.
             seen.append({"entry_id": e["id"], "fact": "container",
@@ -382,9 +382,9 @@ def scan(cfg: dict) -> dict:
                 if extra or missing:
                     findings.append({
                         "type": "ports", "key": f"{P}:ports:{v['name']}",
-                        "label": f"{e['name']} — ports differ",
+                        "label": f"{e['name']} - ports differ",
                         "detail": (f"container publishes {', '.join(map(str, v['published']))}; "
-                                   f"NetMap says {e['ports'] or '—'}"),
+                                   f"NetMap says {e['ports'] or '-'}"),
                         "entry": {"id": e["id"], "name": e["name"], "ports": e["ports"]},
                         "container": v,
                         "suggest": {"ports": ", ".join(str(p) for p in v["published"])},

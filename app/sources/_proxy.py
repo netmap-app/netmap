@@ -1,11 +1,11 @@
 """What every reverse proxy is checked for, whichever product it is.
 
-A proxy driver reads its own API into routes —
+A proxy driver reads its own API into routes -
 
     {"domain": "plex.example.org", "host": "10.0.0.10", "port": 32400,
      "enabled": True}
 
-— and hands them to reconcile(), which compares them with the inventory the
+- and hands them to reconcile(), which compares them with the inventory the
 same way for NPM and Traefik: a name nobody tracks, a name switched off, a
 forward to an address nothing holds, a forward that disagrees with the entry.
 The rules and their reasons were learnt on NPM; they are kept here so a second
@@ -84,7 +84,7 @@ def reconcile(P: str, product: str, routes: list[dict], entries: list[dict]
         if not hit:
             findings.append({
                 "type": "proxy-untracked", "key": f"{P}:host:{domain}",
-                "label": f"{domain} → {target} — proxied, not in NetMap",
+                "label": f"{domain} → {target} - proxied, not in NetMap",
                 "detail": f"{product} serves this name and no inventory entry accounts for it",
                 "draft": _draft(domain, target, product),
             })
@@ -93,7 +93,7 @@ def reconcile(P: str, product: str, routes: list[dict], entries: list[dict]
         if not enabled:
             findings.append({
                 "type": "proxy-disabled", "key": f"{P}:off:{domain}",
-                "label": f"{e['name'] if e else domain} — {domain} is disabled in {product}",
+                "label": f"{e['name'] if e else domain} - {domain} is disabled in {product}",
                 "detail": ("the inventory publishes this address but the proxy "
                            "route is switched off, so the name resolves and then "
                            "answers with nothing"),
@@ -105,7 +105,7 @@ def reconcile(P: str, product: str, routes: list[dict], entries: list[dict]
             continue
 
         # An entry whose `ip` is a hostname describes the *public* endpoint,
-        # not the origin — an entry can hold "ha-mcp.example.org:443" on
+        # not the origin - an entry can hold "ha-mcp.example.org:443" on
         # purpose, so its health check tests the whole path. The proxy's
         # forward target is the far end of that same path: not a
         # disagreement, a different end.
@@ -115,7 +115,7 @@ def reconcile(P: str, product: str, routes: list[dict], entries: list[dict]
         if fh not in by_ip:
             findings.append({
                 "type": "proxy-orphan", "key": f"{P}:orphan:{domain}",
-                "label": f"{domain} → {target} — nothing at that address",
+                "label": f"{domain} → {target} - nothing at that address",
                 "detail": ("the proxy forwards to an address no inventory entry "
                            "holds. After a renumbering this is what stays "
                            "behind, and the name fails while the service itself "
@@ -128,7 +128,7 @@ def reconcile(P: str, product: str, routes: list[dict], entries: list[dict]
         if fh != (e.get("ip") or "").strip() or (fp and mine and int(fp) not in mine):
             findings.append({
                 "type": "proxy-drift", "key": f"{P}:drift:{domain}",
-                "label": f"{e['name']} — {product} forwards {domain} to {target}",
+                "label": f"{e['name']} - {product} forwards {domain} to {target}",
                 "detail": (f"the entry records {e.get('ip')}"
                            + (f":{', '.join(str(p) for p in sorted(mine))}" if mine else "")
                            + ". One of the two is out of date."),

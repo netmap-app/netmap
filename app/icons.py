@@ -4,10 +4,10 @@ A dashboard that says "Plex" in text and one that shows the Plex mark are not
 the same page: the second is scannable. Marks come from two places, because
 neither alone covers a homelab:
 
-- **dashboard-icons** (homarr-labs) — the self-hosted-application vocabulary:
+- **dashboard-icons** (homarr-labs) - the self-hosted-application vocabulary:
   Plex, Sonarr, Pi-hole, Proxmox, UniFi. Full colour, already the set Homepage
   and Homarr use, so the marks are the ones a homelab expects.
-- **simple-icons** — the *brand* vocabulary: Ubuntu, Intel, LG, Philips,
+- **simple-icons** - the *brand* vocabulary: Ubuntu, Intel, LG, Philips,
   Western Digital. Single-colour glyphs, which is why they are recoloured on
   the way out to whichever theme asked.
 
@@ -18,16 +18,16 @@ Three rules, and the design is all three together:
 1. **Fetched by the server, not by the browser.** A browser hitting a CDN per
    tile makes every reader's page depend on someone else's uptime and hands
    that someone a log of what this person runs. One process fetches, once.
-2. **Cached on disk beside the database**, so the second load — and every load
-   after the network goes away — is local.
+2. **Cached on disk beside the database**, so the second load - and every load
+   after the network goes away - is local.
 3. **A miss is not an error.** No mark published, a wrong guess, no internet:
    the interface keeps the drawn glyph it already had. `list_cached()` is what
    the browser asks, and it only ever names marks that are already on disk, so
-   the common case is not even a 404 — it is a question never asked.
+   the common case is not even a 404 - it is a question never asked.
 
 Matching is by substring on the entry's name, which is unglamorous and right:
 the names are written by one person and they contain the product. An entry can
-override with a tag — `icon:jellyseerr`, `icon:si:ubuntu`, or `icon:none`.
+override with a tag - `icon:jellyseerr`, `icon:si:ubuntu`, or `icon:none`.
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ LOCAL = os.path.join(os.path.dirname(__file__), "static", "brand")
 
 SLUG_RE = re.compile(r"^(si:|local:)?[a-z0-9][a-z0-9._-]{0,48}$")
 # Bumped whenever RULES or the fetching changes: a mark cached under the old
-# rules — or a ".miss" written when the old rules asked for the wrong name —
+# rules - or a ".miss" written when the old rules asked for the wrong name -
 # would otherwise outlive the fix and make it look like nothing happened.
 CACHE_GEN = "v2"
 CACHE = os.path.join(os.path.dirname(db.DB_PATH) or ".", "icons-" + CACHE_GEN)
@@ -66,6 +66,8 @@ SOURCE_SLUGS = {
     "docker": "docker", "opnsense": "opnsense", "pihole": "pi-hole",
     "unifi": "unifi", "homeassistant": "home-assistant",
     "npm": "nginx-proxy-manager", "cloudflare": "cloudflare",
+    "adguard": "adguard-home", "traefik": "traefik", "proxmox": "proxmox",
+    "netbox": "netbox",
 }
 
 # Ordered, most specific first: "cockpit unifi" must not become the UniFi mark,
@@ -167,7 +169,7 @@ def _http(url: str) -> bytes | None:
 def _ink(svg: bytes, theme: str) -> bytes:
     """Paint a single-colour mark in the interface's ink.
 
-    Two shapes need it and for the same underlying reason — an <img> is its own
+    Two shapes need it and for the same underlying reason - an <img> is its own
     document and inherits nothing from the page. simple-icons ship one path
     with no fill, which renders black; NetMap's own glyph asks for
     `currentColor`, which in an <img> *is* black. Both are invisible on a dark
@@ -209,7 +211,7 @@ def fetch(slug: str) -> bool:
             got.append((".svg", body))
     else:
         # The index calls some marks PNG-first, and asking for the SVG of one
-        # of those is a 404 — so try both rather than assume.
+        # of those is a 404 - so try both rather than assume.
         exts = ("png", "svg") if slug in PNG_FIRST else ("svg", "png")
         for ext in exts:
             body = _http(DASH.format(ext=ext, slug=slug))
@@ -238,7 +240,7 @@ def fetch(slug: str) -> bool:
 
 
 def read(slug: str, theme: str = "dark") -> tuple[bytes, str] | None:
-    """The bytes to serve, and their media type. Disk only — never fetches, so
+    """The bytes to serve, and their media type. Disk only - never fetches, so
     a page load can never wait on a CDN."""
     cands = _cands(slug)
     if len(cands) > 1:
@@ -284,6 +286,12 @@ def wanted() -> dict[str, str]:
 def list_cached() -> dict[str, str]:
     """What the browser may ask for: entries whose mark is already on disk."""
     return {i: s for i, s in wanted().items() if read(s) is not None}
+
+
+def source_marks() -> dict[str, str]:
+    """Source type -> slug, for the marks already on disk. The browser draws a
+    glyph for any type missing here and never asks for it."""
+    return {t: s for t, s in SOURCE_SLUGS.items() if read(s) is not None}
 
 
 def warm() -> dict:

@@ -1,5 +1,5 @@
 """Uptime per entry (app/uptime.py): 30 days from the stored transitions,
-with unknown time — not monitored, no history yet, NetMap not running —
+with unknown time - not monitored, no history yet, NetMap not running -
 kept out of the figure, and where it is shown decided by a rule and a tag."""
 import time
 
@@ -86,7 +86,7 @@ def test_the_sweep_leaves_a_heartbeat(app):
 def test_where_it_is_shown(app):
     from app import uptime
     assert uptime.shown({"monitor": 1, "criticality": "critical"})
-    # Not monitored: nothing to show, whatever the rule — unless a tag asks.
+    # Not monitored: nothing to show, whatever the rule - unless a tag asks.
     assert not uptime.shown({"monitor": 0, "criticality": "critical"})
     assert uptime.shown({"monitor": 0, "tags": ["uptime:on"]})
     assert uptime.shown({"monitor": 1, "criticality": "important"})

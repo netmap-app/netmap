@@ -26,9 +26,9 @@ def test_the_current_version_has_release_notes():
 def test_notes_are_one_entry_only(tmp_path):
     cl = tmp_path / "CHANGELOG.md"
     cl.write_text("# Changelog\n\n- not a release\n\n"
-                  "## 2.0.10 — 2026-10-05\n\n- ten\n\n"
-                  "## 2.0.1 — 2026-10-03\n\n- one\n- one, again\n\n"
-                  "## 2.0.0 — 2026-10-01\n\n- zero\n", encoding="utf-8")
+                  "## 2.0.10 - 2026-10-05\n\n- ten\n\n"
+                  "## 2.0.1 - 2026-10-03\n\n- one\n- one, again\n\n"
+                  "## 2.0.0 - 2026-10-01\n\n- zero\n", encoding="utf-8")
     out = _notes("2.0.1", str(cl)).stdout
     assert "- one\n- one, again\n" in out
     assert "ten" not in out and "zero" not in out and "not a release" not in out
@@ -36,7 +36,7 @@ def test_notes_are_one_entry_only(tmp_path):
 
 def test_a_version_without_bullets_fails(tmp_path):
     cl = tmp_path / "CHANGELOG.md"
-    cl.write_text("## 2.0.1 — 2026-10-03\n\n- one\n\n## 2.0.2 — 2026-10-04\n\n", encoding="utf-8")
+    cl.write_text("## 2.0.1 - 2026-10-03\n\n- one\n\n## 2.0.2 - 2026-10-04\n\n", encoding="utf-8")
     for v in ("2.0.2", "2.0", "9.9.9"):
         r = _notes(v, str(cl))
         assert r.returncode != 0 and r.stdout == ""

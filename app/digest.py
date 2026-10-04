@@ -1,14 +1,14 @@
 """Summary notifications: a channel can take its news as one message a day or
 a week instead of one per event.
 
-Off by default — every channel delivers immediately until someone chooses
+Off by default - every channel delivers immediately until someone chooses
 otherwise, and can go back at any time (what was held is then sent at once).
 On a summary channel an *urgent* event still goes straight away: one of the
 channel's urgent kinds (default: an entry down, a source not answering, a
-certificate expired, another critical item) at critical level — and its
+certificate expired, another critical item) at critical level - and its
 all-clear. Everything
 else waits in the database (kv `digest_held:<channel>`, so a restart loses
-nothing) and is sent as one message at the chosen local hour — and, for a
+nothing) and is sent as one message at the chosen local hour - and, for a
 weekly summary, day. Nothing held, no message.
 
 The hour is local to the time zone set in Settings › Notifications (kv
@@ -51,7 +51,7 @@ def set_timezone(tz: str, actor: str = "web") -> str:
     try:
         ZoneInfo(tz)
     except (ZoneInfoNotFoundError, ValueError):
-        raise ValueError(f"{tz!r} is not a time zone — use a name like Europe/Berlin") from None
+        raise ValueError(f"{tz!r} is not a time zone - use a name like Europe/Berlin") from None
     before = timezone()
     db.set_setting(TZ_KEY, tz)
     if tz != before:
@@ -84,7 +84,7 @@ def clean(d) -> dict:
 # ---- holding --------------------------------------------------------------------------------
 def urgent(d: dict, msg: dict) -> bool:
     """Sent at once on a summary channel: a critical event of one of the
-    channel's urgent kinds — and its all-clear, so "back up" is not left
+    channel's urgent kinds - and its all-clear, so "back up" is not left
     waiting for the summary after "down" went straight out."""
     if msg.get("kind") not in d["urgent"]:
         return False
@@ -161,7 +161,7 @@ def compose(rows: list[dict], d: dict) -> dict:
         lines.append(f"{head} ({len(titles)}): {shown}")
     return {"kind": "summary", "key": "digest", "path": "/", "ts": db.now(),
             "level": "critical" if any(r.get("level") == "critical" for r in rows) else "warn",
-            "title": f"NetMap — {what.lower()} summary: {len(rows)} "
+            "title": f"NetMap - {what.lower()} summary: {len(rows)} "
                      f"event{'' if len(rows) == 1 else 's'}",
             "detail": "\n".join(lines)}
 
@@ -189,7 +189,7 @@ def run(now: float | None = None) -> list[tuple[str, dict]]:
 
 
 def flush(ch: dict) -> dict | None:
-    """Everything held, as one message now — a channel going back to
+    """Everything held, as one message now - a channel going back to
     immediate delivery keeps what it was holding."""
     rows = take(ch["id"])
     drop(ch["id"])

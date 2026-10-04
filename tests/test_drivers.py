@@ -1,4 +1,4 @@
-"""The drivers added for other people's networks — AdGuard Home and Traefik —
+"""The drivers added for other people's networks - AdGuard Home and Traefik -
 and the parts that no longer assume this homelab: public domains, the edge's
 gateway entry, Proxmox guests matched by name. No network: each driver's
 HTTP call is replaced by the payload its API documents."""
@@ -129,7 +129,7 @@ def test_published_names_link_to_the_edge_gateway(app_):
     tunnel = db.create_entry({"name": "Cloudflare Tunnel"})["id"]
     plex = db.create_entry({"name": "Plex", "url": "https://plex.example.org"})["id"]
     db.create_entry({"name": "LAN only", "url": "https://lan.example.org"})
-    rule = db.create_entry({"name": "Port forward — Plex", "kind": "rule"})["id"]
+    rule = db.create_entry({"name": "Port forward - Plex", "kind": "rule"})["id"]
     _add(sources, "cloudflare", token="t", account="a")
     db.record_sightings("cloudflare", [
         {"entry_id": plex, "fact": "hostname:plex.example.org", "value": "via tunnel"},

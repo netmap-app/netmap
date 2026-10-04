@@ -232,7 +232,7 @@ def test_backup_and_credential_gaps_skip_things_that_hold_neither(make_app):
         blind = next((s for s in d["sections"] if s["key"] == "blind"), None)
         return " ".join([blind["text"]] + blind["items"]) if blind else ""
     phone = gaps({"name": "iPhone", "category": "Client / IoT Devices", "kind": "hardware"})
-    rule = gaps({"name": "Port forward — X", "kind": "rule"})
+    rule = gaps({"name": "Port forward - X", "kind": "rule"})
     server = gaps({"name": "Some service", "category": "Media", "kind": "container"})
     for g in (phone, rule):
         assert "backed up" not in g and "credentials" not in g

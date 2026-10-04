@@ -1,7 +1,7 @@
 """An open-port sweep of the addresses NetMap already tracks.
 
 Every other source reads a system's own records: Docker's container list,
-OPNsense's reservations, NPM's proxy hosts. **This one is different in kind —
+OPNsense's reservations, NPM's proxy hosts. **This one is different in kind -
 it generates traffic against machines it does not own**, which is why it is the
 only source that is off unless switched on.
 
@@ -12,7 +12,7 @@ check TCP-connects to exactly one port per entry, so an entry declaring
 "80 (admin), 53 (DNS)" has never had the second claim tested. Between them
 those two gaps cover most of the estate.
 
-Two questions, in the shape every other source uses — the inventory states
+Two questions, in the shape every other source uses - the inventory states
 something and the scan contradicts it:
 
   is what we claim actually listening?     -> port-closed
@@ -32,7 +32,7 @@ from concurrent.futures import ThreadPoolExecutor
 from .. import db, fingerprint
 
 # Phones, tablets and televisions are not infrastructure, and sweeping them is
-# the part of this that feels like surveillance rather than inventory — but
+# the part of this that feels like surveillance rather than inventory - but
 # which category holds them is each inventory's own naming, so nothing is
 # skipped until a person names it. Also what explain.py treats as "holds no
 # data".
@@ -42,7 +42,7 @@ DEFAULT_SKIP = ""
 LEGACY_SKIP = "Client / IoT Devices"
 
 FIELDS = [
-    # Adding this source is the decision to probe — active probing is a
+    # Adding this source is the decision to probe - active probing is a
     # different bargain from reading an API. Pausing it is the general
     # "Enabled" switch every source has (1.93.0); this list once carried its
     # own, which sources.pin_defaults() folds into that one.
@@ -61,7 +61,7 @@ FIELDS = [
     # Some services break on the very probe this source makes. UniFi's mobile
     # speed-test port (6789) accepts a connection, never notices the probe
     # hang up, and keeps the socket in CLOSE-WAIT; a few dozen of those and it
-    # stops accepting at all — which the sweep then reports as "filtered",
+    # stops accepting at all - which the sweep then reports as "filtered",
     # the damage it caused itself. Listed here, a port is never touched: not
     # by the daily sweep, not by a deep scan.
     {"key": "never_probe", "label": "Never probe (port or address:port, comma separated)",
@@ -110,7 +110,7 @@ PORT_RE = re.compile(r"\b(\d{2,5})\b")
 
 # Ports worth asking about on a homelab: management interfaces, databases,
 # file sharing, and the self-hosted things that turn up on these machines. Not
-# a full sweep — 65535 ports per host would take minutes and tell you almost
+# a full sweep - 65535 ports per host would take minutes and tell you almost
 # nothing you did not already know.
 COMMON = [
     21, 22, 23, 25, 53, 80, 81, 88, 110, 111, 135, 139, 143, 161, 389, 443,
@@ -125,7 +125,7 @@ COMMON = [
 ]
 
 # What a port number usually means, and what actually answers on it, live in
-# app/fingerprint.py — shared with the deep scan.
+# app/fingerprint.py - shared with the deep scan.
 LIKELY = fingerprint.PORT_NAMES
 
 # At most this many unexpected ports are asked what they are per sweep; the
@@ -148,7 +148,7 @@ def _probe(ip: str, port: int, timeout: float) -> str:
     The distinction matters and the first version did not make it. A refusal
     is an answer: something on that host actively said no, so a port the
     inventory claims really is not listening. A timeout says nothing of the
-    kind — a firewall dropping the packet and a service that is merely slow
+    kind - a firewall dropping the packet and a service that is merely slow
     look identical from here. Collapsing the two into "closed" is how a
     dropped packet becomes a confident false claim that a service is missing.
     """
@@ -160,7 +160,7 @@ def _probe(ip: str, port: int, timeout: float) -> str:
     except ConnectionRefusedError:
         return "closed"
     except OSError as exc:
-        # Unreachable host or network — no evidence about this port at all.
+        # Unreachable host or network - no evidence about this port at all.
         return "closed" if exc.errno == errno.ECONNRESET else "filtered"
 
 
@@ -169,7 +169,7 @@ def _sweep(cfg: dict, ip: str, ports: list[int]) -> dict[int, str]:
 
     The cap is the point. Sweeping addresses one at a time means the whole
     pool lands on a single machine, and the machines that most need scanning
-    here are the ones least able to take it — a fifteen-year-old NAS has a
+    here are the ones least able to take it - a fifteen-year-old NAS has a
     small connection table and answers sixty simultaneous SYNs by dropping
     most of them, which the previous version would have read as sixty closed
     ports.
@@ -193,7 +193,7 @@ def _evidence(fp: dict) -> str:
 
 
 def _draft(owner: dict, ip: str, port: int, fp: dict) -> dict:
-    """A service entry for what answers here — never created by itself."""
+    """A service entry for what answers here - never created by itself."""
     name = fp.get("name") if fp.get("identified") else ""
     return {"name": name or f"{fp.get('name') or 'Service'} on {port}",
             "category": "Uncategorised", "kind": "service", "host": owner["name"],
@@ -211,7 +211,7 @@ def scan(cfg: dict) -> dict:
                     "common_ports": len(COMMON)},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = ("paused — this source probes machines rather than reading "
+        out["error"] = ("paused - this source probes machines rather than reading "
                         "an API; enable it in Settings › Sources")
         return out
     skip = skip_categories(cfg)
@@ -238,7 +238,7 @@ def scan(cfg: dict) -> dict:
     identified = 0
     for ip, here in sorted(at.items()):
         # Two different questions, two different sets. A port-forward rule
-        # records "6666 (WAN 6881)" — the second number is the port the world
+        # records "6666 (WAN 6881)" - the second number is the port the world
         # knocks on, not something that listens at this address. So a rule's
         # ports still count as *accounted for* (6666 is not a surprise), but
         # they are never a claim that something answers here.
@@ -272,11 +272,11 @@ def scan(cfg: dict) -> dict:
             e = owners[0]
             findings.append({
                 "type": "port-filtered", "key": f"{P}:filtered:{ip}:{port}",
-                "label": f"{e['name']} — {ip}:{port} did not answer",
+                "label": f"{e['name']} - {ip}:{port} did not answer",
                 "detail": ("the inventory declares this port and the probe "
                            "timed out rather than being refused. Something is "
                            "dropping the packets, or the service is too slow "
-                           "to accept — this is not proof that nothing is "
+                           "to accept - this is not proof that nothing is "
                            "listening."),
                 "entry": _ref(e),
             })
@@ -287,7 +287,7 @@ def scan(cfg: dict) -> dict:
             e = owners[0]
             findings.append({
                 "type": "port-closed", "key": f"{P}:closed:{ip}:{port}",
-                "label": f"{e['name']} — {ip}:{port} is not listening",
+                "label": f"{e['name']} - {ip}:{port} is not listening",
                 "detail": ("the inventory declares this port and the host "
                            "actively refused the connection, so nothing is "
                            "listening. Either the service moved or the entry "
@@ -306,7 +306,7 @@ def scan(cfg: dict) -> dict:
                     seen.append({"entry_id": e["id"], "fact": f"port:{port}",
                                  "value": st})
 
-        # On a shared address an undeclared port is the *host's* — a port
+        # On a shared address an undeclared port is the *host's* - a port
         # opened on a Docker host's address belongs to the host, not to whichever
         # container happens to sort first.
         owner = next((e for e in here if e.get("kind") in ("hardware", "vm")),
@@ -322,11 +322,11 @@ def scan(cfg: dict) -> dict:
             identified += 1 if fp.get("identified") else 0
             what = fingerprint.label(fp)
             seen.append({"entry_id": owner["id"], "fact": f"port:{port}",
-                         "value": f"open — {what}" if fp.get("identified") else "open"})
+                         "value": f"open - {what}" if fp.get("identified") else "open"})
             findings.append({
                 "type": "port-undeclared", "key": f"{P}:open:{ip}:{port}",
-                "label": (f"{what} on {ip}:{port} — not in NetMap" if fp.get("identified")
-                          else f"{owner['name']} — {ip}:{port} is open"
+                "label": (f"{what} on {ip}:{port} - not in NetMap" if fp.get("identified")
+                          else f"{owner['name']} - {ip}:{port} is open"
                           + (f" ({what})" if what else "")),
                 "detail": ("something is listening here that no entry at this "
                            "address accounts for"

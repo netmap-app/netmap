@@ -6,7 +6,7 @@ house, where each of them lands, and whether anything is standing in front of
 them.
 
 The typical failure: a service is renumbered, its container is rebuilt and
-healthy within minutes, and its public hostname stays broken — because the thing
+healthy within minutes, and its public hostname stays broken - because the thing
 that needed changing was not the host but the tunnel's ingress rule pointing at
 it. The
 lesson generalises: *the breakage is rarely on the host, it is in whatever
@@ -46,7 +46,7 @@ FIELDS = [
     # route, but the check can be switched off wholesale if it is all noise.
     {"key": "report_open", "label": "Report hostnames with no Access application",
      "type": "checkbox", "default": True, "env": "NETMAP_CF_REPORT_OPEN"},
-    # Which domains are "ours" — an entry URL under one of them that the
+    # Which domains are "ours" - an entry URL under one of them that the
     # tunnel does not serve is a missing route. Blank: the domains the
     # tunnel's own hostnames are under. An entry pointing at github.com is
     # never a missing route either way.
@@ -57,13 +57,13 @@ FIELDS = [
 
 ROLES = ("edge",)  # see dynamic.ROLES
 
-# "Not here" findings — dropped when another cloudflare source sees the entry.
+# "Not here" findings - dropped when another cloudflare source sees the entry.
 ABSENCE = {'route-missing'}
 
 HOST_RE = re.compile(r"https?://([a-z0-9.-]+)(?::(\d+))?", re.I)
 IP_RE = re.compile(r"^\d{1,3}(?:\.\d{1,3}){3}$")
-# A tunnel with no live connections is not a fault by itself — a tunnel that
-# has never been started looks the same — but it is never what you want.
+# A tunnel with no live connections is not a fault by itself - a tunnel that
+# has never been started looks the same - but it is never what you want.
 BAD_STATUS = {"down", "degraded", "inactive"}
 
 
@@ -91,8 +91,8 @@ def _result(cfg: dict, path: str):
 def _origin(service: str) -> tuple[str, str]:
     """`http://10.0.0.10:8087` → ("10.0.0.10", "8087").
 
-    Ingress services are not all URLs — `http_status:404`, `unix:/…` and bare
-    `tcp://host:port` all appear — so anything unparseable yields ("", "").
+    Ingress services are not all URLs - `http_status:404`, `unix:/…` and bare
+    `tcp://host:port` all appear - so anything unparseable yields ("", "").
     """
     m = HOST_RE.match((service or "").strip())
     if not m:
@@ -121,7 +121,7 @@ def _covered(hostname: str, domains: list[str]) -> tuple[bool, list[str]]:
 
     An application's domain may carry a path (`netmap.example.org/private_…`) or
     be a wildcard (`*.example.org`). A path-scoped application protects only that
-    path, so it does not cover the hostname — but saying "no Access
+    path, so it does not cover the hostname - but saying "no Access
     application" when one exists for `/admin` would be wrong in the way that
     gets a finding dismissed, so the paths are returned and reported.
     """
@@ -142,12 +142,12 @@ def _covered(hostname: str, domains: list[str]) -> tuple[bool, list[str]]:
 
 
 def _lan_names() -> set[str]:
-    """Hostnames answered inside the house — by any reverse proxy (it serves
+    """Hostnames answered inside the house - by any reverse proxy (it serves
     the name) or any local DNS server (it resolves it).
 
     A public-domain name is published one of two ways: through the tunnel, or
     through a reverse proxy with a local DNS record, which never leaves the
-    house. The inventory's `url` field does not distinguish them — and NetMap
+    house. The inventory's `url` field does not distinguish them - and NetMap
     should not need a tag to state what other systems already know. A name
     served or resolved locally is reachable by design, and its absence from
     the tunnel is a decision rather than a fault.
@@ -177,7 +177,7 @@ def public_domains(cfg: dict, routed) -> set[str]:
 
 
 def gateway(cfg: dict, entries: list[dict]) -> dict | None:
-    """The entry that stands for this tunnel — what a published service is
+    """The entry that stands for this tunnel - what a published service is
     `exposed_by`. One whose name says "tunnel" together with "cloudflare" or
     the tunnel's own name; none if that is not exactly one entry."""
     tun = (cfg.get("_state") or {}).get("tunnel_name") or cfg.get("tunnel") or ""
@@ -196,7 +196,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"Cloudflare answered HTTP {exc.code}"
-                + (" — the token needs Account > Cloudflare Tunnel: Read"
+                + (" - the token needs Account > Cloudflare Tunnel: Read"
                    if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach the Cloudflare API: {exc}"}
@@ -210,7 +210,7 @@ def scan(cfg: dict) -> dict:
     out = {"source": cfg.get("_id", "cloudflare"), "configured": configured(cfg), "scanned_at": db.now(),
            "host": {"account": ACCOUNT}, "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = ("not configured — add the API token and account ID in "
+        out["error"] = ("not configured - add the API token and account ID in "
                         "Settings › Sources")
         return out
 
@@ -220,7 +220,7 @@ def scan(cfg: dict) -> dict:
                    if not t.get("deleted_at")]
     except urllib.error.HTTPError as exc:
         out["error"] = (f"Cloudflare answered HTTP {exc.code}"
-                        + (" — the token needs Account > Cloudflare Tunnel: Read"
+                        + (" - the token needs Account > Cloudflare Tunnel: Read"
                            if exc.code in (401, 403) else ""))
         return out
     except Exception as exc:
@@ -244,7 +244,7 @@ def scan(cfg: dict) -> dict:
         out["error"] = ("this account has "
                         + (f"{len(tunnels)} tunnels ("
                            + ", ".join(str(t.get("name")) for t in tunnels)
-                           + ") — set the tunnel NetMap should read in Settings › Sources"
+                           + ") - set the tunnel NetMap should read in Settings › Sources"
                            if tunnels else "no tunnels"))
         return out
 
@@ -260,7 +260,7 @@ def scan(cfg: dict) -> dict:
 
     config = (tcfg or {}).get("config")
     if not config:
-        out["error"] = ("this tunnel is locally managed — its ingress rules live "
+        out["error"] = ("this tunnel is locally managed - its ingress rules live "
                         "in cloudflared's own config file, not in the API, so "
                         "there is nothing here to compare")
         return out
@@ -276,7 +276,7 @@ def scan(cfg: dict) -> dict:
             access_read = True
         except Exception:
             # The token may legitimately carry Tunnel: Read and nothing else.
-            # That is a narrower token, not a failure — the rest of the scan
+            # That is a narrower token, not a failure - the rest of the scan
             # is unaffected, so say nothing and skip one check.
             access_read = False
 
@@ -315,7 +315,7 @@ def scan(cfg: dict) -> dict:
         if not hit:
             findings.append({
                 "type": "ingress-orphan", "key": f"{P}:ingress:{host}",
-                "label": f"{host} → {svc} — published, not in NetMap",
+                "label": f"{host} → {svc} - published, not in NetMap",
                 "detail": ("a public hostname reaching into this network that "
                            "no inventory entry accounts for"),
                 "draft": _draft(host, svc),
@@ -325,13 +325,13 @@ def scan(cfg: dict) -> dict:
         # reverse proxy rather than on the service itself, so comparing the
         # origin with the matched entry's own address would be wrong nearly
         # every time. What is always wrong is an origin address that belongs
-        # to nothing at all — that is a renumbering nobody finished.
+        # to nothing at all - that is a renumbering nobody finished.
         # Only when the hostname itself is known: an orphan already says the
         # whole rule is unaccounted for, and saying it twice is noise.
         if hit and oh and IP_RE.match(oh) and oh not in by_ip:
             findings.append({
                 "type": "origin-untracked", "key": f"{P}:origin:{host}",
-                "label": f"{host} → {oh}{':' + op if op else ''} — nothing at that address",
+                "label": f"{host} → {oh}{':' + op if op else ''} - nothing at that address",
                 "detail": ("the ingress rule points at an address no inventory "
                            "entry holds. After a renumbering this is what stays "
                            "behind, and the hostname fails while the service "
@@ -369,8 +369,8 @@ def scan(cfg: dict) -> dict:
             if not ok:
                 findings.append({
                     "type": "access-open", "key": f"{P}:access:{host}",
-                    "label": (f"{host} — Access covers only {', '.join(paths)}"
-                              if paths else f"{host} — no Access application"),
+                    "label": (f"{host} - Access covers only {', '.join(paths)}"
+                              if paths else f"{host} - no Access application"),
                     "detail": ("published through the tunnel with nothing in "
                                "front of it: whatever answers at the origin is "
                                "answering the open internet"
@@ -398,7 +398,7 @@ def scan(cfg: dict) -> dict:
             continue
         findings.append({
             "type": "route-missing", "key": f"{P}:route:{e['id']}:{host}",
-            "label": f"{e['name']} — {host} is not routed",
+            "label": f"{e['name']} - {host} is not routed",
             "detail": ("the inventory publishes this address but neither the "
                        "tunnel nor a local DNS record or reverse proxy serves "
                        "it, so the hostname resolves to nothing at all."),

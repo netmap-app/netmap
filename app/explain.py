@@ -1,6 +1,6 @@
 """Say, in sentences, what is known about one entry.
 
-Everything here is derived — nothing is stored, nothing is guessed. The
+Everything here is derived - nothing is stored, nothing is guessed. The
 inputs are the entry's own fields, its edges, its live status and the
 sightings the sources left behind; the output is the paragraph a
 person would write after reading all four, which is exactly the work this
@@ -11,12 +11,12 @@ Two rules hold the whole file together:
   * Say only what a source or a field actually says. "Nothing observed" is
     a legitimate sentence and appears often; "probably fine" never does.
   * Absence is not evidence. A port nobody scanned is not a closed port, a
-    service no source mentions is not a service that does not exist — it is
+    service no source mentions is not a service that does not exist - it is
     a blind spot, and blind spots get their own section rather than being
     silently folded into the good news.
 
 Sections come back as {key, title, text, level}. `level` is one of "ok",
-"note", "warn" — the UI colours by it and the MCP client reads it as
+"note", "warn" - the UI colours by it and the MCP client reads it as
 severity. It is never "error": a claim that something is broken belongs in
 findings, where it can be argued with.
 """
@@ -28,7 +28,7 @@ from .sources.dynamic import has_role
 HOSTISH = ("hardware", "vm")
 
 # What "is it backed up / where are its credentials" makes no sense for: a
-# client device (a phone, a bulb, a speaker — the categories the port sweep
+# client device (a phone, a bulb, a speaker - the categories the port sweep
 # already leaves alone) and a firewall rule or a network, which hold nothing
 # to back up and log in to. Asking anyway turned every one of them into two
 # gaps nobody will ever close.
@@ -202,7 +202,7 @@ def explain(entry_id: int, live: dict | None = None) -> dict | None:
     # ---- what nobody can see ---------------------------------------------
     blind = []
     if not sights:
-        blind.append("no source has said anything about it — it exists in the "
+        blind.append("no source has said anything about it - it exists in the "
                      "inventory and nowhere else")
     if not e.get("monitor"):
         blind.append("monitoring is off, so a health check will never fail for it")

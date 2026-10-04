@@ -1,9 +1,9 @@
 """Proxmox VE as a discovery source.
 
-Like every source it is added from Settings › Sources — see
+Like every source it is added from Settings › Sources - see
 app/sources/dynamic.py. It follows the same rule as the rest of this package:
 GET only, and nothing here can construct a write. A read-only credential is a
-real option too — Proxmox has a built-in "PVEAuditor" role; a token built from
+real option too - Proxmox has a built-in "PVEAuditor" role; a token built from
 a user with only that role cannot change anything even if this code tried to.
 
 Reads two things over the cluster's REST API:
@@ -12,7 +12,7 @@ Reads two things over the cluster's REST API:
   /nodes/{node}/qemu         VMs on that node
   /nodes/{node}/lxc          containers on that node
 
-Matching an entry to a VM/container does not use an IP — Proxmox does not
+Matching an entry to a VM/container does not use an IP - Proxmox does not
 hand one back without an extra per-guest call this module deliberately
 avoids making a hundred times a scan. Instead it uses the vmid, which this
 inventory can carry in the `host` field by convention ("VM 101",
@@ -46,7 +46,7 @@ FIELDS = [
 ROLES = ("hypervisor",)  # see dynamic.ROLES
 
 # Entries name a guest by vmid ("VM 101"), and two clusters can both have a
-# 101 — until an entry can say which cluster, a second one would claim the
+# 101 - until an entry can say which cluster, a second one would claim the
 # other's guests and report its own as gone.
 MULTI = False
 
@@ -87,7 +87,7 @@ def _vmid_of(e: dict) -> int | None:
 
 
 def test(cfg: dict) -> dict:
-    """A cheap connectivity check for the Settings 'Test' button — one call,
+    """A cheap connectivity check for the Settings 'Test' button - one call,
     no findings, no sightings."""
     try:
         nodes = _get(cfg, "/nodes")
@@ -95,7 +95,7 @@ def test(cfg: dict) -> dict:
     except urllib.error.HTTPError as exc:
         return {"ok": False,
                 "error": f"Proxmox answered HTTP {exc.code}"
-                        + (" — check the token ID and secret" if exc.code in (401, 403) else "")}
+                        + (" - check the token ID and secret" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach {cfg.get('url')}: {exc}"}
 
@@ -106,13 +106,13 @@ def scan(cfg: dict) -> dict:
            "host": {"url": cfg.get("url", "")}, "findings": [], "counts": {},
            "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — set the API URL, token ID and token secret"
+        out["error"] = "not configured - set the API URL, token ID and token secret"
         return out
     try:
         nodes = _get(cfg, "/nodes")
     except urllib.error.HTTPError as exc:
         out["error"] = (f"Proxmox answered HTTP {exc.code}"
-                        + (" — check the token ID and secret" if exc.code in (401, 403) else ""))
+                        + (" - check the token ID and secret" if exc.code in (401, 403) else ""))
         return out
     except Exception as exc:
         out["error"] = f"cannot reach Proxmox at {cfg.get('url')}: {exc}"
@@ -148,10 +148,10 @@ def scan(cfg: dict) -> dict:
     seen: list[dict] = []
     matched_vmids: set[int] = set()
 
-    # Entries that name no vmid can still be matched by name — "VM 101" in
+    # Entries that name no vmid can still be matched by name - "VM 101" in
     # `host` or a proxmox:<vmid> tag is a convention, not a requirement.
     # Uniquely only, never an entry that names a different vmid, and only
-    # something that could be a guest — not a service that shares its name.
+    # something that could be a guest - not a service that shares its name.
     by_name: dict[str, list[dict]] = {}
     for e in entries:
         if _vmid_of(e) is None and (e.get("kind") or "") in ("vm", "container", ""):

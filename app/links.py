@@ -4,12 +4,12 @@ Most of a homelab's structure is already implicit in the inventory: `host`
 says what a thing runs on, a public URL says what exposes it, a port-forward
 says what published it. Typing those edges by hand for sixty entries is the
 kind of chore that never gets done, so they are inferred here and written with
-`derived=1`. Re-deriving clears only derived edges — anything you added by
+`derived=1`. Re-deriving clears only derived edges - anything you added by
 hand is yours and is never touched.
 
 Deliberately conservative: an ambiguous match produces nothing and is reported,
 because a wrong edge in a dependency graph is worse than a missing one. It also
-does not derive "everything depends on DNS" — true, useless, and it would bury
+does not derive "everything depends on DNS" - true, useless, and it would bury
 the real edges under sixty of its own.
 """
 import re
@@ -45,7 +45,7 @@ def resolve_host(text: str, idx: dict, rows: list[dict],
     """Find the entry a free-text `host` value refers to.
 
     The explicit map wins: "VM 101" is not a name, an IP or a substring of
-    anything, so no amount of cleverness finds it — but one recorded decision
+    anything, so no amount of cleverness finds it - but one recorded decision
     does, permanently.
     """
     raw = (text or "").strip()
@@ -160,7 +160,7 @@ def plan(rows: list[dict] | None = None) -> dict:
     # 4. the physical layer, from the switch and Wi-Fi controllers
     # Everything above is inferred from the inventory's own text. This is the
     # one rule that asks another system, because "what is plugged into what"
-    # is not written down anywhere in NetMap — it was typed in by hand from
+    # is not written down anywhere in NetMap - it was typed in by hand from
     # notes, and a cable that moves silently invalidates it.
     # Every controller that answers, merged: two sites are two halves of one
     # physical graph, and a controller that fails contributes nothing rather
@@ -200,14 +200,14 @@ def plan(rows: list[dict] | None = None) -> dict:
 
         # An uplink is a parent link, including where it leaves the
         # managed fabric. A switch may uplink to a server's SFP+ card,
-        # which UniFi does not adopt — but that cable is the whole LAN's
+        # which UniFi does not adopt - but that cable is the whole LAN's
         # path to the router, so it is the truest edge on the map.
         #
         # The trap is that the same pair is cabled *twice*: the SFP+
         # carrying everything, and an RJ45 carrying Proxmox management
         # only. The controller reports the second one as an ordinary
         # wired client, so both passes fire and the pair points at each
-        # other — a two-node loop, which a tree cannot hold and which the
+        # other - a two-node loop, which a tree cannot hold and which the
         # cycle guard then breaks arbitrarily.
         #
         # So the uplink wins and the management cable is suppressed, not
@@ -236,7 +236,7 @@ def plan(rows: list[dict] | None = None) -> dict:
                         None)
             note = (f"uplink from port {local}" if local else "uplink")
             if mgmt:
-                note += f" — second cable: port {mgmt}, management only"
+                note += f" - second cable: port {mgmt}, management only"
                 suppress.add((b["id"], a["id"]))
             add(a["id"], b["id"], "connects_to", note)
         for c in topo["clients"]:
@@ -247,7 +247,7 @@ def plan(rows: list[dict] | None = None) -> dict:
             b = find(c["sw_mac"])
             # Only real hardware is on a cable. A bridged VM or LXC has its
             # own MAC on the host's port, so the controller reports it as a
-            # wired client indistinguishable from the machine — and an edge
+            # wired client indistinguishable from the machine - and an edge
             # saying a container is plugged into a switch is false in the
             # way that matters: it hides the host that actually is.
             # `runs_on` already says where those live.
@@ -267,7 +267,7 @@ def plan(rows: list[dict] | None = None) -> dict:
         # such a machine that is always one of its guests. So the rule is
         # narrow on purpose: **only a guest MAC places its host.** A port
         # whose last device is itself a piece of hardware says nothing new
-        # — the wired-client pass above already knows where hardware is,
+        # - the wired-client pass above already knows where hardware is,
         # and trusting a single last-seen MAC there would happily put a
         # whole downstream switch's worth of devices on one port. Uplinks
         # are skipped for the same reason; the controller describes those
@@ -290,9 +290,9 @@ def plan(rows: list[dict] | None = None) -> dict:
                     continue
                 port = p.get("port")
                 add(host["id"], b["id"], "connects_to",
-                    f"UniFi switch port {port} — bridged host, seen via "
+                    f"UniFi switch port {port} - bridged host, seen via "
                     f"{guest['name']}" if port else
-                    f"UniFi switch port — bridged host, seen via {guest['name']}")
+                    f"UniFi switch port - bridged host, seen via {guest['name']}")
 
     # Group the misses by the distinct host string: a dozen decisions, not
     # one per row. This list is what the UI asks you to answer.

@@ -147,7 +147,7 @@ def test_docker_label_matches_entry():
                {"id": 73, "name": "netmap-docker-proxy", "ports": ""}]
     view = {"name": "netmap", "published": [], "netmap_id": 59}
     assert _match(view, entries, {e["id"]: e for e in entries}, entries)["id"] == 59
-    # Without the label the name is ambiguous — two entries contain it.
+    # Without the label the name is ambiguous - two entries contain it.
     assert _match({**view, "netmap_id": None}, entries,
                   {e["id"]: e for e in entries}, entries) is None
 

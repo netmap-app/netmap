@@ -58,7 +58,7 @@ def parse_healthcheck(spec: str) -> dict | None:
 KINDS = ["hardware", "vm", "container", "service", "rule", "network"]
 
 # How much it matters when this is down. Deliberately four values, not a
-# number — anything finer invites debate and gets left at the default.
+# number - anything finer invites debate and gets left at the default.
 CRITICALITY = ["critical", "important", "normal", "experimental"]
 
 # How two entries relate. src is the subject: "Plex runs_on NAS".
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS edges (
 );
 -- Host mapping. `host` is free text ("VM 101", "CT 107", "HA add-on") and
 -- rarely equals any entry's name, so fuzzy matching cannot bridge it without
--- inventing edges. This table records the answer once per distinct string —
+-- inventing edges. This table records the answer once per distinct string -
 -- roughly a dozen decisions that then place every entry in the tree.
 CREATE TABLE IF NOT EXISTS host_map (
     host_key TEXT PRIMARY KEY,
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS ignores (
 -- how badly, but "since when" is the thing that separates a blip from a rot,
 -- and nothing else in the schema records it: a down entry has a transition in
 -- `observations`, but "9 entries not verified" has no event anywhere.
--- Keyed by the item's own key, with the fingerprint beside it — when the
+-- Keyed by the item's own key, with the fingerprint beside it - when the
 -- situation changes the fingerprint changes and the clock restarts, because
 -- "7 mismatches since Tuesday" is a different fact from "5 mismatches since
 -- Tuesday, 7 since an hour ago".
@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS audit (
 -- What each source currently says about an entry, as opposed to where it
 -- disagrees. Findings are the disagreements and are recomputed every scan;
 -- these are the agreements, and without them a screen cannot answer "who
--- says this port is open" — a port that matches produces no finding at all,
+-- says this port is open" - a port that matches produces no finding at all,
 -- so agreement was previously invisible.
 --
 -- Latest-only by construction: the primary key overwrites, so the table
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS watch (
 -- When something last confirmed an entry exists: a source's sighting, an
 -- address a source sees at its MAC or machine, or its health check
 -- answering. What app/stale.py reads to say "nothing has seen this for N
--- days" — and only of entries that were confirmed at least once.
+-- days" - and only of entries that were confirmed at least once.
 CREATE TABLE IF NOT EXISTS entry_seen (
     entry_id  INTEGER PRIMARY KEY REFERENCES entries(id) ON DELETE CASCADE,
     last_seen TEXT NOT NULL,
@@ -229,7 +229,7 @@ CREATE TABLE IF NOT EXISTS sightings (
     PRIMARY KEY (entry_id, fact, source)
 );
 -- Small key/value settings the app itself owns (e.g. the generated key that
--- encrypts source_instances.secrets). Not user-facing config — that is what
+-- encrypts source_instances.secrets). Not user-facing config - that is what
 -- source_instances and the entries table are for.
 CREATE TABLE IF NOT EXISTS kv (
     key   TEXT PRIMARY KEY,
@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS kv (
 );
 -- Every source, added from Settings › Sources. `config` is plain JSON (url,
 -- flags, anything not secret); `secrets` is JSON of field -> ciphertext,
--- encrypted by app/crypto.py. Neither is read here — this table only stores
+-- encrypted by app/crypto.py. Neither is read here - this table only stores
 -- and retrieves; app/sources/dynamic.py knows what a driver's fields mean.
 CREATE TABLE IF NOT EXISTS source_instances (
     id         TEXT PRIMARY KEY,
@@ -281,7 +281,7 @@ def record_sightings(source: str, rows: list[dict]) -> int:
 
     The first version deleted only the rows of the entries it was about to
     write, reasoning that a half-finished scan should not erase what a source
-    said last time — silence is not a retraction. That reasoning was sound and
+    said last time - silence is not a retraction. That reasoning was sound and
     the premise was wrong: this is called once, at the end of a scan that
     completed, with the source's full set of observations. A source that fails
     returns before reaching here, so there is no half-finished case to protect
@@ -290,7 +290,7 @@ def record_sightings(source: str, rows: list[dict]) -> int:
     What the narrow delete did instead was make every attribution change
     permanent. v1.36.0 credited every container on one Docker host with all
     twenty-odd hostnames at that address; v1.36.1 corrected it to credit only
-    the service that owns the name — and because the corrected scan no longer
+    the service that owns the name - and because the corrected scan no longer
     mentioned those containers, their rows were never deleted. The Overview
     then read fourteen surviving copies of `hostname:plex.example.org` and
     reported twenty-seven naked hostnames out of sixteen published.
@@ -307,7 +307,7 @@ def record_sightings(source: str, rows: list[dict]) -> int:
             "(entry_id, fact, value, source, seen_at) VALUES (?,?,?,?,?)",
             [(int(r["entry_id"]), str(r["fact"]), str(r.get("value") or ""),
               source, ts) for r in rows])
-    # A source that says anything about an entry confirms it exists — except
+    # A source that says anything about an entry confirms it exists - except
     # a port it found closed or unanswered, which says the opposite, and a
     # planning tool's `intent`, which says only that it should.
     confirm({int(r["entry_id"]) for r in rows if r["fact"] != "intent"
@@ -318,7 +318,7 @@ def record_sightings(source: str, rows: list[dict]) -> int:
 
 
 def confirm(entry_ids, how: str) -> None:
-    """Record that these entries were just seen to exist — see entry_seen."""
+    """Record that these entries were just seen to exist - see entry_seen."""
     ids = [int(i) for i in entry_ids]
     if ids:
         conn().executemany(
@@ -344,7 +344,7 @@ def sightings_for(entry_id: int) -> list[dict]:
 
 
 def sightings_by_fact(fact: str) -> list[dict]:
-    """Everyone who says something about one fact — e.g. "port:32400"."""
+    """Everyone who says something about one fact - e.g. "port:32400"."""
     return [dict(r) for r in conn().execute(
         "SELECT entry_id, value, source, seen_at FROM sightings WHERE fact=? "
         "ORDER BY source", (fact,)).fetchall()]
@@ -354,14 +354,14 @@ def record_presence(source: str, rows: list[dict]) -> int:
     """Who is on the network according to one source, replacing what it said.
 
     Deliberately *not* entries. The inventory tracks infrastructure, and the
-    decision to keep phones and lightbulbs out of it stands — a row nobody
+    decision to keep phones and lightbulbs out of it stands - a row nobody
     maintains is worse than no row. But an address map that shows only what
     the inventory knows is wrong in the one moment it is consulted: there are
     a dozen occupied addresses on this LAN that the strip drew as free.
 
     So presence is a layer over the map, not a set of records. Nothing here
     is authored, nothing needs upkeep, and it is replaced wholesale on every
-    scan — see record_sightings for why per-row deletion was the wrong call.
+    scan - see record_sightings for why per-row deletion was the wrong call.
     """
     rows = [r for r in rows if (r.get("ip") or "").strip()]
     ts = now()
@@ -382,7 +382,7 @@ def record_presence(source: str, rows: list[dict]) -> int:
              for r in rows])
         # An address a source sees confirms the machine that holds it: by
         # MAC, or by address for hardware and VMs (not every service that
-        # shares a host's address — the host being up says nothing of them).
+        # shares a host's address - the host being up says nothing of them).
         by_mac, by_ip = {}, {}
         for e in list_entries():
             for m in MAC_RE.findall(e.get("mac") or ""):
@@ -391,7 +391,7 @@ def record_presence(source: str, rows: list[dict]) -> int:
                 by_ip.setdefault(e["ip"].strip(), e["id"])
         confirm({by_mac.get(str(r.get("mac") or "").lower()) or by_ip.get(str(r["ip"]).strip())
                  for r in rows} - {None}, f"address seen by {source}")
-        # First seen once, last seen every time — see presence_seen.
+        # First seen once, last seen every time - see presence_seen.
         c.executemany(
             "INSERT INTO presence_seen (key, mac, first_seen, last_seen, first_source, "
             "last_source, last_ip, label, baseline) VALUES (?,?,?,?,?,?,?,?,?) "
@@ -417,7 +417,7 @@ def presence_history() -> list[dict]:
 
 
 def purge_presence_history(days: int) -> int:
-    """Forget devices not seen for `days` — a phone that visited once should
+    """Forget devices not seen for `days` - a phone that visited once should
     not be remembered for ever."""
     cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - days * 86400))
     cur = conn().execute("DELETE FROM presence_seen WHERE last_seen < ?", (cutoff,))
@@ -426,7 +426,7 @@ def purge_presence_history(days: int) -> int:
 
 
 def presence(untracked_only: bool = True) -> list[dict]:
-    """Addresses a source has seen. By default only those no entry claims —
+    """Addresses a source has seen. By default only those no entry claims -
     the map already draws the tracked ones."""
     rows = [dict(r) for r in conn().execute(
         "SELECT ip, source, label, mac, detail, seen_at FROM presence "
@@ -454,7 +454,7 @@ def presence(untracked_only: bool = True) -> list[dict]:
 
 def all_sightings() -> list[dict]:
     """Every current sighting. The Overview reads the whole table because the
-    question it asks — what is reachable from outside — is not about one
+    question it asks - what is reachable from outside - is not about one
     entry."""
     return [dict(r) for r in conn().execute(
         "SELECT entry_id, fact, value, source, seen_at FROM sightings "
@@ -479,7 +479,7 @@ def transaction():
     Every write function here commits as it goes, which is right for one
     change and wrong for many: an import that died after forty of sixty rows
     left forty applied. Inside this block their commits are postponed to its
-    end, and any exception rolls the whole block back. Blocks nest — only the
+    end, and any exception rolls the whole block back. Blocks nest - only the
     outermost one commits. Per thread, like the connection it wraps.
     """
     _local.depth = getattr(_local, "depth", 0) + 1
@@ -526,7 +526,7 @@ def unwritable_reason() -> str | None:
 
     Since 1.69.4 the container runs as an ordinary user. A data directory left
     root-owned by an older, root-run container would otherwise fail deep inside
-    SQLite with "attempt to write a readonly database" — this says what to do.
+    SQLite with "attempt to write a readonly database" - this says what to do.
     """
     d = os.path.dirname(os.path.abspath(DB_PATH))
     target = DB_PATH if os.path.exists(DB_PATH) else d
@@ -604,7 +604,7 @@ def list_entries(query: str = "", category: str = "", tag: str = "",
         args.append(category)
     if tag:
         # Narrowed in SQL, decided below: `tags` is one comma-separated
-        # string, so LIKE alone matched substrings — "ha" found "alpha".
+        # string, so LIKE alone matched substrings - "ha" found "alpha".
         sql += " AND lower(tags) LIKE ? ESCAPE '\\'"
         args.append("%" + _like_escape(tag.strip().lower()) + "%")
     if kind:
@@ -644,8 +644,8 @@ def _norm(data: dict) -> dict:
         if f in ("monitor", "verified", "pinned"):
             v = 1 if v in (True, 1, "1", "true", "True", "yes") else 0
         if f == "mac":
-            # Accept whatever the source spells it as — colons, hyphens, upper
-            # or lower — and store one canonical form, so a MAC copied from
+            # Accept whatever the source spells it as - colons, hyphens, upper
+            # or lower - and store one canonical form, so a MAC copied from
             # OPNsense matches the same MAC copied from UniFi.
             if isinstance(v, list):
                 v = ", ".join(str(x) for x in v)
@@ -863,7 +863,7 @@ def clear_host_map(raw: str, actor: str = "web") -> bool:
 
 
 def unlinked_count() -> int:
-    """Entries with no relationship in either direction — the map's blank spots."""
+    """Entries with no relationship in either direction - the map's blank spots."""
     return conn().execute(
         "SELECT COUNT(*) FROM entries WHERE id NOT IN "
         "(SELECT src FROM edges UNION SELECT dst FROM edges)").fetchone()[0]
@@ -875,13 +875,13 @@ _PORT_RE = re.compile(r"port\s+(\d+)", re.I)
 def _via(rel: str, note: str) -> str:
     """One sentence shape for every row of the tree.
 
-    The notes these come from are written by four different hands — the UniFi
+    The notes these come from are written by four different hands - the UniFi
     derivation says "UniFi switch port 4", an older hand-mapping says "wired to
     the PoE switch", another says "2.5 GbE uplink into PoE switch port 8", and
     an edge made without a note says nothing at all. All four mean the same
     thing, and reading four phrasings down one column is work the reader should
-    not have to do. A cable is reduced to the only part that varies — which
-    port — because the other end is the row it is nested under.
+    not have to do. A cable is reduced to the only part that varies - which
+    port - because the other end is the row it is nested under.
 
     Provenance is not an annotation: "host matched by host map" is how the link
     was derived, and it would put the same sentence on forty rows.
@@ -901,8 +901,8 @@ def topology(mode: str = "tree") -> list[dict]:
     Two relations, one tree. `connects_to` says what a thing is plugged into;
     `runs_on` says what it runs on. Cabling only parents *hardware*: a switch
     port explains where a NAS or an access point sits, and that is the layer
-    the physical tree is drawn in. Everything else — VMs, containers,
-    services — hangs off its host, because a `connects_to` edge on a VM means
+    the physical tree is drawn in. Everything else - VMs, containers,
+    services - hangs off its host, because a `connects_to` edge on a VM means
     something else entirely (a mount, a dependency, a path), and letting that
     outrank `runs_on` would move the VM off the machine it actually runs on.
 
@@ -925,7 +925,7 @@ def topology(mode: str = "tree") -> list[dict]:
             parent[r["src"]] = r["dst"]
             via[r["src"]] = _via(rel, r["note"])
 
-    # Three questions, three trees. "tree" is the whole house — what runs on
+    # Three questions, three trees. "tree" is the whole house - what runs on
     # what, with cabling underneath it. "physical" is the cabling alone, drawn
     # over hardware only, so a switch port is not buried under twenty
     # containers. "deps" abandons hosting entirely and parents each thing by
@@ -945,7 +945,7 @@ def topology(mode: str = "tree") -> list[dict]:
     # node and drop any parent link that closes a loop, so one bad edge cannot
     # make the whole view disappear.
     # Break the cycle, not a bystander. The first version popped
-    # `parent[start]` whenever the walk from `start` revisited a node — which
+    # `parent[start]` whenever the walk from `start` revisited a node - which
     # orphans anything merely *pointing at* a loop rather than part of one.
     # A small switch sat at the top level for exactly that reason: it hangs
     # off a PoE switch, and the PoE switch and a server are cabled to each
@@ -953,7 +953,7 @@ def topology(mode: str = "tree") -> list[dict]:
     # walk 4 → 68 → 71 → 68 found a loop three hops away and dropped 4's link.
     #
     # Two cables between one pair is a real arrangement a tree cannot hold, so
-    # one edge has to go. The one dropped is the edge that *closes* the loop —
+    # one edge has to go. The one dropped is the edge that *closes* the loop -
     # deterministic, and it leaves the rest of the chain standing.
     for start in list(parent):
         seen, prev, cur = {start}, start, parent.get(start)
@@ -1004,8 +1004,8 @@ def port_dossier(port: int) -> dict:
     """Everything the inventory and the sources say about one port number.
 
     The Ports table answers "who uses 8080". This answers the question that
-    follows it — is it open, is it forwarded, is a name pointed at it, and is
-    anything in front of that name — which until now meant opening four
+    follows it - is it open, is it forwarded, is a name pointed at it, and is
+    anything in front of that name - which until now meant opening four
     entries and reading their sightings by eye.
     """
     entries = [e for e in list_entries() if _declares(e.get("ports"), port)]
@@ -1045,7 +1045,7 @@ def port_dossier(port: int) -> dict:
 
 
 # --------------------------------------------------------------------------
-# Status observations — transitions only
+# Status observations - transitions only
 # --------------------------------------------------------------------------
 OBS_KEEP = 5000
 
@@ -1135,7 +1135,7 @@ def prune_observations() -> int:
 
 
 def service_context(entry_id: int) -> dict | None:
-    """Everything about one entry in a single read — the service card."""
+    """Everything about one entry in a single read - the service card."""
     e = get_entry(entry_id)
     if not e:
         return None
@@ -1145,7 +1145,7 @@ def service_context(entry_id: int) -> dict | None:
 
 
 def export_rows() -> list[dict]:
-    """Every entry, every stored field — the JSON backup payload."""
+    """Every entry, every stored field - the JSON backup payload."""
     return list_entries()
 
 
@@ -1210,8 +1210,8 @@ def import_entries(rows: list, mode: str = "merge", dry_run: bool = True,
     (case-insensitive). A name that matches several existing entries is
     ambiguous and is reported rather than guessed at.
 
-    mode "merge"   — create what is missing, update what differs, delete nothing.
-    mode "replace" — as merge, and delete entries the file does not contain.
+    mode "merge"   - create what is missing, update what differs, delete nothing.
+    mode "replace" - as merge, and delete entries the file does not contain.
 
     With dry_run the database is untouched and the plan is returned, which is
     what the UI shows before you commit.
@@ -1248,7 +1248,7 @@ def import_entries(rows: list, mode: str = "merge", dry_run: bool = True,
             elif len(cands) > 1:
                 problems.append({"name": name,
                                  "why": f"{len(cands)} existing entries share this "
-                                        "name — rename them first"})
+                                        "name - rename them first"})
                 continue
         try:
             data = _norm(raw)
@@ -1357,7 +1357,7 @@ def seed_if_empty(path: str) -> int:
 
 
 # --------------------------------------------------------------------------
-# App settings (small key/value store — currently just the secret key)
+# App settings (small key/value store - currently just the secret key)
 # --------------------------------------------------------------------------
 def get_setting(key: str) -> str | None:
     r = conn().execute("SELECT value FROM kv WHERE key=?", (key,)).fetchone()
@@ -1404,7 +1404,7 @@ def drop_source_settings() -> bool:
 
 
 # --------------------------------------------------------------------------
-# Source instances — every source, configured from Settings › Sources.
+# Source instances - every source, configured from Settings › Sources.
 # --------------------------------------------------------------------------
 def list_source_instances(type_: str = "") -> list[dict]:
     sql = "SELECT * FROM source_instances"
@@ -1451,7 +1451,7 @@ def create_source_instance(type_: str, name: str, config: dict, secrets: dict,
 
 
 def rename_source_instance(old_id: str, new_id: str, actor: str = "system") -> None:
-    """Give an instance a new id — used once, to make a single-instance
+    """Give an instance a new id - used once, to make a single-instance
     source's id its type (see sources.migrate_legacy)."""
     conn().execute("UPDATE source_instances SET id=? WHERE id=?", (new_id, old_id))
     _commit()
@@ -1467,7 +1467,7 @@ def update_source_instance(instance_id: str, name: str | None = None,
         return None
     new_name = before["name"] if name is None else name.strip() or before["name"]
     new_config = before["config"] if config is None else config
-    # Secrets are merged field-by-field, not replaced wholesale — leaving a
+    # Secrets are merged field-by-field, not replaced wholesale - leaving a
     # field blank in the edit form means "keep what's there", since the
     # actual value is never sent back to the browser to be resubmitted.
     new_secrets = dict(before["secrets"])
@@ -1497,7 +1497,7 @@ def delete_source_instance(instance_id: str, actor: str = "web") -> bool:
 
 
 # --------------------------------------------------------------------------
-# Notification channels — Settings › Notifications. Same shape as a source
+# Notification channels - Settings › Notifications. Same shape as a source
 # instance, plus the list of events the channel wants.
 # --------------------------------------------------------------------------
 def list_notify_channels() -> list[dict]:
@@ -1520,7 +1520,7 @@ def save_notify_channel(channel_id: str | None, type_: str, name: str, config: d
                         secrets: dict, events: list, enabled: bool,
                         actor: str = "web", detail: dict | None = None) -> dict:
     """Create (no id) or replace one channel. `secrets` is the complete
-    ciphertext map — merging "blank means keep" is the caller's job."""
+    ciphertext map - merging "blank means keep" is the caller's job."""
     import uuid
     ts = now()
     if not name.strip():
@@ -1545,7 +1545,7 @@ def save_notify_channel(channel_id: str | None, type_: str, name: str, config: d
 
 
 def set_notify_secrets(channel_id: str, secrets: dict) -> None:
-    """Re-encrypted ciphertext only — used by the key rotation at start-up."""
+    """Re-encrypted ciphertext only - used by the key rotation at start-up."""
     conn().execute("UPDATE notify_channels SET secrets=? WHERE id=?",
                    (json.dumps(secrets), channel_id))
     _commit()

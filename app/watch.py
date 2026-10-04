@@ -4,8 +4,8 @@ the inventory and without ignoring it.
 A new-device finding offers Watch next to Create entry and Ignore. A watched
 device leaves "Needs you" (its finding is not raised while it is watched) and
 is listed under Network › Watching: what the sources know of it, whether it
-is on the network now, and a note. It stays until a person decides — create
-an entry, ignore it, or stop watching — or until it has not been seen for
+is on the network now, and a note. It stays until a person decides - create
+an entry, ignore it, or stop watching - or until it has not been seen for
 DROP_DAYS, when it is dropped by itself.
 
 Keyed like presence_seen: the MAC when a source knows it, else
@@ -140,7 +140,7 @@ def ignore(key: str, actor: str = "web") -> bool:
     if row is None:
         return False
     db.add_ignore(row["finding"], row["finding"].split(":")[0],
-                  f"{row['label'] or key} — watched", actor=actor)
+                  f"{row['label'] or key} - watched", actor=actor)
     return remove(key, actor, "ignored")
 
 
@@ -199,7 +199,7 @@ def check(now: float | None = None) -> dict:
                 back.append(key)
                 notify.tell("watch", key, {
                     "title": f"{v['name']} is back on the network at {', '.join(v['ips'])}",
-                    "detail": f"a device you are watching — {key}"
+                    "detail": f"a device you are watching - {key}"
                               + (f" · {v['note']}" if v["note"] else ""),
                     "level": "warn"})
             db.conn().execute("UPDATE watch SET online=1, last_seen=? WHERE key=?",
@@ -210,7 +210,7 @@ def check(now: float | None = None) -> dict:
             remove(key, "system", f"not seen for {DROP_DAYS} days")
             dropped.append(key)
             notify.tell("watch", key + ":dropped", {
-                "title": f"Stopped watching {v['name']} — not seen for {DROP_DAYS} days",
+                "title": f"Stopped watching {v['name']} - not seen for {DROP_DAYS} days",
                 "detail": f"last seen {v['last_seen'][:10]} at {', '.join(v['ips'])}",
                 "level": "ok"})
     db._commit()

@@ -1,8 +1,8 @@
-"""Traefik as a discovery source — the `proxy` role, like NPM.
+"""Traefik as a discovery source - the `proxy` role, like NPM.
 
 Reads Traefik's API (the one the dashboard uses), GET only:
 
-  /api/http/routers    each router's rule — the Host(`…`) names it answers
+  /api/http/routers    each router's rule - the Host(`…`) names it answers
   /api/http/services   where each service forwards: its servers' URLs
 
 and hands the name → target pairs to the reconciliation NPM uses (_proxy.py):
@@ -10,8 +10,8 @@ a name nobody tracks, a router switched off, a forward to an address nothing
 holds, a forward that disagrees with the entry.
 
 Two differences from NPM. Traefik usually forwards to a *container*
-address — with the Docker provider, 172.18.0.5 rather than the host's LAN
-address — and that address means nothing to the inventory, so targets inside
+address - with the Docker provider, 172.18.0.5 rather than the host's LAN
+address - and that address means nothing to the inventory, so targets inside
 "Container networks" are shown but never compared. And the API may be open
 (`api.insecure`) or behind Basic auth on the dashboard router; the username
 and password are optional for that reason.
@@ -67,7 +67,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None, "version": v.get("Version")}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"Traefik answered HTTP {exc.code}"
-                + (" — the API needs a username and password" if exc.code in (401, 403) else "")}
+                + (" - the API needs a username and password" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach Traefik at {cfg['url']}: {exc}"}
 
@@ -125,14 +125,14 @@ def scan(cfg: dict) -> dict:
            "scanned_at": db.now(), "host": {"url": cfg.get("url", "")},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — add the API URL in Settings › Sources"
+        out["error"] = "not configured - add the API URL in Settings › Sources"
         return out
     try:
         routers = _get(cfg, "/api/http/routers") or []
         services = _get(cfg, "/api/http/services") or []
     except urllib.error.HTTPError as exc:
         out["error"] = (f"Traefik answered HTTP {exc.code}"
-                        + (" — the API needs a username and password" if exc.code in (401, 403) else ""))
+                        + (" - the API needs a username and password" if exc.code in (401, 403) else ""))
         return out
     except Exception as exc:
         out["error"] = f"cannot reach Traefik at {cfg['url']}: {exc}"

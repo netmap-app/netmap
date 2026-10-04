@@ -1,8 +1,8 @@
-"""AdGuard Home as a discovery source — the `dns` role, like Pi-hole.
+"""AdGuard Home as a discovery source - the `dns` role, like Pi-hole.
 
 Reads, over AdGuard Home's own HTTP API, GET only:
 
-  /control/rewrite/list   DNS rewrites — the local records: a name, and the
+  /control/rewrite/list   DNS rewrites - the local records: a name, and the
                           address it answers with
   /control/clients        persistent clients (named by a person) and the
                           runtime clients it has seen
@@ -61,7 +61,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None, "version": st.get("version")}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"AdGuard Home answered HTTP {exc.code}"
-                + (" — check the username and password" if exc.code in (401, 403) else "")}
+                + (" - check the username and password" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach AdGuard Home at {cfg['url']}: {exc}"}
 
@@ -89,14 +89,14 @@ def scan(cfg: dict) -> dict:
            "scanned_at": db.now(), "host": {"url": cfg.get("url", "")},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — add the URL, username and password in Settings › Sources"
+        out["error"] = "not configured - add the URL, username and password in Settings › Sources"
         return out
     try:
         rewrites = _get(cfg, "/control/rewrite/list") or []
         cl = _get(cfg, "/control/clients") or {}
     except urllib.error.HTTPError as exc:
         out["error"] = (f"AdGuard Home answered HTTP {exc.code}"
-                        + (" — check the username and password" if exc.code in (401, 403) else ""))
+                        + (" - check the username and password" if exc.code in (401, 403) else ""))
         return out
     except Exception as exc:
         out["error"] = f"cannot reach AdGuard Home at {cfg['url']}: {exc}"
@@ -122,13 +122,13 @@ def scan(cfg: dict) -> dict:
             ident = str(ident).strip().lower()
             if not IP_RE.match(ident):
                 continue
-            # A person named this client — that name wins over a runtime one.
+            # A person named this client - that name wins over a runtime one.
             presence[ident] = {"ip": ident, "label": name, "mac": "",
                                "detail": "AdGuard Home persistent client"}
             if ident not in held:
                 findings.append({
                     "type": "client-untracked", "key": f"{P}:client:{ident}",
-                    "label": f"{name or ident} — AdGuard Home client, not in NetMap",
+                    "label": f"{name or ident} - AdGuard Home client, not in NetMap",
                     "detail": ("configured as a persistent client, so someone gave it "
                                "its own settings, but no inventory entry records "
                                "what it is"),

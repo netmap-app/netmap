@@ -1,5 +1,5 @@
 """GET /metrics (app/metrics.py): valid Prometheus text, every label value
-escaped, and behind authentication — with a token that opens nothing else."""
+escaped, and behind authentication - with a token that opens nothing else."""
 import re
 
 import pytest

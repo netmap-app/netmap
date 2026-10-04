@@ -1,5 +1,5 @@
 {
-  "_comment": "What answers on an open port. Each rule: one or more of title, server, header ('Name: regex'), location, body, banner — case-insensitive regular expressions, all of which must match — and the name, protocol and dashboard-icons slug it means. First match wins; keep it generic (common self-hosted software), never one homelab's names. Loaded by app/fingerprint.py.",
+  "_comment": "What answers on an open port. Each rule: one or more of title, server, header ('Name: regex'), location, body, banner - case-insensitive regular expressions, all of which must match - and the name, protocol and dashboard-icons slug it means. First match wins; keep it generic (common self-hosted software), never one homelab's names. Loaded by app/fingerprint.py.",
   "rules": [
     {"banner": "^SSH-", "name": "SSH", "protocol": "ssh"},
     {"banner": "^RFB \\d", "name": "VNC", "protocol": "vnc"},

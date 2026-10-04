@@ -1,5 +1,5 @@
 """Who made a network card: the IEEE MA-L registry, shipped as app/oui.txt.gz
-and refreshed by scripts/update_oui.py — never fetched at run time.
+and refreshed by scripts/update_oui.py - never fetched at run time.
 
 A locally administered address (the second-lowest bit of the first octet set)
 belongs to no vendor: phones and laptops make these up per network ("private

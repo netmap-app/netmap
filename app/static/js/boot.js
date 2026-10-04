@@ -1,7 +1,7 @@
-/* NetMap front end — boot.js: wiring that spans views, keyboard access, and start-up — last.
+/* NetMap front end - boot.js: wiring that spans views, keyboard access, and start-up - last.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 $("#iconWarm").onclick = async (ev) => {
   const b = ev.currentTarget, out = $("#iconWarmOut");
@@ -9,7 +9,7 @@ $("#iconWarm").onclick = async (ev) => {
   try {
     const r = await api("/api/icons/warm", { method: "POST" });
     out.textContent = `${r.cached} of ${r.wanted} marks cached` + (r.missing.length
-      ? ` — no mark published for: ${r.missing.join(", ")}` : ".");
+      ? ` - no mark published for: ${r.missing.join(", ")}` : ".");
     ICONS = {}; await load();
   } catch { out.textContent = "Could not reach the icon source."; }
   b.disabled = false;
@@ -30,7 +30,7 @@ $("#histBtn").onclick = () => { view = "changes"; applyView(); };
 $("#histClose").onclick = () => ($("#histModal").hidden = true);
 /* One button, both kinds of "go and look". The reachability sweep is local
    and quick; a discovery scan reaches four external systems and is slower, so
-   the sweep lands first and the sources follow — the page updates twice
+   the sweep lands first and the sources follow - the page updates twice
    rather than making you wait for the slowest thing to say anything. */
 async function recheckAll() {
   const btn = $("#refreshBtn");
@@ -60,14 +60,14 @@ for (const m of ["editModal", "histModal", "palModal", "cardModal", "portModal",
   });
 // iOS Safari lets a drag that starts on the backdrop scroll the page behind
 // a fixed-position modal instead of the modal's own content, which is what
-// "scrolling is stuck" turns out to be — the touch went to the wrong
+// "scrolling is stuck" turns out to be - the touch went to the wrong
 // element. Locking body scroll for as long as any modal is open removes the
 // element it could go to instead.
 new MutationObserver(() => {
   const open = [...document.querySelectorAll(".modal")].some(m => !m.hidden);
   document.body.classList.toggle("modalopen", open);
 }).observe(document.body, { attributes: true, attributeFilter: ["hidden"], subtree: true });
-/* A dialog that closes gives focus back to whatever opened it — without this
+/* A dialog that closes gives focus back to whatever opened it - without this
    a keyboard or screen-reader user is dropped at the top of the page. Each
    dialog remembers the element that had focus when it opened. */
 const MODAL_OPENER = new Map();
@@ -111,7 +111,7 @@ document.addEventListener("keydown", ev => {
 
 /* ---- Network: jump to a section ------------------------------------------------
    Five sections stacked into ~3,400px. The bar lists whichever ones the view
-   rendered — rebuilt from its headings each time it re-renders — and scrolls
+   rendered - rebuilt from its headings each time it re-renders - and scrolls
    to them. It sits just under the header and stays there. */
 function buildNetJump() {
   const heads = [...document.querySelectorAll("#network .ovsec > .ovhead > h2")];
@@ -152,8 +152,8 @@ $("#netJump").addEventListener("click", ev => {
 })();
 
 /* ---- keyboard access ---------------------------------------------------------
-   Much of the interface is clickable elements that are not buttons — filter
-   chips, table rows and cards, tree nodes, tags, "more" links — handled by
+   Much of the interface is clickable elements that are not buttons - filter
+   chips, table rows and cards, tree nodes, tags, "more" links - handled by
    delegated click listeners. A mouse reaches them; a keyboard could not. Rather
    than rewrite every template, this makes each one focusable, announces it as a
    button where that is what it is, and lets Enter and Space activate it. It runs
@@ -216,7 +216,7 @@ document.addEventListener("keydown", ev => {
 function loadFailed() {
   if (ENTRIES.length) return;                     // an earlier load's data is still on screen
   const msg = `<div class="loadfail" role="alert"><b>NetMap could not load its data.</b>
-    <span class="hint">The server did not answer as expected — it may be restarting.</span>
+    <span class="hint">The server did not answer as expected - it may be restarting.</span>
     <button class="btn" data-retry-load>Try again</button></div>`;
   for (const id of ["#overview", "#listbody", "#network", "#changes"]) $(id).innerHTML = msg;
 }
@@ -235,7 +235,7 @@ if (location.hash === "#settings") {
 }
 api("/api/profile").then(showPwBanner).catch(() => {});
 // A tab keeps running the code it loaded. After a deploy that is the previous
-// version, and a change looks like it did nothing — so compare with what the
+// version, and a change looks like it did nothing - so compare with what the
 // server runs now and offer the reload. /healthz is open and costs nothing;
 // while a deploy restarts the server it simply does not answer.
 const PAGE_VERSION = (document.querySelector('meta[name="netmap-version"]') || {}).content || "";
@@ -245,15 +245,15 @@ async function checkVersion() {
     const v = (await r.json()).version;
     if (v && PAGE_VERSION && v !== PAGE_VERSION) {
       const b = $("#updBanner");
-      b.textContent = `NetMap was updated to ${v} — reload to use it.`;
+      b.textContent = `NetMap was updated to ${v} - reload to use it.`;
       b.hidden = false;
     }
   } catch { /* server restarting, or offline: ask again next time */ }
 }
 $("#updBanner").onclick = () => location.reload();
 
-/* Every 15 s: is what the page shows still fresh? A tab that slept — or a
-   server that stopped answering — is greyed and says so; it also asks for
+/* Every 15 s: is what the page shows still fresh? A tab that slept - or a
+   server that stopped answering - is greyed and says so; it also asks for
    fresh data at once rather than waiting out the minute. With a dialog open
    it waits: the page under it is not being read, and reloading it would
    change what the dialog was opened from. */
@@ -262,7 +262,7 @@ function freshnessTick() {
   if (document.hidden) return;
   repaintSrcChips();
   const anyOpen = [...document.querySelectorAll(".modal")].some(m => !m.hidden);
-  // A server that is down is asked once a minute, not every tick — each
+  // A server that is down is asked once a minute, not every tick - each
   // failed try is a toast.
   if (anyOpen || !pageFreshness() || REFRESHING || Date.now() - LAST_TRY < 60000) return;
   REFRESHING = true; LAST_TRY = Date.now();

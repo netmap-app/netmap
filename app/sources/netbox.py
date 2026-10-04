@@ -1,4 +1,4 @@
-"""NetBox as a discovery source — the `intent` role.
+"""NetBox as a discovery source - the `intent` role.
 
 For someone who keeps NetBox as the source of truth: what NetBox says should
 exist, reconciled against what NetMap tracks. Reads, GET only, following
@@ -10,7 +10,7 @@ NetBox's pagination:
   /api/virtualization/interfaces/          VM interfaces' MAC addresses
   /api/ipam/ip-addresses/                  addresses assigned to nothing
 
-Matching: by address first, then by name — an entry's own name, or a host
+Matching: by address first, then by name - an entry's own name, or a host
 name mapped to it (host_map). Findings:
 
   netbox-untracked   an active NetBox device or VM NetMap does not track (draft)
@@ -23,7 +23,7 @@ Read-only by enforcement: give it a NetBox API token with write disabled
 (`write_enabled` off; for v2 tokens, `nbt_…`, the same switch). The module
 only issues GETs, never follows a redirect, and refuses a `next` page on
 another host, so the token only ever reaches the configured NetBox. There is
-no push to NetBox — that would be a write.
+no push to NetBox - that would be a write.
 """
 import ipaddress
 import json
@@ -84,7 +84,7 @@ def _list(cfg: dict, path: str) -> list[dict]:
         n = urllib.parse.urlsplit(nxt)
         if (n.scheme, n.netloc) != (base.scheme, base.netloc):
             raise ValueError(f"NetBox's next page points at {n.scheme}://{n.netloc}, not "
-                             f"{base.scheme}://{base.netloc} — set NetBox's own URL "
+                             f"{base.scheme}://{base.netloc} - set NetBox's own URL "
                              "(or its BASE_PATH / proxy headers) so the token stays there")
         url = nxt
     raise ValueError(f"more than {MAX_PAGES} pages at {path}")
@@ -96,7 +96,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None, "version": st.get("netbox-version")}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"NetBox answered HTTP {exc.code}"
-                + (" — check the token" if exc.code in (401, 403) else "")}
+                + (" - check the token" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach NetBox at {cfg['url']}: {exc}"}
 
@@ -147,7 +147,7 @@ def _draft(name: str, ip: str, kind: str, macs: set[str], note: str) -> dict:
 def reconcile(P: str, devices: list[dict], vms: list[dict], dev_ifs: list[dict],
               vm_ifs: list[dict], ips: list[dict], entries: list[dict],
               hmap: dict, kinds: set[str]) -> tuple[list[dict], list[dict], dict]:
-    """(findings, sightings, counts) — pure, so the matching can be tested
+    """(findings, sightings, counts) - pure, so the matching can be tested
     without a NetBox."""
     macs: dict[tuple[str, int], set[str]] = {}
     for i in dev_ifs:
@@ -177,7 +177,7 @@ def reconcile(P: str, devices: list[dict], vms: list[dict], dev_ifs: list[dict],
         name, ip = _label(o), _addr(o.get("primary_ip4") or o.get("primary_ip"))
         mine = macs.get((typ, o.get("id")), set())
         what = "device" if typ == "device" else "VM"
-        # Address first — but only a machine at that address, not one of the
+        # Address first - but only a machine at that address, not one of the
         # services sharing it; then the name.
         cands = [x for x in by_ip.get(ip, []) if x.get("kind") in (kinds or {"hardware", "vm"})]
         e = cands[0] if len(cands) == 1 else by_name.get(db.host_key(name))
@@ -185,7 +185,7 @@ def reconcile(P: str, devices: list[dict], vms: list[dict], dev_ifs: list[dict],
             if _status(o) == "active":
                 findings.append({
                     "type": "netbox-untracked", "key": f"{P}:{typ}:{o.get('id')}",
-                    "label": f"{name} — NetBox {what}, not in NetMap",
+                    "label": f"{name} - NetBox {what}, not in NetMap",
                     "detail": ("active in NetBox" + (f" at {ip}" if ip else "")
                                + ", but no entry matches it by address or name"),
                     "draft": _draft(name, ip, "hardware" if typ == "device" else "vm",
@@ -202,7 +202,7 @@ def reconcile(P: str, devices: list[dict], vms: list[dict], dev_ifs: list[dict],
         if ip and eip and ip != eip:
             findings.append({
                 "type": "netbox-ip-drift", "key": f"{P}:ip:{typ}:{o.get('id')}",
-                "label": f"{e['name']} — NetBox says {ip}, NetMap {eip}",
+                "label": f"{e['name']} - NetBox says {ip}, NetMap {eip}",
                 "detail": f"the NetBox {what} {name} has primary address {ip}",
                 "entry": _ref(e), "suggest": {"ip": ip},
             })
@@ -210,7 +210,7 @@ def reconcile(P: str, devices: list[dict], vms: list[dict], dev_ifs: list[dict],
         if mine and emacs and not mine & emacs:
             findings.append({
                 "type": "netbox-mac-drift", "key": f"{P}:mac:{typ}:{o.get('id')}",
-                "label": f"{e['name']} — NetBox has {', '.join(sorted(mine))}",
+                "label": f"{e['name']} - NetBox has {', '.join(sorted(mine))}",
                 "detail": (f"none of the NetBox {what}'s interfaces carries the entry's "
                            f"MAC ({', '.join(sorted(emacs))})"),
                 "entry": _ref(e),
@@ -226,7 +226,7 @@ def reconcile(P: str, devices: list[dict], vms: list[dict], dev_ifs: list[dict],
         dns = str(a.get("dns_name") or "").strip()
         findings.append({
             "type": "netbox-ip", "key": f"{P}:addr:{a.get('id')}",
-            "label": f"{dns or ip} — NetBox address, not in NetMap",
+            "label": f"{dns or ip} - NetBox address, not in NetMap",
             "detail": (f"{ip} is active in NetBox IPAM"
                        + (f" as {dns}" if dns else "") + ", and no entry holds it"),
             "draft": _draft(dns or ip, ip, "", set(), "NetBox IP address"),
@@ -237,9 +237,9 @@ def reconcile(P: str, devices: list[dict], vms: list[dict], dev_ifs: list[dict],
             continue
         findings.append({
             "type": "netbox-missing", "key": f"{P}:missing:{e['id']}",
-            "label": f"{e['name']} — not in NetBox",
+            "label": f"{e['name']} - not in NetBox",
             "detail": (f"a {e.get('kind')} entry no NetBox device or VM matches by "
-                       "address or name — add it to NetBox, or map its name"),
+                       "address or name - add it to NetBox, or map its name"),
             "entry": _ref(e),
         })
     counts = {"devices": len(devices), "vms": len(vms), "matched": len(matched)}
@@ -252,7 +252,7 @@ def scan(cfg: dict) -> dict:
            "scanned_at": db.now(), "host": {"url": cfg.get("url", "")},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — add the NetBox URL and a read-only token in Settings › Sources"
+        out["error"] = "not configured - add the NetBox URL and a read-only token in Settings › Sources"
         return out
     try:
         devices = _list(cfg, "/api/dcim/devices/")
@@ -262,7 +262,7 @@ def scan(cfg: dict) -> dict:
         ips = _list(cfg, "/api/ipam/ip-addresses/")
     except urllib.error.HTTPError as exc:
         out["error"] = (f"NetBox answered HTTP {exc.code}"
-                        + (" — check the token" if exc.code in (401, 403) else ""))
+                        + (" - check the token" if exc.code in (401, 403) else ""))
         return out
     except Exception as exc:
         out["error"] = f"cannot read NetBox at {cfg['url']}: {exc}"

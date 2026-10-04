@@ -2,7 +2,7 @@
 
 A driver is a module with:
 
-    FIELDS               the Settings form — see app/sources/fields.py for the
+    FIELDS               the Settings form - see app/sources/fields.py for the
                          shape of one field
     configured(cfg) -> bool
     scan(cfg) -> dict    the finding shape the rest of the package uses,
@@ -15,10 +15,10 @@ A driver is a module with:
     ABSENCE              optional; finding types that say "this entry is not
                          here". With two instances of a type, one instance
                          saying an entry is missing is dropped when another
-                         instance sees it — see sources._shadow().
+                         instance sees it - see sources._shadow().
     MULTI                optional, default True; False for a type that can
                          be added only once (see below)
-    ROLES                what the source *is* to the rest of NetMap — see
+    ROLES                what the source *is* to the rest of NetMap - see
                          ROLES below. Shared code (Overview, explain, links,
                          other drivers) asks for a role, never for a product,
                          so a new DNS server or reverse proxy only has to
@@ -37,7 +37,7 @@ fields.coerce(), plus:
              first instance keeps the prefix it has always had ("pihole",
              "ha" for Home Assistant); another instance uses its id.
 
-Adding a driver type is a code change — write the module, add one line below.
+Adding a driver type is a code change - write the module, add one line below.
 Every *instance* of a type (which firewall, which token) is added, edited and
 removed from Settings › Sources, with no deploy. Order here is the order
 sources are listed and scanned in.
@@ -47,7 +47,7 @@ from . import (adguard, cloudflare, docker, homeassistant, leasefile, netbox, np
 
 DRIVERS = {
     "docker": {"label": "Docker", "mod": docker,
-               "hint": "containers on one Docker or Podman host — through a socket proxy "
+               "hint": "containers on one Docker or Podman host - through a socket proxy "
                        "(recommended), the TLS port with a client certificate, or a "
                        "mounted socket"},
     "opnsense": {"label": "OPNsense", "mod": opnsense,
@@ -57,25 +57,25 @@ DRIVERS = {
     "adguard": {"label": "AdGuard Home", "mod": adguard,
                 "hint": "DNS rewrites and persistent clients"},
     "leasefile": {"label": "DHCP lease file", "mod": leasefile,
-                  "hint": "who holds which address — dnsmasq, ISC dhcpd or Kea"},
+                  "hint": "who holds which address - dnsmasq, ISC dhcpd or Kea"},
     "snmparp": {"label": "Router ARP (SNMP)", "mod": snmparp,
-                "hint": "who answers at which address — any router with SNMP v2c"},
+                "hint": "who answers at which address - any router with SNMP v2c"},
     "unifi": {"label": "UniFi", "mod": unifi,
-              "hint": "the physical layer — devices, uplinks and switch ports"},
+              "hint": "the physical layer - devices, uplinks and switch ports"},
     "homeassistant": {"label": "Home Assistant", "mod": homeassistant,
                       "hint": "whether watched things are actually working"},
     "npm": {"label": "NPM", "mod": npm,
-            "hint": "the reverse proxy — which name reaches which service"},
+            "hint": "the reverse proxy - which name reaches which service"},
     "traefik": {"label": "Traefik", "mod": traefik,
-                "hint": "routers and services — which name reaches which service"},
+                "hint": "routers and services - which name reaches which service"},
     "cloudflare": {"label": "Cloudflare", "mod": cloudflare,
-                   "hint": "the edge — which public hostnames reach in, and where"},
-    "ports": {"label": "Open ports", "mod": portscan,
-              "hint": "what is listening, against what the inventory claims"},
+                   "hint": "the edge - which public hostnames reach in, and where"},
     "proxmox": {"label": "Proxmox VE", "mod": proxmox,
                 "hint": "VMs and LXC containers on a Proxmox node or cluster"},
+    "ports": {"label": "Open ports", "mod": portscan,
+              "hint": "what is listening, against what the inventory claims"},
     "netbox": {"label": "NetBox", "mod": netbox,
-               "hint": "the source of truth — devices, VMs and addresses it says exist"},
+               "hint": "the source of truth - devices, VMs and addresses it says exist"},
 }
 
 
@@ -98,7 +98,7 @@ ROLES = {
                "onto rows and calls _leases.report() for mac-mismatch, "
                "ip-moved and the `lease`/`arp` sightings"),
     "layer2": ("Switches & Wi-Fi", "topology(cfg) -> {devices, clients}, "
-               "keyed by MAC — what is plugged into what"),
+               "keyed by MAC - what is plugged into what"),
     "health": ("Health", "whether watched things are actually working"),
     "intent": ("Source of truth", "what a planning tool says should exist; sightings "
                "`intent` on the entries it matches"),
@@ -129,7 +129,7 @@ def type_of(source: str) -> str:
 
 def has_role(source: str, role: str) -> bool:
     """Whether an instance id or finding-key prefix belongs to a source with
-    that role — "cloudflare-2" and "edge", "ha" and "health"."""
+    that role - "cloudflare-2" and "edge", "ha" and "health"."""
     return role in roles_of(type_of(source))
 
 

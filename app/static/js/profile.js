@@ -1,11 +1,11 @@
-/* NetMap front end — profile.js: Settings › Profile: the local account, appearance.
+/* NetMap front end - profile.js: Settings › Profile: the local account, appearance.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
-/* ---- Settings > Profile — the local account (app/accounts.py) ---- */
+/* ---- Settings > Profile - the local account (app/accounts.py) ---- */
 const VIA = { access: "Cloudflare Access", password: "the password login",
-              token: "the API token", off: "nothing — NETMAP_AUTH=off" };
+              token: "the API token", off: "nothing - NETMAP_AUTH=off" };
 
 function showPwBanner(p) { $("#pwBanner").hidden = !(p && p.must_change); }
 
@@ -21,7 +21,7 @@ async function loadProfile() {
   const pw = p.via === "password";
   $("#signOut").hidden = !pw;
   $("#signOutHint").textContent = pw ? ""
-    : `This browser is signed in through ${VIA[p.via] || p.via}, not the password login — there is nothing to sign out of here.`;
+    : `This browser is signed in through ${VIA[p.via] || p.via}, not the password login - there is nothing to sign out of here.`;
 }
 
 $("#profNameForm").addEventListener("submit", async ev => {

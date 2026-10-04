@@ -6,7 +6,7 @@
      own near-black is 6.8:1. Light mode's darker accent keeps white. */
   --onaccent:#0b1422;
   --upglow:rgba(61,220,151,.55); --downglow:rgba(255,92,122,.5);
-  /* Kind badges. Each kind gets a hue of its own — "service" was the odd one
+  /* Kind badges. Each kind gets a hue of its own - "service" was the odd one
      out on plain grey, which at 10px uppercase read as disabled rather than
      as a category. Teal is the only family hue not already spoken for: green
      means reachable, red and amber mean trouble, and the blues are taken. */
@@ -17,7 +17,7 @@
      borrowed one at a time from the kind badges: each has to stay apart from
      its neighbours in a list AND from --up/--down, which already mean
      something. Mint is the one that flirts with "reachable", which is why it
-     is on Storage — a category nobody reads as a status. */
+     is on Storage - a category nobody reads as a status. */
   --c-core:#7fd4ff; --c-infra:#8ab4ff; --c-media:#ff9fc4;  --c-smart:#4ecdc4;
   --c-hosts:#c79bff; --c-client:#ffc46b; --c-remote:#ff8f6b;
   --c-store:#8fe3bd; --c-tools:#aab4c4; --c-misc:#8b93a1;
@@ -31,7 +31,7 @@
         /* darker status hues: the dark-mode greens/reds wash out on white */
         --up:#0c7d54; --down:#c4213f; --warn:#936317; --onaccent:#fff;
         --upglow:rgba(16,160,108,.30); --downglow:rgba(196,33,63,.28);
-        /* The bright badge hues wash out on white — every one of them measured
+        /* The bright badge hues wash out on white - every one of them measured
            between 1.4 and 2.3 against the panel, i.e. barely legible. These
            are the same hues darkened to clear 4.5:1. */
         --k-hardware:#6d34c4; --k-vm:#0f5f9c; --k-container:#2452ab;
@@ -45,7 +45,7 @@
         --fg:#1a1d23;--dim:#5b6472;--faint:#676d77;--accent:#2869cb;
         --up:#0c7d54; --down:#c4213f; --warn:#936317; --onaccent:#fff;
         --upglow:rgba(16,160,108,.30); --downglow:rgba(196,33,63,.28);
-        /* The bright badge hues wash out on white — every one of them measured
+        /* The bright badge hues wash out on white - every one of them measured
            between 1.4 and 2.3 against the panel, i.e. barely legible. These
            are the same hues darkened to clear 4.5:1. */
         --k-hardware:#6d34c4; --k-vm:#0f5f9c; --k-container:#2452ab;
@@ -61,7 +61,7 @@ a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 button,input,select,textarea{font:inherit;color:inherit}
 /* No double-tap zoom: a tap on a button acts at once instead of waiting to
-   see whether a second tap follows. Pinch zoom stays — it is how anyone who
+   see whether a second tap follows. Pinch zoom stays - it is how anyone who
    needs larger text gets it. */
 html{touch-action:manipulation}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;
@@ -120,14 +120,14 @@ header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1p
 .vtab{background:none;border:none;color:var(--dim);font-size:13px;padding:5px 15px;
       border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
       /* inline-flex was added for the discovery badge, and it silently killed
-         text-align:center — a flex container aligns by justify-content, which
+         text-align:center - a flex container aligns by justify-content, which
          defaults to flex-start. Invisible on desktop, where the tabs are
          content-sized, but on mobile they flex-grow and the leftover slack all
          landed on the right, sitting every label ~2px left of centre. */
       justify-content:center}
 .vtab.on{background:var(--accent);color:var(--onaccent);font-weight:600}
 /* The finding count. Cyan is the brand's "live" colour and is used nowhere
-   else in the chrome, so it reads as new information rather than as an error —
+   else in the chrome, so it reads as new information rather than as an error -
    a discovered device is news, not a fault. */
 .vbadge{display:inline-flex;align-items:center;justify-content:center;
         min-width:17px;height:17px;padding:0 5px;border-radius:999px;
@@ -136,7 +136,7 @@ header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1p
 .vtab.on .vbadge{background:var(--onaccent);color:var(--accent)}
 
 /* Where you are, said once. The rail says it too, but the rail is a list of
-   places and this is the place you are in — and it is the only line with room
+   places and this is the place you are in - and it is the only line with room
    for the subtitle that tells a first-time reader what the page is for. */
 .pagetitle{display:flex;flex-direction:column;gap:1px;min-width:0;margin-right:6px}
 .pagetitle b,.pagetitle h1{font-size:17px;font-weight:650;line-height:1.2;margin:0}
@@ -166,7 +166,7 @@ header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1p
 
 /* Filters get the full width. Nothing sits beside them, so a pill clipped at
    the scroll edge reads as "there is more this way" rather than as a
-   collision — which is what it always was. */
+   collision - which is what it always was. */
 .chipsrow{display:flex;padding:0 20px 2px}
 .chipsrow[hidden]{display:none}
 .chips{display:flex;gap:6px;flex:1;min-width:0;overflow-x:auto;
@@ -244,7 +244,7 @@ main{padding:20px;max-width:1500px;margin:0 auto}
 /* Two columns where there is room for two. The queue, the set-aside list and
    the exposure panel stay above it at full width on purpose: they are the
    ones that change, and a column that has to hold eight dismissable rows is
-   not a column. What is down here is reference — it does not mind being
+   not a column. What is down here is reference - it does not mind being
    half as wide. */
 .ovgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;
   align-items:start;margin-bottom:22px}
@@ -283,7 +283,7 @@ main{padding:20px;max-width:1500px;margin:0 auto}
 
 /* ---------- inventory ---------- */
 .groupname{margin:22px 0 8px;display:flex;align-items:center;gap:8px}
-/* The whole header line is the hit target — a 14px triangle is a nuisance to
+/* The whole header line is the hit target - a 14px triangle is a nuisance to
    aim at, and the row has nothing else clickable on it. */
 .groupname{cursor:pointer}
 .groupname .gt{font-size:12px;text-transform:uppercase;letter-spacing:.10em;
@@ -317,7 +317,7 @@ tr:hover td{background:var(--panel2)}
 .notes{color:var(--dim);font-size:13px}
 /* Notes grew into paragraphs once discovery started writing findings into
    them, and a table row three hundred words tall is not a table. Two lines
-   here, the whole thing on the service card — the ellipsis is the tell that
+   here, the whole thing on the service card - the ellipsis is the tell that
    there is more, and the row already opens the card.
    This must be an element INSIDE the cell: -webkit-box on the <td> itself
    replaces display:table-cell, the row stops sizing to its content, and a
@@ -333,7 +333,7 @@ tr:hover td{background:var(--panel2)}
 .dot.down{background:var(--down);box-shadow:0 0 6px var(--downglow)}
 .dot.na{background:transparent;border:1px solid var(--line)}
 .lat{color:var(--faint);font-size:11px}
-/* One set of metrics for every chip that can share a row — kind, criticality,
+/* One set of metrics for every chip that can share a row - kind, criticality,
    verify and tags. They sit side by side, so different heights read as a bug
    rather than as a distinction; case and colour carry the meaning instead.
    Fixed height rather than padding alone, so a 10px uppercase badge and a
@@ -359,7 +359,7 @@ tr:hover td{background:var(--panel2)}
 .empty{color:var(--faint);text-align:center;padding:50px 0}
 
 /* ---------- modals ---------- */
-/* The backdrop no longer scrolls (overflow:hidden) — only .sheet does, so
+/* The backdrop no longer scrolls (overflow:hidden) - only .sheet does, so
    there is exactly one scroll container on iOS instead of two nested ones
    fighting over the same touch. Top padding adds the status-bar inset so a
    tall sheet's own heading clears it in standalone mode, same reasoning as
@@ -426,19 +426,19 @@ body.modalopen{overflow:hidden}
   .viewtabs{flex:1}
   /* `flex:1` gave all three tabs an equal third regardless of their labels.
      "Inventory" is the longest word AND goes bold when active, so it filled
-     its share to within 3px while "Overview" floated in ~18px of slack — the
+     its share to within 3px while "Overview" floated in ~18px of slack - the
      active pill looked stretched to bursting next to two loose ones.
      Size to content plus equal padding instead, and keep every tab at the
      active weight so switching tabs does not resize them. */
   .vtab{flex:1 1 auto;padding:9px 12px;text-align:center;font-size:14px;
         font-weight:600;min-width:0}
   .btn{min-height:44px}
-  /* 44px is the touch target, so it must not be negotiable — flex-shrink
+  /* 44px is the touch target, so it must not be negotiable - flex-shrink
      defaults to 1 and was letting these collapse next to the wide Add. */
   .btn.icon-only{width:44px;height:44px;flex:0 0 44px;padding:0}
   .actions{flex-wrap:wrap}
   /* The button grew for touch and the glyph did not, leaving it at ~36% of
-     the box against 44% on desktop — geometrically correct and visually
+     the box against 44% on desktop - geometrically correct and visually
      wrong, which is what "distorted" actually looked like. */
   .btn.icon-only .ico{width:20px;height:20px}
   .btn.primary{flex:1;justify-content:center}
@@ -616,7 +616,7 @@ body.modalopen{overflow:hidden}
 .cs.up{color:var(--up)} .cs.down{color:var(--down)} .cs.na{color:var(--faint)}
 .csx{color:var(--faint);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
      min-width:0;overflow-wrap:anywhere}
-/* What an https health check read from the certificate — its own line. */
+/* What an https health check read from the certificate - its own line. */
 .cscert{flex-basis:100%;color:var(--faint)}
 .cscert.warn{color:var(--warn)} .cscert.down{color:var(--down)}
 .cnotes{color:var(--dim);font-size:13px}
@@ -672,7 +672,7 @@ button.tcar::before{content:"";position:absolute;top:3px;left:4px;
       transition:transform .12s ease;transform-origin:1px 4px}
 .tn[data-open="true"] button.tcar::before{transform:rotate(90deg)}
 button.tcar:hover::before{border-left-color:var(--accent)}
-/* How much is folded away. Only shown while it is folded — on an open branch
+/* How much is folded away. Only shown while it is folded - on an open branch
    the answer is on the screen already. */
 .tnum{font-size:10px;color:var(--faint);background:var(--chip,transparent);
       border:1px solid var(--line);border-radius:9px;padding:0 6px;line-height:15px}
@@ -742,7 +742,7 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 .subnet + .subnet{padding-top:16px;border-top:1px solid var(--line)}
 
 /* 254 cells across a phone is about one pixel each, which is why this used to
-   be hidden entirely — but hiding it left the readout advertising a strip that
+   be hidden entirely - but hiding it left the readout advertising a strip that
    was not there, and the address map is one of the more useful things to have
    in your pocket. Wrap it into rows of 32 instead: eight rows, cells wide
    enough to hit with a thumb, same data, same interactions. */
@@ -774,7 +774,7 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 .moreline:hover{border-color:var(--accent);color:var(--fg)}
 
 /* The re-check button now waits on four external systems, so it has to look
-   busy — a control that appears inert for six seconds gets clicked again. */
+   busy - a control that appears inert for six seconds gets clicked again. */
 @keyframes nm-spin{to{transform:rotate(360deg)}}
 .btn.spin .ico{animation:nm-spin .9s linear infinite;transform-origin:50% 50%}
 .btn.spin{pointer-events:none;opacity:.75}
@@ -836,7 +836,7 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 .exfoot{font-size:11.5px;color:var(--faint);border-top:1px solid var(--hair);padding-top:9px}
 
 /* ---------- control room ---------- */
-/* The state on the left — a glyph and a few words, coloured by how bad —
+/* The state on the left - a glyph and a few words, coloured by how bad -
    and the numbers on the right, each led by its own mark. */
 .verdict{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
   padding:14px 18px;display:flex;align-items:center;gap:18px 28px;flex-wrap:wrap;
@@ -997,7 +997,7 @@ body.railmin .railcheck{display:none}
 /* ---------- source strip ---------- */
 /* The chip carries a mark now; the dot stays behind it for the sources that
    have none and for any whose mark does not load, so health is never
-   communicated by an image that might be missing — the chip's own colour
+   communicated by an image that might be missing - the chip's own colour
    says it too. */
 .src .sico{width:13px;height:13px;flex:none;object-fit:contain;margin-right:1px}
 .src i{display:none}
@@ -1040,7 +1040,7 @@ body.railmin .railcheck{display:none}
 /* ---------- the hairline grid ---------- */
 /* One device, used by Quick links and by the exposure panel: a bordered box
    whose cells draw their own right and bottom rule. A `gap:1px` over a
-   line-coloured background is the usual trick and it has one failure — a
+   line-coloured background is the usual trick and it has one failure - a
    partly filled last row leaves line-coloured blocks where the missing cells
    would be. Outset shadows put the rule on the cell instead, so a ragged tail
    is simply empty panel, and the container's own border clips the ones at
@@ -1079,16 +1079,22 @@ body.railmin .railcheck{display:none}
 .exchips .lchip b{font-weight:650}
 
 /* ---------- sources, inline ---------- */
-.srcline{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;
-  font-size:11.5px;color:var(--faint);padding-top:2px}
-.srcline .s{white-space:nowrap}
-.srcline .s.good{color:var(--up);font-style:normal}
-.srcline .s.stale{color:var(--warn);font-style:normal}
-.srcline .s.bad{color:var(--down);font-style:normal}
-.srcline .s.wait{color:var(--faint);animation:srcwait 1.4s ease-in-out infinite}
+.srcline{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;padding-top:4px}
+.srcline .s{--st:var(--faint);display:inline-flex;flex-direction:column;align-items:center;gap:4px;cursor:default}
+.srcline .s::after{content:"";width:100%;min-width:20px;height:3px;border-radius:2px;background:var(--st)}
+.srcline .s.good{--st:var(--up)}
+.srcline .s.stale{--st:var(--warn)}
+.srcline .s.bad{--st:var(--down)}
+.srcline .s.wait{--st:var(--faint)}
+.srcline .s.wait::after{animation:srcwait 1.4s ease-in-out infinite}
 @keyframes srcwait{50%{opacity:.45}}
-@media (prefers-reduced-motion:reduce){.srcline .s.wait{animation:none}}
-.srcline i{opacity:.4;font-style:normal}
+@media (prefers-reduced-motion:reduce){.srcline .s.wait::after{animation:none}}
+.srcline .sm{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--dim)}
+.srcline .sm .ico{width:18px;height:18px;stroke-width:1.8}
+.srcline .sm .svc{width:22px;height:22px;object-fit:contain;display:block}
+.srcline .sm.svcbox .ico{display:none}
+.srcline .sm.svcbox.noicon .ico{display:block}
+.srcline .sm.svcbox.noicon .svc{display:none}
 
 /* ---- local account: /login, Settings > Profile, the starting-password banner ---- */
 .loginbody{min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -1135,13 +1141,13 @@ body.railmin .railcheck{display:none}
   outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 tr[tabindex]:focus-visible{outline-offset:-2px}
 
-/* Touch screens get targets of at least 44px — the icon buttons and the
+/* Touch screens get targets of at least 44px - the icon buttons and the
    small segmented switches were 26–30px. */
 @media (pointer: coarse){
   /* iOS zooms into any field whose text is under 16px when it is tapped, and
      leaves the page zoomed after. 16px on touch screens and it never does.
      !important because a field's own rule (.f input.mono, .scanin input…)
-     is more specific than this one and quietly won — 13 fields still zoomed. */
+     is more specific than this one and quietly won - 13 fields still zoomed. */
   input, select, textarea{font-size:16px !important}
   .iconbtn, .sheetx{min-width:44px;min-height:44px}
   .seg button{min-height:40px;padding-left:14px;padding-right:14px}
@@ -1261,14 +1267,14 @@ header.hidehdr ~ .jumpbar{top:0}
 .loadfail{margin:32px auto;max-width:520px;display:flex;flex-direction:column;gap:10px;
   align-items:flex-start;padding:18px;border:1px solid var(--line);border-radius:var(--radius);
   background:var(--panel)}
-/* Free text a person or a source typed — notes, names, hosts, URLs — can be
+/* Free text a person or a source typed - notes, names, hosts, URLs - can be
    one long token with nowhere to break; it wraps anywhere rather than push the
    table or the card past the screen. */
 .notecell,.cnotes,.card-sheet h2,.card-sheet dd,.card-sheet .explain,
 td,.qlink,.lchip,.kv{overflow-wrap:anywhere}
 /* The palette on a phone: one row was five things in a line, which wrapped
-   into a different shape whenever a name was short. Two lines instead —
-   name, then address — and no keyboard hints on a touch screen. */
+   into a different shape whenever a name was short. Two lines instead -
+   name, then address - and no keyboard hints on a touch screen. */
 @media (max-width:600px){
   .palrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:2px}
   .palrow .dot{grid-column:1;grid-row:1 / 3}

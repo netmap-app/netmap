@@ -1,7 +1,7 @@
-/* NetMap front end — theme.js: light / dark / auto.
+/* NetMap front end - theme.js: light / dark / auto.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ---- theme: "auto" leaves the OS media query in charge ---- */
 function readTheme() {
@@ -28,7 +28,7 @@ const toast = (msg) => {
 
 async function api(path, opts) {
   const r = await fetch(path, opts);
-  // Signed out — an expired session, or a password changed elsewhere. The
+  // Signed out - an expired session, or a password changed elsewhere. The
   // login form is the only useful thing to show.
   if (r.status === 401 && !path.startsWith("/api/profile/password")) {
     location.href = "/login"; throw new Error(401);
@@ -38,7 +38,7 @@ async function api(path, opts) {
 }
 
 function linkFor(e) {
-  // Only web addresses become links — never `javascript:` or `data:`. The
+  // Only web addresses become links - never `javascript:` or `data:`. The
   // server refuses those on write; this covers anything stored before it did.
   if (e.url) return /^https?:\/\//i.test(e.url.trim()) ? e.url.trim() : null;
   const ip = (e.ip || "").trim();
@@ -52,7 +52,7 @@ function linkFor(e) {
   return `${proto}://${ip}:${port}`;
 }
 
-// What the last check did and what answered — the server writes it
+// What the last check did and what answered - the server writes it
 // ("HTTPS 10.0.0.5:443/health → 200 in 42 ms"); older results lack it.
 function statusWhy(st) {
   if (st.summary) return st.summary;
@@ -72,7 +72,7 @@ function when(ts) {
   const d = new Date(ts.endsWith("Z") ? ts : ts + "Z");
   if (isNaN(d)) return ts;
   const today = new Date().toDateString() === d.toDateString();
-  // 24-hour, whatever the browser's locale — the same clock as whenScan().
+  // 24-hour, whatever the browser's locale - the same clock as whenScan().
   const hm = { hour: "2-digit", minute: "2-digit", hourCycle: "h23" };
   return today ? d.toLocaleTimeString([], hm)
                : d.toLocaleDateString([], { day: "numeric", month: "short" }) + " " +
@@ -80,7 +80,7 @@ function when(ts) {
 }
 
 /* A scan's timestamp is read once, days later, next to sources that may have
-   gone stale — "today at 9 PM" is useless once today has passed, so unlike
+   gone stale - "today at 9 PM" is useless once today has passed, so unlike
    `when()` this always carries the date, in dd.mm.yyyy + 24h so it reads the
    same regardless of locale. */
 function whenScan(ts) {

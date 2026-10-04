@@ -1,7 +1,7 @@
 # python:3.12-slim, pinned by digest 2026-09-11. A tag moves; a digest
 # does not, so a rebuild reproduces the image that is running instead of
 # whatever the tag points at today. Base-image patches now arrive only
-# when this line is changed on purpose — that is the trade, and it is
+# when this line is changed on purpose - that is the trade, and it is
 # deliberate. Refresh with:
 #   docker image inspect python:3.12-slim --format '{{index .RepoDigests 0}}'
 FROM python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
@@ -25,15 +25,15 @@ RUN groupadd -g "$NETMAP_GID" netmap \
  && mkdir -p /data && chown netmap:netmap /data
 
 # Code stays root-owned: the app can read it and cannot change it. The chmod
-# makes that true whatever modes the build machine's checkout has — a file
+# makes that true whatever modes the build machine's checkout has - a file
 # saved owner-only (rw-------) there would otherwise be unreadable here.
 COPY app ./app
 COPY CHANGELOG.md .
 RUN chmod -R a+rX /srv/app /srv/CHANGELOG.md
 
 ENV NETMAP_DB=/data/netmap.db
-# Whose X-Forwarded-For / -Proto to believe: the proxies in front — NPM and
-# cloudflared on the Docker network — and nobody else. It used to be "*",
+# Whose X-Forwarded-For / -Proto to believe: the proxies in front - NPM and
+# cloudflared on the Docker network - and nobody else. It used to be "*",
 # which let any client claim to be forwarding for any address. Docker's
 # bridge networks live in 172.16.0.0/12; override in compose if yours differ.
 ENV FORWARDED_ALLOW_IPS=127.0.0.1,172.16.0.0/12

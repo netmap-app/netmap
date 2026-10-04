@@ -1,7 +1,7 @@
-/* NetMap front end — inventory.js: the Inventory: load(), filters, grouping, the list.
+/* NetMap front end - inventory.js: the Inventory: load(), filters, grouping, the list.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= inventory ================= */
 function groupOf(e) { return String(e[groupBy] || "").trim() || GROUPS[groupBy]; }
@@ -99,8 +99,8 @@ function nameCell(e, link) {
 }
 
 /* Ports, for scanning rather than for reading.
-   The field is free text and people write what a port is for — "5000/5001
-   (DSM), 80/443 (DSM redirect), 22 (SSH)…" — which is worth having and is
+   The field is free text and people write what a port is for - "5000/5001
+   (DSM), 80/443 (DSM redirect), 22 (SSH)…" - which is worth having and is
    the wrong thing in a table cell: on the NAS rows it wrapped into twenty
    lines and pushed every other column off the screen. The numbers are what
    you scan a table for; the prose is what you open the entry for. So the cell
@@ -122,7 +122,7 @@ function portsCell(e) {
 }
 
 /* An empty cell should say "nothing here", not look like a rendering fault. */
-const nil = () => `<span class="nil" title="not recorded">—</span>`;
+const nil = () => `<span class="nil" title="not recorded">-</span>`;
 
 function rowHtml(e) {
   const link = linkFor(e);
@@ -142,7 +142,7 @@ function rowHtml(e) {
   </tr>`;
 }
 
-/* On a phone the classification badges had never been rendered at all — the
+/* On a phone the classification badges had never been rendered at all - the
    three-line treatment above is a table layout, and the card is a different
    component. Here they share one wrapping row with the tags at the foot of the
    card, because vertical space is the scarce thing on a phone and horizontal
@@ -184,7 +184,7 @@ function renderChips() {
     b.classList.toggle("on", b.dataset.group === groupBy));
   if (view !== "inventory") { $("#chips").innerHTML = ""; return; }
   const anyFilter = filter.category || filter.tag || filter.kind || filter.criticality || filter.zone;
-  // The strip carries the categories — the one filter everything has. Kind,
+  // The strip carries the categories - the one filter everything has. Kind,
   // criticality, zone and tags (thirty-odd more chips, two-thirds of them
   // scrolled out of sight) moved behind "Filters"; whichever of those is
   // active shows here as a chip that removes it.
@@ -234,11 +234,11 @@ function applyView() {
 }
 
 /* A count on a view tab. Findings are news from a system NetMap does not
-   control, so they have to be visible from whichever tab you are on — the
+   control, so they have to be visible from whichever tab you are on - the
    Network view is no use as a notification if you have to go there to be
    notified. */
 function badge(viewName, n) {
-  // Two nav surfaces now — the rail on a wide screen, the tab group on a
+  // Two nav surfaces now - the rail on a wide screen, the tab group on a
   // narrow one. Only one of them is visible at a time, and which one is a
   // question for CSS, so both are kept current.
   document.querySelectorAll(
@@ -253,7 +253,7 @@ function badge(viewName, n) {
 }
 
 /* What the page actually displays, as one short string. If this has not moved
-   there is nothing to repaint — which is the difference between a poll you
+   there is nothing to repaint - which is the difference between a poll you
    never notice and a page that visibly blinks every minute. */
 function signature(rows, cf) {
   // Data only. View and grouping changes are rendered by the handlers that
@@ -305,7 +305,7 @@ async function load(opts = {}) {
   // Before renderList: the category order is ranked over the whole inventory.
   ALL = filtered ? await api("/api/entries") : rows;
   renderList();
-  // Filtered, the count has to say what it is showing AND out of what — a bare
+  // Filtered, the count has to say what it is showing AND out of what - a bare
   // "12 entries" on a filtered table looks like the inventory shrank.
   $("#count").innerHTML = filtered
     ? `<b>${ENTRIES.length}</b> of ${ALL.length} entries`

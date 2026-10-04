@@ -1,7 +1,7 @@
-/* NetMap front end — network.js: the Network view: topology, derived links, deep scan.
+/* NetMap front end - network.js: the Network view: topology, derived links, deep scan.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= network view ================= */
 const IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
@@ -75,7 +75,7 @@ function treeHtml(nodes, depth = 0) {
     // The address, ports and cable annotation are reference, not structure. On
     // every row they turned the shape of the tree into a wall of text; on
     // hover they are still one gesture away. `via` arrives already normalised
-    // — db.topology() reduces four phrasings of "plugged into a port" to one
+    // - db.topology() reduces four phrasings of "plugged into a port" to one
     // and drops provenance.
     //
     // The address is no longer hidden when it matches the parent's. That
@@ -87,7 +87,7 @@ function treeHtml(nodes, depth = 0) {
                  n.ip || "", n.ports || "", n.via || ""]
       .filter(Boolean).join("  ·  ");
     // Status and the product's mark are the two things worth seeing on every
-    // row — a glance down the tree shows what is up and what each thing is.
+    // row - a glance down the tree shows what is up and what each thing is.
     // The address sits in a faint column at the far right: available without
     // a hover, but out of the tree's shape, which is what the comment above
     // protects. It goes away on narrow screens.
@@ -111,7 +111,7 @@ function treeHtml(nodes, depth = 0) {
 /* Devices a person is keeping an eye on without adding them to the
    inventory (app/watch.py). Each says what the sources know, whether it is
    on the network now, and the note; it ends with Create entry, Ignore or
-   Stop watching — or by itself after 90 days unseen. */
+   Stop watching - or by itself after 90 days unseen. */
 let WATCH = { watching: [], drop_days: 90 };
 // A note being typed survives the re-render a landing scan causes.
 const WNOTE_DRAFT = {};
@@ -119,7 +119,7 @@ const WNOTE_DRAFT = {};
 function watchHtml() {
   const ws = WATCH.watching || [];
   if (!ws.length) return "";
-  const day = (ts) => ts ? whenScan(ts) : "—";
+  const day = (ts) => ts ? whenScan(ts) : "-";
   return `<div class="ovsec" id="watchSec">
     <div class="ovhead"><h2>Watching</h2>
       <span class="hint">${ws.length} device${ws.length === 1 ? "" : "s"} · ${
@@ -144,7 +144,7 @@ function watchHtml() {
         <div class="setrow wnote">
           <input class="wnoteIn" maxlength="500" value="${esc(w.key in WNOTE_DRAFT
             ? WNOTE_DRAFT[w.key] : w.note || "")}"
-                 placeholder="Note — what you know so far" aria-label="Note on ${esc(w.name)}">
+                 placeholder="Note - what you know so far" aria-label="Note on ${esc(w.name)}">
           <button class="btn sm" data-wsave="${esc(w.key)}">Save note</button>
         </div>
         <div class="setrow">
@@ -216,7 +216,7 @@ function wireWatch(box) {
         await api(`/api/watch?key=${encodeURIComponent(key)}${ignore ? "&ignore=true" : ""}`,
                   { method: "DELETE" });
       } catch { return; }
-      toast(ignore ? "Ignored — it will not come back" : "No longer watched");
+      toast(ignore ? "Ignored - it will not come back" : "No longer watched");
       const src = ((find(key) || {}).finding || "").split(":")[0];
       if (src && !ignore) await scanOne(src);
       await again();
@@ -233,7 +233,7 @@ async function renderNetwork() {
     SEEN = {};
     for (const x of (r.presence || [])) SEEN[x.ip] = x;
   }).catch(() => {});
-  // The live sweep — eight sources, one of them ~2,000 port probes — runs
+  // The live sweep - eight sources, one of them ~2,000 port probes - runs
   // behind the page instead of in front of it. Reconciliation renders from
   // whatever is cached (nothing, on a first-ever visit) and fills in, with
   // the rail's "checked" time along with it, once the scan lands.
@@ -249,7 +249,7 @@ async function renderNetwork() {
       ? api("/api/graph").then(g => { GRAPH_DATA = g; return []; })
       : api("/api/topology?mode=" + encodeURIComponent(graph ? "tree" : topoMode)),
     api("/api/edges/derive?dry_run=true", { method: "POST" }).catch(() => null),
-    // Never scans — safe to re-read on every visit, same as the nav badge does.
+    // Never scans - safe to re-read on every visit, same as the nav badge does.
     api("/api/discovery/summary").then(s => { SRC_HEALTH = s; }).catch(() => {}),
     api("/api/watch").then(w => { WATCH = w; }).catch(() => {}),
   ]);
@@ -265,7 +265,7 @@ async function renderNetwork() {
       <div class="cflist">${unmapped.map(u => `
         <div class="cf">
           <div class="cfh"><b class="mono">${esc(u.host)}</b>
-            <span class="cfd">${u.count} entr${u.count === 1 ? "y" : "ies"} — ${esc(u.examples.join(", "))}</span></div>
+            <span class="cfd">${u.count} entr${u.count === 1 ? "y" : "ies"} - ${esc(u.examples.join(", "))}</span></div>
           <div class="setrow">
             <input class="hmIn" list="entrylist2" data-host="${esc(u.host)}" placeholder="which entry is this?">
             <button class="btn hmSet" data-host="${esc(u.host)}">Map</button>
@@ -293,13 +293,13 @@ async function renderNetwork() {
         ${graph ? "" : `<span class="more" id="tfoldall">Collapse all</span>`}
         <span class="more" id="rederive">Re-derive links</span></div>
       ${graph && !narrow ? `<div class="card2 gwrap" id="graphBox"></div>` : `
-      ${graph ? `<div class="empty-hint gnarrow">The graph needs a wider screen — here is the tree.</div>` : ""}
+      ${graph ? `<div class="empty-hint gnarrow">The graph needs a wider screen - here is the tree.</div>` : ""}
       <div class="card2 tree">${roots.length ? treeHtml(roots)
         : `<div class="empty-hint">${topoMode === "deps"
-            ? "Nothing declares a dependency yet — add <code>depends on</code> links on a service card."
+            ? "Nothing declares a dependency yet - add <code>depends on</code> links on a service card."
             : topoMode === "physical"
-            ? "No cabling recorded yet — UniFi derives it; re-derive links."
-            : "No <code>runs on</code> links yet — map the hosts below, then re-derive."}</div>`}
+            ? "No cabling recorded yet - UniFi derives it; re-derive links."
+            : "No <code>runs on</code> links yet - map the hosts below, then re-derive."}</div>`}
         ${loose.length && topoMode === "tree" ? `<div class="loose"><span class="lh">Not placed (${loose.length})</span>
           ${loose.map(n => `<span class="lchip" data-card="${n.id}">${esc(n.name)}</span>`).join("")}</div>` : ""}
       </div>`}
@@ -319,7 +319,7 @@ async function renderNetwork() {
               : (SEEN[addrOf(n.net, i + 1)] ? "seen" : "free");
             return `<i class="${cls}" data-a="${i + 1}"></i>`;
           }).join("")}</div>
-          <div class="snread" data-read="${esc(n.net)}"><span class="hint">Hover or tap an address for detail — or Tab here and use the arrow keys</span></div>
+          <div class="snread" data-read="${esc(n.net)}"><span class="hint">Hover or tap an address for detail - or Tab here and use the arrow keys</span></div>
         </div>`).join("")}
       </div>
     </div>
@@ -407,7 +407,7 @@ async function renderNetwork() {
         body: JSON.stringify({ host, entry_id: target.id }),
       });
       const r = await api("/api/edges/derive?dry_run=false", { method: "POST" });
-      toast(`Mapped — ${r.counts.added} links`);
+      toast(`Mapped - ${r.counts.added} links`);
       await load(); renderNetwork();
     };
   });
@@ -428,7 +428,7 @@ function dsRows(j) {
       <span class="pe">${r.url && /^https?:\/\//.test(r.url)
         ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.service || r.url)}</a>`
         : esc(r.service || "")}${r.service && !r.identified
-        ? ` <span class="hint" title="Named from the port number alone — nothing answered that said what it is">(guess)</span>` : ""}</span>
+        ? ` <span class="hint" title="Named from the port number alone - nothing answered that said what it is">(guess)</span>` : ""}</span>
       <span class="pc">${r.declared
         ? `<span class="hint">declared</span>`
         : `<span class="dupw">not declared</span>`}</span>
@@ -439,7 +439,7 @@ function dsInner() {
   const j = DS;
   if (!j || j.state === "none")
     return `<div class="empty-hint">Nothing scanned yet. Private addresses
-      only — this probes machines, it does not read a record.</div>`;
+      only - this probes machines, it does not read a record.</div>`;
   if (j.state === "running") {
     return `
       <div class="dshead"><b class="mono">${esc(j.ip)}</b>
@@ -449,16 +449,16 @@ function dsInner() {
       <div class="dsbar"><i style="width:${j.percent}%"></i></div>`;
   }
   if (j.state === "error")
-    return `<div class="empty-hint">Scan of ${esc(j.ip)} failed —
+    return `<div class="empty-hint">Scan of ${esc(j.ip)} failed -
       ${esc(j.error || "no reason given")}.</div>`;
   // A silent host is not a host with 65535 closed ports. Say which it was.
   const verdict = j.silent
-    ? `<span class="dupw">${esc(j.ip)} answered nothing at all</span> — no
+    ? `<span class="dupw">${esc(j.ip)} answered nothing at all</span> - no
        refusals either, so it is unreachable or dropping every packet. That is
        not evidence that its ports are closed.`
     : `<b>${j.open.length}</b> open of ${j.total} scanned in ${j.seconds}s`
       + (j.undeclared.length
-        ? ` — <span class="dupw">${j.undeclared.length} nothing in the
+        ? ` - <span class="dupw">${j.undeclared.length} nothing in the
             inventory accounts for</span>` : `, all of them declared`);
   return `
     <div class="dshead"><b class="mono">${esc(j.ip)}</b>

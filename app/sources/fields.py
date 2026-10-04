@@ -11,15 +11,15 @@ A driver's `FIELDS` is a list of:
     integer      a number field that is a whole number
     wide         a wider input (URLs, tokens)
     placeholder  hint text
-    binds        what a secret was entered *for* — changing it without
+    binds        what a secret was entered *for* - changing it without
                  re-entering the secret is refused, so a stored credential is
                  never sent to an address or user it was not entered for
     env          the environment variable this field was read from before
-                 1.75.0 — used only by the one-time seed, see
+                 1.75.0 - used only by the one-time seed, see
                  sources.migrate_legacy()
 
 Values are cast here once, when saved, and again when handed to a driver, so a
-driver's `cfg` always holds a bool for a checkbox and a number for a number —
+driver's `cfg` always holds a bool for a checkbox and a number for a number -
 never the string "false" that used to switch a flag on.
 """
 import ssl
@@ -57,7 +57,7 @@ def cast(f: dict, raw):
             kind = "whole number" if f.get("integer") else "number"
             raise ValueError(f"'{f['key']}' must be a {kind}") from None
     s = "" if raw is None else str(raw)
-    # URLs lose surrounding space and a trailing slash — "http://x/" + "/api"
+    # URLs lose surrounding space and a trailing slash - "http://x/" + "/api"
     # is "//api". Secrets are left exactly as typed: a trailing space in a
     # password is the password.
     return s.strip().rstrip("/") if f["key"] == "url" else s
@@ -88,7 +88,7 @@ def coerce(field_defs: list[dict], raw: dict) -> dict:
 
 def split(field_defs: list[dict], fields_in: dict) -> tuple[dict, dict]:
     """A form submission into (config, secrets), using the field list to decide
-    which is which — so a caller cannot write a token into a plaintext column —
+    which is which - so a caller cannot write a token into a plaintext column -
     and casting every value, so a bad one is refused on save rather than
     breaking a scan later. Secrets come back in plaintext for the caller to
     encrypt; a blank one is left out, which means "keep what is stored"."""
@@ -129,7 +129,7 @@ def check_rebind(field_defs: list[dict], before: dict, config: dict, secrets: di
     if rebound and missing:
         raise ValueError(
             f"changing {', '.join(rebound)} needs {', '.join(missing)} "
-            "entered again — a stored secret is never sent to an address "
+            "entered again - a stored secret is never sent to an address "
             "or user it was not entered for")
 
 

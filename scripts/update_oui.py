@@ -1,4 +1,4 @@
-"""Refresh app/oui.txt.gz — the vendor of every IEEE MA-L block, for
+"""Refresh app/oui.txt.gz - the vendor of every IEEE MA-L block, for
 "who made this device" on the address map.
 
 Run by hand, never by the app: NetMap does not fetch this at run time.
@@ -33,7 +33,7 @@ def main(src: str | None) -> None:
         if m and m.group(2):
             rows[m.group(1)] = " ".join(m.group(2).split())
     if len(rows) < 10000:
-        raise SystemExit(f"only {len(rows)} blocks parsed — not an IEEE oui.txt?")
+        raise SystemExit(f"only {len(rows)} blocks parsed - not an IEEE oui.txt?")
     body = "".join(f"{k}\t{v}\n" for k, v in sorted(rows.items()))
     OUT.write_bytes(gzip.compress(body.encode(), 9, mtime=0))
     print(f"{len(rows)} blocks -> {OUT} ({OUT.stat().st_size // 1024} KB)")

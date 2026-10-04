@@ -1,11 +1,11 @@
-/* NetMap front end — graph.js: Network › Topology › Graph, the drawn map.
+/* NetMap front end - graph.js: Network › Topology › Graph, the drawn map.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= topology graph ================= */
 /* The tree answers "what runs on what" one parent at a time; this draws every
-   link at once — cabling, hosting, dependencies, and the paths in from the
+   link at once - cabling, hosting, dependencies, and the paths in from the
    internet. Hand-written SVG, no library: layers by kind (the internet, then
    hardware, VMs, containers, services, rules), each ordered by the average
    position of its neighbours so links cross as little as a few passes can
@@ -137,7 +137,7 @@ function graphSvg(pick, width) {
   const { xy, height } = graphLayout(pick.nodes, pick.links, pick.inet, width);
   const edges = pick.links.map(l => {
     const a = xy.get(l.src), b = xy.get(l.dst);
-    const tip = `${a.node.name} ${GRAPH_EDGE[l.type] || l.type} ${b.node.name}${l.note ? " — " + l.note : ""}`;
+    const tip = `${a.node.name} ${GRAPH_EDGE[l.type] || l.type} ${b.node.name}${l.note ? " - " + l.note : ""}`;
     return `<path class="ge ge-${esc(l.type)}${l.derived ? " derived" : ""}" d="${graphPath(a, b)}"
       data-src="${l.src}" data-dst="${l.dst}"><title>${esc(tip)}</title></path>`;
   });
@@ -192,7 +192,7 @@ function graphHtml(entries, data, width) {
   const body = pick.nodes.length ? graphSvg(pick, width)
     : `<div class="empty-hint">${f.cat || f.zone || f.exposed
         ? "Nothing matches these filters."
-        : "No links yet — map the hosts below, then re-derive links."}</div>`;
+        : "No links yet - map the hosts below, then re-derive links."}</div>`;
   return bar + `<div class="gscroll">${body}</div>` + legend;
 }
 

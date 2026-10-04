@@ -1,16 +1,16 @@
-/* NetMap front end — addresses.js: the address strip — one /24 at a time.
+/* NetMap front end - addresses.js: the address strip - one /24 at a time.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= address strip ================= */
 /* 254 cells per /24. A native `title` was the cheap answer and the wrong one:
    it waits a second, truncates a long list, cannot be clicked, and never
-   appears on the free cells — which are the ones you are looking at when the
+   appears on the free cells - which are the ones you are looking at when the
    question is "what address can I use next". So: a readout that follows the
    pointer, and a popover on click whose entries are links. */
 let popNet = null;
-// Addresses a source has seen that no entry claims. Not inventory — a layer
+// Addresses a source has seen that no entry claims. Not inventory - a layer
 // over the map, because a strip that draws an occupied address as free is
 // wrong exactly when someone is looking for a free one.
 let SEEN = {};
@@ -35,7 +35,7 @@ function closeAddrPop() {
 
 function addrOf(net, i) { return net.replace(/0\/24$/, "") + i; }
 
-// Who made it, and since when it has been around — from the server's device
+// Who made it, and since when it has been around - from the server's device
 // history (app/newdevices.py). A randomised MAC has no vendor to name.
 function seenWho(x) {
   return x.randomised ? "randomised MAC" : (x.vendor || "");
@@ -135,7 +135,7 @@ function wireStrip(box, nets) {
             }).join("")}</div>
              ${here.length > 1
                ? `<div class="apw">${here.length} entries at this address. Normal for
-                  containers on one host — the Overview flags the pairs that actually
+                  containers on one host - the Overview flags the pairs that actually
                   conflict.</div>` : ""}`
           : SEEN[ip]
           ? `<div class="apseen"><b>${esc(SEEN[ip].label || "unnamed device")}</b>
@@ -150,7 +150,7 @@ function wireStrip(box, nets) {
              <button class="btn primary sm" id="apAdd">Add an entry here</button>`}`;
       const r = cell.getBoundingClientRect();
       el.hidden = false;
-      // Measure after unhiding, then keep it inside the viewport — the cell
+      // Measure after unhiding, then keep it inside the viewport - the cell
       // may be at either edge of a 254-wide strip.
       const w = el.offsetWidth;
       el.style.left = Math.max(8, Math.min(window.innerWidth - w - 8,

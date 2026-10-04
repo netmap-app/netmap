@@ -1,4 +1,4 @@
-# NetMap — every option, with what it is for. Copy this file, fill in what
+# NetMap - every option, with what it is for. Copy this file, fill in what
 # you use, then:  docker compose up -d
 # The first start prints a one-time admin password to the log:
 #   docker compose logs netmap | grep password
@@ -12,8 +12,8 @@ services:
     container_name: netmap
     restart: unless-stopped
     # Reachable on the LAN at http://<this host>:8087 (login required). Behind
-    # a reverse proxy or a tunnel, bind it to loopback instead —
-    # "127.0.0.1:8087:8087" — or drop `ports` and join the proxy's network.
+    # a reverse proxy or a tunnel, bind it to loopback instead -
+    # "127.0.0.1:8087:8087" - or drop `ports` and join the proxy's network.
     ports:
       - "8087:8087"
     # The database and the icon cache. The app runs as UID 1000: the folder
@@ -24,12 +24,12 @@ services:
     environment:
       - TZ=Etc/UTC                  # your time zone, e.g. Europe/Berlin
       - NETMAP_CHECK_INTERVAL=120   # seconds between reachability sweeps
-      # Discovery is reconciliation, not monitoring — daily is enough, and
+      # Discovery is reconciliation, not monitoring - daily is enough, and
       # the port sweep should not run 96 times a day. Scans also run at start-up.
       - NETMAP_DISCOVERY_INTERVAL=86400
       - NETMAP_CHECK_TIMEOUT=2.5    # seconds per TCP probe
       # MCP endpoint path (README section 10). Optional: a private path keeps
-      # the endpoint out of casual scans, but it is not a credential — the
+      # the endpoint out of casual scans, but it is not a credential - the
       # token below is. Rotate by changing it here AND in every MCP client.
       #   python3 -c "import secrets; print('/private_' + secrets.token_urlsafe(18))"
       - NETMAP_MCP_PATH=/mcp
@@ -39,7 +39,7 @@ services:
       # `Authorization: Bearer <this token>`.
       #   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
       - NETMAP_MCP_TOKEN=
-      # REQUIRED: every name or address you open NetMap by, comma separated —
+      # REQUIRED: every name or address you open NetMap by, comma separated -
       # this server's LAN IP, its DNS name, the name a reverse proxy sends.
       # localhost is always allowed. Anything else is refused (DNS-rebinding
       # protection) with a page naming what to add here.
@@ -54,11 +54,11 @@ services:
       # For machines that cannot log in (a dashboard widget, scripts): send "Authorization: Bearer <this>". Optional.
       #   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
       - NETMAP_API_TOKEN=
-      # Read-only token for GET /api/summary only — a dashboard widget.
+      # Read-only token for GET /api/summary only - a dashboard widget.
       - NETMAP_SUMMARY_TOKEN=
-      # Read-only token for GET /metrics only — a Prometheus scraper.
+      # Read-only token for GET /metrics only - a Prometheus scraper.
       - NETMAP_METRICS_TOKEN=
-      # The local password login (/login, Settings > Profile) is always on —
+      # The local password login (/login, Settings > Profile) is always on -
       # the way in when Access is misconfigured. Its starting password: this
       # value on the first start only, or, if empty, a random one printed once
       # to the container log. Change it under Settings > Profile; after that
@@ -70,12 +70,12 @@ services:
       # database copy of the key is deleted). Keep a copy somewhere safe.
       #   python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
       - NETMAP_SECRET_KEY=
-      # NETMAP_AUTH=off disables all of the above — local development only.
+      # NETMAP_AUTH=off disables all of the above - local development only.
       # ==== Sources ====================================================
       # Docker, OPNsense, Pi-hole, AdGuard Home, a DHCP lease file, router ARP
       # (SNMP), UniFi, Home Assistant, NPM, Traefik, Cloudflare, Open ports,
       # Proxmox VE and NetBox are added in
-      # Settings › Sources, credentials encrypted under NETMAP_SECRET_KEY —
+      # Settings › Sources, credentials encrypted under NETMAP_SECRET_KEY -
       # not here. README §12 says which read-only credential to create for
       # each. (The NETMAP_* source variables of ≤ 1.74 are a one-time seed on
       # upgrade, listed in README §7; a new install does not need them.)

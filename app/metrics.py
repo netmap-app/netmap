@@ -1,4 +1,4 @@
-"""GET /metrics — NetMap's state in the Prometheus text format, so Grafana or
+"""GET /metrics - NetMap's state in the Prometheus text format, so Grafana or
 Alertmanager can watch it without NetMap growing an alerting engine.
 
 Written by hand: the format is a few lines of text per series and does not
@@ -97,7 +97,7 @@ def render(version: str) -> str:
     out.family("netmap_findings", "Findings from the source's last scan, by type.",
                [({"source": s, "type": t}, n) for (s, t), n in sorted(by_type.items())])
     out.family("netmap_source_findings",
-               "All findings from the source's last scan — 0 is a real answer here.", totals)
+               "All findings from the source's last scan - 0 is a real answer here.", totals)
 
     out.family("netmap_build_info", "The running NetMap version.", [({"version": version}, 1)])
     return "\n".join(out.lines) + "\n"

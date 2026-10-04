@@ -1,24 +1,24 @@
 """Who may use the web UI and REST API, and what the browser is told to allow.
 
-The MCP endpoint is not handled here — `_MCPDispatcher` in main.py sends it
+The MCP endpoint is not handled here - `_MCPDispatcher` in main.py sends it
 to the MCP app before any of this runs. It is off unless NETMAP_MCP_TOKEN is
 set, and then requires that bearer token; it has its own Host check.
 
 Everything else used to trust the network: Cloudflare Access stood in front of
 the public hostname, but the container's port was also open on the LAN, where the
-same API answered anyone — including requests that could point a source at
+same API answered anyone - including requests that could point a source at
 another address and collect the credential stored for it. Being on the LAN is
 not an identity, so every request now carries one of three:
 
   Cf-Access-Jwt-Assertion   the signed token Cloudflare Access adds to every
                             request it lets through (or its CF_Authorization
-                            cookie). Verified here — signature, audience,
-                            issuer, expiry — because a header anyone can type
+                            cookie). Verified here - signature, audience,
+                            issuer, expiry - because a header anyone can type
                             is not proof that Access ever saw the request.
   Authorization: Bearer     NETMAP_API_TOKEN, for machines on the LAN that
                             cannot log in to Access: a dashboard widget,
                             scripts.
-  netmap_session cookie     the local account's password login (/login) —
+  netmap_session cookie     the local account's password login (/login) -
                             the spare key for when Access is misconfigured.
                             See app/accounts.py.
 
@@ -29,7 +29,7 @@ so loudly at start-up and in Settings > About.
 Two of the three ride on cookies (Access converts its CF_Authorization cookie
 into the header), and a cookie is sent on a request another site's page
 starts. So a state-changing request identified that way must not carry a
-foreign Origin — the bearer token is exempt, since no browser sends it on
+foreign Origin - the bearer token is exempt, since no browser sends it on
 its own.
 """
 import os
@@ -51,7 +51,7 @@ CF_AUD = os.environ.get("NETMAP_CF_ACCESS_AUD", "").strip()
 API_TOKEN = os.environ.get("NETMAP_API_TOKEN", "").strip()
 # Read-only, and only for the counters a dashboard shows: this token opens
 # GET /api/summary and nothing else. It lives in a dashboard's config, which
-# is exactly the kind of file that gets copied around — so it must not be
+# is exactly the kind of file that gets copied around - so it must not be
 # able to change anything, or read the inventory itself.
 SUMMARY_TOKEN = os.environ.get("NETMAP_SUMMARY_TOKEN", "").strip()
 SUMMARY_PATHS = {"/api/summary"}
@@ -64,7 +64,7 @@ DISABLED = os.environ.get("NETMAP_AUTH", "").strip().lower() in ("off", "0", "fa
 CF_CONFIGURED = bool(CF_ISSUER and CF_AUD)
 
 # Reachable without an identity: the container health check, and the static
-# files (public code and images — the page that uses them is not public).
+# files (public code and images - the page that uses them is not public).
 EXEMPT_EXACT = {"/healthz", "/login", "/api/auth/login", "/api/auth/logout"}
 EXEMPT_PREFIX = ("/static/",)
 
@@ -83,13 +83,13 @@ def describe() -> dict:
 
 def startup_lines() -> list[str]:
     if DISABLED:
-        return ["[netmap] WARNING: NETMAP_AUTH=off — the web UI and REST API "
+        return ["[netmap] WARNING: NETMAP_AUTH=off - the web UI and REST API "
                 "answer anyone who can reach this port"]
     ways = (["Cloudflare Access JWT"] if CF_CONFIGURED else []) + \
            (["API token"] if API_TOKEN else []) + ["password login (/login)"]
     out = [f"[netmap] web UI and REST API require: {' or '.join(ways)}"]
     if not CF_CONFIGURED:
-        out.append("[netmap] Cloudflare Access login is off — set "
+        out.append("[netmap] Cloudflare Access login is off - set "
                    "NETMAP_CF_ACCESS_TEAM and NETMAP_CF_ACCESS_AUD")
     return out
 
@@ -97,7 +97,7 @@ def startup_lines() -> list[str]:
 # ---- identity ---------------------------------------------------------------
 def _h(headers: dict[bytes, bytes], name: bytes) -> str:
     """A header as text. Latin-1 maps every byte, so a malformed header is
-    just a wrong value — never an exception and a 500."""
+    just a wrong value - never an exception and a 500."""
     return headers.get(name, b"").decode("latin-1")
 
 
@@ -133,7 +133,7 @@ def _verify_cf(token: str) -> str | None:
 
 
 async def identify(headers: dict[bytes, bytes]) -> tuple[str, str] | None:
-    """(who, how) — how is "token", "access", "password" or "off"."""
+    """(who, how) - how is "token", "access", "password" or "off"."""
     if DISABLED:
         return "web", "off"
     if bearer_ok(headers, API_TOKEN):
@@ -168,7 +168,7 @@ _SAFE = {"GET", "HEAD", "OPTIONS"}
 
 class RequireIdentity:
     """ASGI middleware: no identity, no API. The identity lands in
-    `request.state.actor`, which is what the change history records — it
+    `request.state.actor`, which is what the change history records - it
     replaces reading an e-mail out of a header the client chose."""
 
     def __init__(self, app):
@@ -190,7 +190,7 @@ class RequireIdentity:
         found = await identify(headers)
         if found is None:
             # A person arriving at the page goes to the login form; anything
-            # else — the API, a script — gets a status it can act on.
+            # else - the API, a script - gets a status it can act on.
             if path == "/" and scope.get("method") in ("GET", "HEAD"):
                 return await _redirect(send, "/login")
             return await _deny(send)
@@ -229,7 +229,7 @@ PAGE_CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inl
             "form-action 'self'; frame-ancestors 'none'")
 
 # For the service marks: SVGs fetched from a CDN and served from this origin.
-# An <img> never runs script, but opening the URL directly makes it a document —
+# An <img> never runs script, but opening the URL directly makes it a document -
 # sandboxed, it cannot.
 ICON_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
 
@@ -265,7 +265,7 @@ class HostCheck:
     """Refuse a request whose Host is not an allowed name (DNS rebinding:
     a page elsewhere re-pointing its own name at this address). Starlette's
     TrustedHostMiddleware does the same with a bare "Invalid host header",
-    which is the first thing a new install opened by its IP address sees —
+    which is the first thing a new install opened by its IP address sees -
     so this one says which name was refused and what to set."""
 
     def __init__(self, app, allowed_hosts: list[str]):

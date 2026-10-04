@@ -1,5 +1,5 @@
 """NetBox as a source (app/sources/netbox.py): pagination, the token staying on
-NetBox, and matching — by address, by name, by a mapped host name — into the
+NetBox, and matching - by address, by name, by a mapped host name - into the
 five findings. API pages are canned; one test talks to a local HTTP server."""
 import http.server
 import json
@@ -85,7 +85,7 @@ def test_findings(nb):
     by = {}
     for f in r["findings"]:
         by.setdefault(f["type"], []).append(f)
-    # matched by address (switch, docker-vm — not the container sharing it),
+    # matched by address (switch, docker-vm - not the container sharing it),
     # by name (nas, whose address drifted), by a mapped host name (Pve Host)
     assert r["counts"]["matched"] == 4
     assert [f["draft"]["name"] for f in by["netbox-untracked"]] == ["new-ap"]   # planned: not news

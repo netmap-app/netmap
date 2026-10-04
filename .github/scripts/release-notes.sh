@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Print the GitHub Release notes for one version: its CHANGELOG.md bullets,
 # then the pull command and the upgrade line. Fails if the version has no
-# entry or the entry has no bullets — a release never goes out empty.
+# entry or the entry has no bullets - a release never goes out empty.
 #
 #   release-notes.sh <version> [CHANGELOG.md] [image]
 set -euo pipefail
@@ -9,7 +9,7 @@ v=${1:?usage: release-notes.sh <version> [CHANGELOG.md] [image]}
 file=${2:-CHANGELOG.md}
 image=${3:-ghcr.io/netmap-app/netmap}
 
-# The entry: from "## <version> — <date>" to the next "## " heading. The same
+# The entry: from "## <version> - <date>" to the next "## " heading. The same
 # shape /api/changelog parses (app/main.py), so one format serves both.
 notes=$(awk -v v="$v" '
   /^## / { on = ($2 == v); next }

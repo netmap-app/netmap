@@ -1,4 +1,4 @@
-"""What the `leases` role implies, written once — as _dns.py is for DNS and
+"""What the `leases` role implies, written once - as _dns.py is for DNS and
 _proxy.py for reverse proxies.
 
 A leases source says which hardware address holds which IP right now: a DHCP
@@ -9,10 +9,10 @@ from those rows:
   presence    every row is a dot on the address map (db.record_presence)
   sightings   `lease` on an entry whose address and MAC the source confirms
   mac-mismatch  an entry that states its MAC(s), at an address this source
-                sees held by a different one — the address changed hands, or
+                sees held by a different one - the address changed hands, or
                 the entry's MAC is wrong
   ip-moved    an entry's MAC is seen at another address, and not at the
-              entry's own — the device moved and the inventory did not
+              entry's own - the device moved and the inventory did not
 
 Only entries that record a MAC are judged. Services share their host's
 address and have no hardware address of their own; silence is not
@@ -74,7 +74,7 @@ def report(cfg: dict, rows: list[dict], what: str, fact: str = "lease") -> tuple
         if at and at.get("mac"):
             findings.append({
                 "type": "mac-mismatch", "key": f"{P}:leasemac:{e['id']}",
-                "label": f"{e['name']} — {ip} is held by {at['mac']}",
+                "label": f"{e['name']} - {ip} is held by {at['mac']}",
                 "detail": (f"{what} sees {ip} at {at['mac']}"
                            + (f" ({at['label']})" if at.get("label") else "")
                            + f", but the entry records {', '.join(sorted(mine))}. "
@@ -86,7 +86,7 @@ def report(cfg: dict, rows: list[dict], what: str, fact: str = "lease") -> tuple
         if ip and elsewhere:
             findings.append({
                 "type": "ip-moved", "key": f"{P}:moved:{e['id']}",
-                "label": f"{e['name']} — now at {elsewhere[0]}, not {ip}",
+                "label": f"{e['name']} - now at {elsewhere[0]}, not {ip}",
                 "detail": (f"{what} sees this entry's MAC at {', '.join(elsewhere)} "
                            f"and nothing of it at {ip}. The device moved; the "
                            "inventory did not."),

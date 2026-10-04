@@ -4,8 +4,8 @@ The other four sources answer "does this exist and where". This one answers a
 question none of them can: **is it actually working?**
 
 NetMap's own health check is a TCP connect. That covers most things and misses
-the ones that matter most here. Zigbee2MQTT publishes no port at all — its
-frontend is mapped to null and reachable only through HA ingress — so a service
+the ones that matter most here. Zigbee2MQTT publishes no port at all - its
+frontend is mapped to null and reachable only through HA ingress - so a service
 that every light switch in the house depends on cannot be probed, and
 `critical_down` silently excludes it. Home Assistant already knows the answer:
 `binary_sensor.zigbee2mqtt_bridge_connection_state`.
@@ -16,7 +16,7 @@ its expectation as a tag:
     ha:binary_sensor.zigbee2mqtt_bridge_connection_state     expect "on"
     ha:sensor.some_thing=running                             expect "running"
 
-Without a tag there is nothing to check — Home Assistant's own state cannot be
+Without a tag there is nothing to check - Home Assistant's own state cannot be
 "wrong", it is simply what is true. The tag is the inventory saying what it
 believes, which is the only thing a scan can contradict.
 
@@ -46,7 +46,7 @@ FIELDS = [
 
 ROLES = ("health",)  # see dynamic.ROLES
 
-# "Not here" findings — dropped when another homeassistant source sees the entry.
+# "Not here" findings - dropped when another homeassistant source sees the entry.
 ABSENCE = {'ha-missing'}
 
 TAG_RE = re.compile(r"^ha:([a-z_]+\.[a-z0-9_]+)(?:=(.+))?$", re.I)
@@ -58,7 +58,7 @@ EXPECT = {"binary_sensor": "on", "switch": "on", "light": "on",
 # "unavailable" means the integration behind the entity is not answering.
 # "unknown" does not: a button is unknown until pressed, and a sensor is
 # unknown until it first reports. Counting them together inflated the number
-# to 220 where Home Assistant's own registry said 78 — a figure that disagrees
+# to 220 where Home Assistant's own registry said 78 - a figure that disagrees
 # with the source system is worse than no figure at all.
 DEAD = {"unavailable", "none", ""}
 
@@ -81,7 +81,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"Home Assistant answered HTTP {exc.code}"
-                + (" — check the token" if exc.code in (401, 403) else "")}
+                + (" - check the token" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach Home Assistant at {cfg['url']}: {exc}"}
 
@@ -105,13 +105,13 @@ def scan(cfg: dict) -> dict:
            "scanned_at": db.now(), "host": {"url": cfg.get("url", "")},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — add the URL and token in Settings › Sources"
+        out["error"] = "not configured - add the URL and token in Settings › Sources"
         return out
     try:
         states = _get(cfg, "/api/states")
     except urllib.error.HTTPError as exc:
         out["error"] = (f"Home Assistant answered HTTP {exc.code}"
-                        + (" — check the token; a long-lived access token "
+                        + (" - check the token; a long-lived access token "
                            "is made under your HA profile"
                            if exc.code in (401, 403) else ""))
         return out
@@ -132,10 +132,10 @@ def scan(cfg: dict) -> dict:
             if st is None:
                 findings.append({
                     "type": "ha-missing", "key": f"{P}:missing:{e['id']}:{ent}",
-                    "label": f"{e['name']} — {ent} does not exist",
+                    "label": f"{e['name']} - {ent} does not exist",
                     "detail": ("the inventory watches this entity and Home "
                                "Assistant has no such entity. Renamed, removed, "
-                               "or its integration failed to load — in every "
+                               "or its integration failed to load - in every "
                                "case nothing is being checked."),
                     "entry": _ref(e),
                 })
@@ -144,9 +144,9 @@ def scan(cfg: dict) -> dict:
             if val.lower() in DEAD:
                 findings.append({
                     "type": "ha-unavailable", "key": f"{P}:dead:{e['id']}:{ent}",
-                    "label": f"{e['name']} — {ent} is {val or 'empty'}",
+                    "label": f"{e['name']} - {ent} is {val or 'empty'}",
                     "detail": ("Home Assistant has the entity but the "
-                               "integration behind it is not answering — which "
+                               "integration behind it is not answering - which "
                                "a TCP check on this entry would not show."),
                     "entry": _ref(e),
                 })
@@ -155,7 +155,7 @@ def scan(cfg: dict) -> dict:
             if expect and val.lower() != expect.lower():
                 findings.append({
                     "type": "ha-state", "key": f"{P}:state:{e['id']}:{ent}",
-                    "label": f"{e['name']} — {ent} is \"{val}\"",
+                    "label": f"{e['name']} - {ent} is \"{val}\"",
                     "detail": f"expected \"{expect}\"" + ("" if want else
                               " (the default for this entity type; add "
                               "=<state> to the tag to expect something else)"),

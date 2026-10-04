@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
 <meta name="netmap-version" content="__V__">
-<title>NetMap — homelab inventory</title>
+<title>NetMap - homelab inventory</title>
 <link rel="stylesheet" href="/static/style.css?v=__V__">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2312161B'/><g stroke='%236B7480' stroke-width='6' fill='none'><path d='M17 47V17M19 19l26 26M47 47V17'/></g><g fill='%23E4E8ED'><rect x='12' y='42' width='10' height='10'/><rect x='12' y='12' width='10' height='10'/><rect x='42' y='42' width='10' height='10'/></g><circle cx='47' cy='17' r='6' fill='%2322D3EE'/></svg>">
 <link rel="icon" sizes="32x32" href="/static/brand/netmap-tile-32.png">
@@ -21,7 +21,7 @@
 <!-- The rail. Four destinations and a settings door: at this size a
      persistent list beats a pill group, because the reader can see where else
      they could be without first losing where they are. It is hidden below
-     980px, where the header's tab group takes over — a 200px column is not a
+     980px, where the header's tab group takes over - a 200px column is not a
      trade a phone can afford. -->
 <nav class="rail" aria-label="Sections">
   <button class="railtog" id="railTog" title="Collapse the sidebar" aria-label="Collapse the sidebar"><svg viewBox="0 0 24 24" class="ico"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
@@ -60,7 +60,7 @@
       <button class="btn primary" id="addBtn" title="Add entry">
         <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Add</span>
       </button>
-      <button class="btn icon-only" id="refreshBtn" title="Re-check everything — reachability and every reconciliation source">
+      <button class="btn icon-only" id="refreshBtn" title="Re-check everything - reachability and every reconciliation source">
         <svg viewBox="0 0 24 24" width="15" height="15" class="ico"><path d="M20 11a8 8 0 1 0-2.3 5.6"/><path d="M20 5v6h-6"/></svg>
       </button>
       <button class="btn icon-only" id="histBtn" title="Change history">
@@ -90,7 +90,7 @@
 <button class="pwbanner updbanner stalebanner" id="staleBanner" role="status" aria-live="polite" hidden></button>
 <!-- Shown until the starting password has been replaced. -->
 <button class="pwbanner" id="pwBanner" hidden>The local login still uses its
-  starting password — set your own in Settings › Profile.</button>
+  starting password - set your own in Settings › Profile.</button>
 
 <main id="overview"></main>
 <main id="list" hidden>
@@ -139,7 +139,7 @@
     <div class="ovsec">
       <div class="ovhead"><h2>Sources</h2>
         <span class="hint" data-tip>The systems NetMap reads to check the inventory
-          against — add, edit or remove them here, with no redeploy. Secrets
+          against - add, edit or remove them here, with no redeploy. Secrets
           are encrypted at rest and never shown again once saved.</span></div>
       <form class="card2 setcard scanset" id="scanForm">
         <div class="setrow">
@@ -181,7 +181,7 @@
       <form class="card2 setcard scanset" id="staleForm">
         <div class="setrow">
           <span>Flag entries nothing has seen for</span>
-          <span class="hint" data-tip>Only entries something confirmed once — a source, an
+          <span class="hint" data-tip>Only entries something confirmed once - a source, an
             address it sees, or the health check answering. One note on the Overview.</span>
           <label class="scanin"><input id="staleDays" type="number" min="1" max="365" step="1"
             inputmode="numeric" aria-label="Days"> days</label>
@@ -192,7 +192,7 @@
         <div class="flabel"><span>Show 30-day uptime on the service card and the status dot for</span>
           <span class="hint" data-tip>Any match counts. A tag on an entry wins:
             <code>uptime:on</code> or <code>uptime:off</code>. Only monitored entries.
-            Time NetMap was not running, or an entry was not checked, counts as unknown —
+            Time NetMap was not running, or an entry was not checked, counts as unknown -
             never as up.</span></div>
         <div class="uprule" id="uptimeRule"><span class="hint">Loading…</span></div>
         <div class="setrow"><button class="btn" type="submit" id="uptimeSave">Save</button></div>
@@ -219,8 +219,8 @@
   <div class="setpanel" data-panel="notify" hidden>
     <div class="ovsec">
       <div class="ovhead"><h2>Notifications</h2>
-        <span class="hint" data-tip>What the Overview would show you — a new finding, a
-          critical entry down, a source not answering — sent where you will see
+        <span class="hint" data-tip>What the Overview would show you - a new finding, a
+          critical entry down, a source not answering - sent where you will see
           it. Once per change, never once per scan. Tokens are encrypted at rest
           and never shown again once saved.</span></div>
       <div class="card2 setcard">
@@ -253,7 +253,7 @@
           <input type="file" id="impFile" accept="application/json,.json" hidden>
         </div>
         <label class="impmode"><input type="checkbox" id="impReplace">
-          Replace mode — also delete entries the file does not contain</label>
+          Replace mode - also delete entries the file does not contain</label>
         <div id="impPlan"></div>
       </div>
     </div>
@@ -262,7 +262,7 @@
   <div class="setpanel" data-panel="profile" hidden>
     <div class="ovsec">
       <div class="ovhead"><h2>Profile</h2>
-        <span class="hint" data-tip>The local account — the password login at /login,
+        <span class="hint" data-tip>The local account - the password login at /login,
           for when Cloudflare Access cannot sign you in.</span></div>
       <div class="card2 setcard">
         <div class="profwho" id="profWho">Loading…</div>
@@ -317,8 +317,8 @@
       <div class="f"><label for="f_ports">Port(s)</label><input id="f_ports" class="mono"></div>
       <div class="f"><label for="f_protocol">Protocol / access</label><input id="f_protocol"></div>
       <div class="f"><div class="flabel"><label for="f_kind">Kind</label><span class="hint" data-tip>What it
-        is — as opposed to its category (what it does) or its host (where it runs).</span></div><select id="f_kind">
-        <option value="">— unset —</option>
+        is - as opposed to its category (what it does) or its host (where it runs).</span></div><select id="f_kind">
+        <option value="">- unset -</option>
         <option value="hardware">hardware</option>
         <option value="vm">vm</option>
         <option value="container">container</option>
@@ -327,7 +327,7 @@
         <option value="network">network</option>
       </select></div>
       <div class="f"><label for="f_criticality">Criticality</label><select id="f_criticality">
-        <option value="">— unset —</option>
+        <option value="">- unset -</option>
         <option value="critical">critical</option>
         <option value="important">important</option>
         <option value="normal">normal</option>
@@ -335,7 +335,7 @@
       </select></div>
       <div class="f"><label for="f_zone">Zone</label><input id="f_zone" list="zonelist" placeholder="LAN, IoT, DMZ…"><datalist id="zonelist"></datalist></div>
       <div class="f wide"><div class="flabel"><label for="f_secret_ref">Secret reference</label>
-        <span class="hint" data-tip>Where the credentials live — a pointer such as a password
+        <span class="hint" data-tip>Where the credentials live - a pointer such as a password
           manager path, never the secret itself.</span></div>
         <input id="f_secret_ref" class="mono" placeholder="op://Vault/Item/field"></div>
       <div class="f wide"><div class="flabel"><label for="f_url">URL</label>

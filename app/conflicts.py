@@ -6,7 +6,7 @@ twice under different names, an entry that says "monitor me" but carries
 nothing to probe.
 
 Every rule is deliberately narrow. A detector that cries wolf gets
-ignored, and an ignored detector is worse than none — so anything that
+ignored, and an ignored detector is worse than none - so anything that
 is *normally* true of a homelab (a dozen containers sharing the host's
 IP, a port-forward pointing at a service that already exists) is not a
 conflict here.
@@ -131,7 +131,7 @@ def find(rows: list[dict]) -> list[dict]:
                 "severity": "review",
                 "title": f"{len(group)} entries named “{group[0]['name']}”",
                 "detail": "Same name in more than one place. Fine if they really "
-                          "are different things — rename them so you can tell.",
+                          "are different things - rename them so you can tell.",
                 "entries": [_ref(e) for e in group],
             })
 

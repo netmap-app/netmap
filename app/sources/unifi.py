@@ -1,13 +1,13 @@
 """UniFi as a discovery source.
 
-The other three sources describe logical facts — what runs where, what holds an
+The other three sources describe logical facts - what runs where, what holds an
 address, what a name resolves to. UniFi is the only one that knows how things
 are physically **connected**: which switch port the NAS is on, which access
 point a phone is talking to, what uplinks into what.
 
 That matters because the physical layer in this inventory is hand-maintained.
 Switch and AP uplinks were typed in from notes, and nothing tells you when a
-cable moves — the edges rot silently. The controller knows the current answer
+cable moves - the edges rot silently. The controller knows the current answer
 continuously.
 
 Two endpoints, both GET:
@@ -103,7 +103,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"UniFi answered HTTP {exc.code}"
-                + (" — check the credentials" if exc.code in (401, 403) else "")}
+                + (" - check the credentials" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach UniFi at {cfg['url']}: {exc}"}
 
@@ -158,7 +158,7 @@ def _last_mac(port: dict) -> str:
 def topology(cfg: dict) -> dict:
     """The physical graph, for `links.py` to derive `connects_to` edges from.
 
-    Returns raw controller facts keyed by MAC — no NetMap ids, no opinions.
+    Returns raw controller facts keyed by MAC - no NetMap ids, no opinions.
     Deliberately separate from `scan()`: a scan reports and never writes, so
     the thing that produces edges is called by derivation, which is an explicit
     action the operator takes.
@@ -182,8 +182,8 @@ def topology(cfg: dict) -> dict:
             "uplink_mac": (up.get("uplink_mac") or "").lower(),
             "uplink_port": up.get("uplink_remote_port"),
             # The last device the switch saw on each live port. This
-            # controller keeps no per-port MAC table — `port_mac_lists` in a
-            # scan comes back empty — so this single MAC is all there is, and
+            # controller keeps no per-port MAC table - `port_mac_lists` in a
+            # scan comes back empty - so this single MAC is all there is, and
             # it is the only place a bridged host shows up at all: the host has
             # no client record of its own, but its guests' traffic crosses its
             # cable and is what the port reports.
@@ -217,14 +217,14 @@ def scan(cfg: dict) -> dict:
            "findings": [], "counts": {}, "error": None}
     # (the port-field probe below fills host.port_fields once devices are read)
     if not configured(cfg):
-        out["error"] = ("not configured — add the controller URL, username and "
+        out["error"] = ("not configured - add the controller URL, username and "
                         "password in Settings › Sources")
         return out
     try:
         devs, stas = _fetch(cfg)
     except urllib.error.HTTPError as exc:
         out["error"] = (f"UniFi answered HTTP {exc.code}"
-                        + (" — check the credentials; a read-only local admin is "
+                        + (" - check the credentials; a read-only local admin is "
                            "enough for this source" if exc.code in (401, 403) else ""))
         return out
     except Exception as exc:
@@ -233,14 +233,14 @@ def scan(cfg: dict) -> dict:
 
     # What this controller actually returns per switch port. The bridged-host
     # rule in links.py depends on one of these fields and the name varies by
-    # controller version, so the controller is asked rather than assumed —
+    # controller version, so the controller is asked rather than assumed -
     # guessing the name once already cost a wrong answer.
     #
     # Settled 2026-09-10, by watching the UI itself. The "MAC Table" the web
     # interface shows per port is not fetched from any endpoint: opening it
     # issues only `ports/system-logs` and `ports/port-anomalies`, and the full
     # device record from /api/s/<site>/stat/device/<mac> carries exactly one
-    # MAC per port — `last_connection.mac`. The UI assembles that table
+    # MAC per port - `last_connection.mac`. The UI assembles that table
     # client-side by grouping the clients from /stat/sta on `sw_mac` +
     # `sw_port`, which is data this source already fetches. There is no
     # endpoint to find, so `port_mac_lists` will stay empty and rule 5 keeps
@@ -273,7 +273,7 @@ def scan(cfg: dict) -> dict:
         if not e:
             findings.append({
                 "type": "device-untracked", "key": f"{P}:device:{mac}",
-                "label": f"{name or mac} — adopted UniFi device, not in NetMap",
+                "label": f"{name or mac} - adopted UniFi device, not in NetMap",
                 "detail": f"{d.get('model')} at {ip or 'no address'}, firmware "
                           f"{d.get('version')}",
                 "draft": {
@@ -290,14 +290,14 @@ def scan(cfg: dict) -> dict:
         if not d.get("adopted") or d.get("state") != 1:
             findings.append({
                 "type": "device-down", "key": f"{P}:down:{mac}",
-                "label": f"{e['name']} — {'not adopted' if not d.get('adopted') else 'offline'}",
+                "label": f"{e['name']} - {'not adopted' if not d.get('adopted') else 'offline'}",
                 "detail": f"the controller reports state {d.get('state')}",
                 "entry": _ref(e),
             })
         elif mac and not _macs(e.get("mac", "")):
             findings.append({
                 "type": "mac-missing", "key": f"{P}:mac:{mac}",
-                "label": f"{e['name']} — no MAC recorded",
+                "label": f"{e['name']} - no MAC recorded",
                 "detail": (f"the controller reports {mac}. Recording it lets "
                            "this entry be matched when it has no address to "
                            "match on."),
@@ -306,9 +306,9 @@ def scan(cfg: dict) -> dict:
         elif ip and (e.get("ip") or "").strip() != ip:
             findings.append({
                 "type": "device-drift", "key": f"{P}:ip:{mac}",
-                "label": f"{e['name']} — address differs",
+                "label": f"{e['name']} - address differs",
                 "detail": (f"the controller reports {ip}; NetMap records "
-                           f"{e.get('ip') or '—'}. A device that fell back to "
+                           f"{e.get('ip') or '-'}. A device that fell back to "
                            "DHCP looks exactly like this."),
                 "entry": _ref(e), "suggest": {"ip": ip},
             })
@@ -349,7 +349,7 @@ def scan(cfg: dict) -> dict:
     # The same question as link-missing, asked about clients rather than about
     # the controller's own gear. `link-missing` only walks UniFi devices, so a
     # NAS or a coordinator plugged into a switch port could sit outside the
-    # physical map indefinitely with nothing reporting it — the tree simply
+    # physical map indefinitely with nothing reporting it - the tree simply
     # listed it under "Not placed" and said nothing about why.
     for c in wired:
         sw = (c.get("sw_mac") or "").lower()
@@ -357,7 +357,7 @@ def scan(cfg: dict) -> dict:
             continue
         e = (by_mac.get((c.get("mac") or "").lower())
              or by_ip.get((c.get("ip") or "").strip().lower(), [None])[0])
-        # Only hardware is on a cable — same reasoning as the derivation rule.
+        # Only hardware is on a cable - same reasoning as the derivation rule.
         if not e or e.get("kind") != "hardware":
             continue
         parent = dev_by_mac.get(sw) or {}
@@ -366,15 +366,15 @@ def scan(cfg: dict) -> dict:
         if not dst or dst["id"] == e["id"]:
             continue
         port = c.get("sw_port")
-        # Two cables between one pair — a machine's uplink carrying the LAN
-        # and a management RJ45 beside it — are one edge, drawn in the
+        # Two cables between one pair - a machine's uplink carrying the LAN
+        # and a management RJ45 beside it - are one edge, drawn in the
         # direction of the uplink. The management cable having no edge of its
         # own is the design, not a gap, so the reverse link answers this.
         if (dst["id"], e["id"], "connects_to") in have:
             continue
         held = edge_at.get((e["id"], dst["id"], "connects_to"))
         if held is not None:
-            # A hand-made edge blocks the derived one permanently — `db.link`
+            # A hand-made edge blocks the derived one permanently - `db.link`
             # is INSERT OR IGNORE, so the version carrying the port can never
             # replace it. Drawing a device on the right switch with the port
             # silently missing is a worse failure than not drawing it, because
@@ -384,7 +384,7 @@ def scan(cfg: dict) -> dict:
                 continue
             findings.append({
                 "type": "client-unplaced", "key": f"{P}:client:{c.get('mac')}",
-                "label": f"{e['name']} → {dst['name']} — recorded without port {port}",
+                "label": f"{e['name']} → {dst['name']} - recorded without port {port}",
                 "detail": ("the link is hand-made and carries no port, which "
                            "permanently blocks the derived one that does. "
                            "Remove the hand-made link and re-derive."),
@@ -417,7 +417,7 @@ def scan(cfg: dict) -> dict:
             weak += 1
             findings.append({
                 "type": "weak-signal", "key": f"{P}:weak:{c.get('mac')}",
-                "label": f"{e['name']} — {sig} dBm on {c.get('essid')}",
+                "label": f"{e['name']} - {sig} dBm on {c.get('essid')}",
                 "detail": "below the weak-signal threshold set in Settings › Sources",
                 "entry": _ref(e),
             })

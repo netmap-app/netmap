@@ -1,7 +1,7 @@
-/* NetMap front end — palette.js: quick open (Cmd/Ctrl+K).
+/* NetMap front end - palette.js: quick open (Cmd/Ctrl+K).
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= quick open (Cmd/Ctrl+K) ================= */
 const entryById = (id) => ENTRIES.find(x => x.id == id) || ALL.find(x => x.id == id);
@@ -19,7 +19,7 @@ function palScore(e, q) {
   const hay = [e.ip, e.host, e.category, e.kind, e.ports, e.protocol,
     (e.tags || []).join(" ")].join(" ").toLowerCase();
   if (hay.includes(q)) return 40;
-  // Loose subsequence, so "sonr" still finds Sonarr — but only when the
+  // Loose subsequence, so "sonr" still finds Sonarr - but only when the
   // letters sit close together. Scattered over a long name, any four letters
   // match something ("plex" found "Philips Pedestal Fan cx3550").
   let best = Infinity;
@@ -100,16 +100,16 @@ $("#palResults").addEventListener("click", ev => {
   palGo(palRows[+r.dataset.i], ev.metaKey || ev.ctrlKey);
 });
 
-const fmtBytes = (b) => b == null ? "—"
+const fmtBytes = (b) => b == null ? "-"
   : b > 1048576 ? (b / 1048576).toFixed(1) + " MB"
   : b > 1024 ? (b / 1024).toFixed(0) + " kB" : b + " B";
 const fmtDur = (s) => {
-  if (s == null) return "—";
+  if (s == null) return "-";
   const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
   return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`;
 };
 
-/* Settings is one page with sub-tabs rather than one long scroll — the
+/* Settings is one page with sub-tabs rather than one long scroll - the
    Sources tab alone can run long once a few sources are added. */
 function readSetTab() {
   try { return localStorage.getItem("netmap.settab") || "about"; } catch { return "about"; }
@@ -149,7 +149,7 @@ async function renderSettingsPage() {
       ["Entries", `${a.entries} in ${a.categories} categories`],
       ["Monitored", `${a.monitored} · ${a.pinned} pinned`],
       ["Needs attention", `${a.unverified} to verify · ${a.unclassified} without a kind`],
-      ["Conflicts", a.conflicts ? `${a.conflicts} — see the Overview` : "none"],
+      ["Conflicts", a.conflicts ? `${a.conflicts} - see the Overview` : "none"],
       ["Links", `${a.links} recorded · ${a.unlinked} entries unlinked`],
       ["Reconciliation", (() => {
         const on = (a.discovery_sources || []).filter(x => x.configured);
@@ -160,23 +160,23 @@ async function renderSettingsPage() {
       ["Last status sweep", a.last_sweep ? when(a.last_sweep) : "not yet"],
       ["Check interval", `${a.check_interval}s · ${a.check_timeout}s timeout`],
       ["App uptime", fmtDur(a.uptime_seconds)],
-      ["Database", `${fmtBytes(a.db_bytes)} — ${a.db_path}`],
+      ["Database", `${fmtBytes(a.db_bytes)} - ${a.db_path}`],
       ["MCP endpoint", a.mcp_enabled
-        ? "on — bearer token required" + (a.mcp_path_is_default ? " · default path" : " · custom path")
-        : "off — set NETMAP_MCP_TOKEN to enable it"],
+        ? "on - bearer token required" + (a.mcp_path_is_default ? " · default path" : " · custom path")
+        : "off - set NETMAP_MCP_TOKEN to enable it"],
       ...(a.mcp_enabled ? [["MCP accepts Host", (a.mcp_allowed_hosts || []).join(", ")]] : []),
-      ["API access", !a.auth ? "—" : a.auth.disabled
-        ? "OPEN — NETMAP_AUTH=off, anyone who can reach the port"
+      ["API access", !a.auth ? "-" : a.auth.disabled
+        ? "OPEN - NETMAP_AUTH=off, anyone who can reach the port"
         : [a.auth.cf_access && "Cloudflare Access (verified JWT)",
            a.auth.api_token && "API token",
            a.auth.summary_token && "read-only summary token",
            a.auth.metrics_token && "read-only metrics token",
            a.auth.password && "password login"].filter(Boolean).join(" or ")],
       ["Secret key", a.secret_key === "environment"
-        ? "in NETMAP_SECRET_KEY — the database holds ciphertext only"
-        : "in the database — set NETMAP_SECRET_KEY to move it out"],
+        ? "in NETMAP_SECRET_KEY - the database holds ciphertext only"
+        : "in the database - set NETMAP_SECRET_KEY to move it out"],
       ...(a.secrets_undecryptable ? [["Undecryptable secrets",
-        `${a.secrets_undecryptable} — NETMAP_SECRET_KEY does not match; see the Overview`]] : []),
+        `${a.secrets_undecryptable} - NETMAP_SECRET_KEY does not match; see the Overview`]] : []),
       ["Python", a.python],
     ];
     b.innerHTML = rows.map(([k, v, raw]) =>

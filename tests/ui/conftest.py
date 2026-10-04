@@ -2,7 +2,7 @@
 
 Each test gets its own server process on a free port with an empty database
 in a temp directory, authentication off and the background loops slowed to
-a crawl — so nothing reaches a homelab. State is set up through the REST API,
+a crawl - so nothing reaches a homelab. State is set up through the REST API,
 or written straight into the database for what only a scan would produce
 (sightings), and the page is asserted on by its DOM, not a screenshot.
 
@@ -58,7 +58,7 @@ class Server:
                 if self.proc.poll() is not None:
                     break
                 time.sleep(0.1)
-        raise RuntimeError("server did not start — see " + str(tmp / "server.log"))
+        raise RuntimeError("server did not start - see " + str(tmp / "server.log"))
 
     def api(self, method: str, path: str, body=None):
         req = urllib.request.Request(
@@ -69,7 +69,7 @@ class Server:
             return json.loads(r.read() or "null")
 
     def sightings(self, source: str, rows: list[dict]):
-        """What a scan would have recorded — written straight into the database."""
+        """What a scan would have recorded - written straight into the database."""
         c = sqlite3.connect(self.db)
         c.executemany("INSERT INTO sightings (entry_id, fact, value, source, seen_at) "
                       "VALUES (?,?,?,?, datetime('now'))",
@@ -99,7 +99,7 @@ def browser():
         try:
             b = p.chromium.launch()
         except Exception as exc:
-            why = (f"Chromium for Playwright is not installed ({exc.__class__.__name__}) — "
+            why = (f"Chromium for Playwright is not installed ({exc.__class__.__name__}) - "
                    ".venv/bin/python -m playwright install chromium")
             if os.environ.get("NETMAP_UI_REQUIRED"):
                 pytest.fail(why)             # CI: a skipped UI suite is not a pass

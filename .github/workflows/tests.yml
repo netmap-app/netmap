@@ -1,15 +1,15 @@
 # CI/CD. Four jobs, each gated on the one it needs:
 #
-#   pytest   every push and pull request — the same command as locally.
+#   pytest   every push and pull request - the same command as locally.
 #   publish  pushes to main only, after pytest: build the image for amd64 and
 #            arm64 and push it to ghcr.io/<owner>/<repo> as :latest, :<VERSION>
-#            and :sha-<commit>. Skipped when :<VERSION> is already published —
+#            and :sha-<commit>. Skipped when :<VERSION> is already published -
 #            a release is a VERSION bump (app/main.py), so a README-only push
 #            never overwrites a version. Then prune: keep the newest 10
 #            releases and what they reference (.github/scripts/prune-images.sh).
 #   release  after publish, on main: create the GitHub Release v<VERSION>
 #            (notes from CHANGELOG.md, .github/scripts/release-notes.sh) on
-#            the commit that set that VERSION, unless it already exists — so
+#            the commit that set that VERSION, unless it already exists - so
 #            a version published without a release gets one on the next push.
 #   deploy   optional, after publish: ask a Dockhand instance to recreate the
 #            container from the new image and wait until the new version
@@ -19,7 +19,7 @@
 #              secrets  DOCKHAND_TOKEN; CF_ACCESS_CLIENT_ID and
 #                       CF_ACCESS_CLIENT_SECRET when Dockhand is behind
 #                       Cloudflare Access
-#            Without it the image is published and nothing is deployed — a
+#            Without it the image is published and nothing is deployed - a
 #            fork or a plain install updates by pulling :latest.
 name: CI
 
@@ -112,7 +112,7 @@ jobs:
       - id: exists
         run: |
           if docker manifest inspect "$IMAGE:${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
-            echo "::notice::$IMAGE:${{ steps.v.outputs.version }} is already published — nothing to release. Bump VERSION in app/main.py to deploy this commit."
+            echo "::notice::$IMAGE:${{ steps.v.outputs.version }} is already published - nothing to release. Bump VERSION in app/main.py to deploy this commit."
             echo "published=false" >> "$GITHUB_OUTPUT"
           else
             echo "published=true" >> "$GITHUB_OUTPUT"
@@ -167,7 +167,7 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "v$V" >/dev/null 2>&1; then
-            echo "Release v$V already exists — nothing to do."
+            echo "Release v$V already exists - nothing to do."
             exit 0
           fi
           # Tag the release commit, not whatever later commit runs this: the
@@ -197,7 +197,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$DH_TOKEN" ]; then
-            echo "::warning::DOCKHAND_URL is set but the DOCKHAND_TOKEN secret is not — $WANT is published but not deployed."
+            echo "::warning::DOCKHAND_URL is set but the DOCKHAND_TOKEN secret is not - $WANT is published but not deployed."
             exit 0
           fi
           # Cloudflare Access headers only when both are set.
@@ -205,7 +205,7 @@ jobs:
           if [ -n "$CF_ID" ] && [ -n "$CF_SECRET" ]; then
             access=(-H "CF-Access-Client-Id: $CF_ID" -H "CF-Access-Client-Secret: $CF_SECRET")
           fi
-          # Any answer but a 2xx is an error that says which layer gave it —
+          # Any answer but a 2xx is an error that says which layer gave it -
           # a redirect to *.cloudflareaccess.com is Access refusing the service
           # token; a redirect to /login or a 401 is Dockhand refusing its token.
           # Only the status and the redirect's host and path are printed.
@@ -244,7 +244,7 @@ jobs:
             health=$(echo "$info" | jq -r '.State.Health.Status // .State.Status // empty')
             echo "running version: ${got:-?}  health: ${health:-?}"
             if [ "$got" = "$WANT" ] && [ "$health" = "healthy" ]; then
-              echo "::notice::Deployed $WANT — healthy."
+              echo "::notice::Deployed $WANT - healthy."
               exit 0
             fi
           done

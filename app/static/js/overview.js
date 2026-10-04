@@ -1,11 +1,11 @@
-/* NetMap front end — overview.js: the Overview: verdict, the attention queue, exposure, tiles.
+/* NetMap front end - overview.js: the Overview: verdict, the attention queue, exposure, tiles.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= overview ================= */
-// The control room. What this page owes the reader is one sentence — is
-// anything wrong — and then the queue, worst first. The counts that used to
+// The control room. What this page owes the reader is one sentence - is
+// anything wrong - and then the queue, worst first. The counts that used to
 // lead it (entries tracked, a bar chart of categories) answered "how much is
 // there", which never changes and never asks anything of you; they live on
 // Inventory now, where you go when you actually want to look something up.
@@ -18,8 +18,8 @@ let OVSHOW = false;                     // is the "set aside" list expanded
 
 const LEVEL_WORD = { critical: "critical", warn: "attention", note: "later" };
 
-/* The banner. A state you read from across the room — a glyph and two or
-   three words — then the numbers, each led by its own mark. The full
+/* The banner. A state you read from across the room - a glyph and two or
+   three words - then the numbers, each led by its own mark. The full
    sentence (app/overview.py, the same one MCP answers with) is the hover. */
 const TILE_ICON = {
   assets: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
@@ -33,7 +33,7 @@ const STATE_ICON = {
   critical: '<path d="M8.2 2.5h7.6l5.7 5.7v7.6l-5.7 5.7H8.2l-5.7-5.7V8.2z"/><path d="M12 7.5v5.5M12 16.3v.1"/>',
   down: '<circle cx="12" cy="12" r="10"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/>',
 };
-// The queue by level, one glyph each — what the rows below are, counted.
+// The queue by level, one glyph each - what the rows below are, counted.
 const LEVEL_ICON = {
   critical: '<circle cx="12" cy="12" r="6"/>',
   warn: '<path d="M12 5l8 14H4z"/>',
@@ -113,7 +113,7 @@ function attnHtml(items) {
       ${it.since ? `<span class="atage" title="${esc(it.since_exact
           ? "since " + when(it.since)
           : "first seen by NetMap " + when(it.since) +
-            " — nothing records when this actually began")}">${
+            " - nothing records when this actually began")}">${
           it.since_exact || ago(it.since) === "now" ? "" : "~"}${ago(it.since)}</span>` : ""}
       <button class="iconbtn atx" title="${esc(it.level === "critical"
           ? "Set aside for a day"
@@ -148,13 +148,13 @@ function dismissedHtml(hidden) {
     </div>`;
 }
 
-/* Open hostnames split two ways: ones nobody has looked at (red — a real
-   question) and ones ignored with a reason (neutral — a decision on record,
+/* Open hostnames split two ways: ones nobody has looked at (red - a real
+   question) and ones ignored with a reason (neutral - a decision on record,
    the reason on hover). */
 function exOpenCaption(naked) {
   const open = naked.filter(n => !n.accepted).length;
   const ok = naked.length - open;
-  if (!open) return `<div class="excap">no Access application — open on purpose</div>`;
+  if (!open) return `<div class="excap">no Access application - open on purpose</div>`;
   return `<div class="excap bad">no Access application${ok ? ` · ${ok} open on purpose` : ""}</div>`;
 }
 
@@ -194,13 +194,13 @@ async function renderOverview(all) {
   try { OV = await api("/api/overview"); }
   catch {
     box.innerHTML = `<div class="loadfail" role="alert"><b>The Overview could not load.</b>
-      <span class="hint">The server did not answer as expected — it may be restarting.</span>
+      <span class="hint">The server did not answer as expected - it may be restarting.</span>
       <button class="btn" data-retry-load>Try again</button></div>`;
     return;
   }
 
   // The address card calls an address free only if nothing is living on it,
-  // which needs the presence layer — normally loaded by the Network view. On
+  // which needs the presence layer - normally loaded by the Network view. On
   // a first visit to the Overview it has never run, so fetch it once.
   if (!Object.keys(SEEN).length) {
     try {
@@ -223,7 +223,7 @@ async function renderOverview(all) {
   const ok = OV.level === "ok";
 
   // Everything below is one template literal, and an exception anywhere in it
-  // leaves the "Loading…" placeholder standing — a fault that looks exactly
+  // leaves the "Loading…" placeholder standing - a fault that looks exactly
   // like a slow network and hides its own stack. Build it, then swap it in:
   // if it throws, the page says so instead of spinning forever.
   let html;
@@ -254,7 +254,7 @@ function overviewHtml(all, pinned, c, ok) {
 
     <div class="ovsec">
       <div class="ovhead"><h2>Reachable from outside</h2>
-        <span class="hint" data-tip>What the edge actually says — the firewall, proxy and
+        <span class="hint" data-tip>What the edge actually says - the firewall, proxy and
           tunnel sources, not the inventory.</span></div>
       ${exposureHtml(OV.exposure)}
     </div>
@@ -263,7 +263,7 @@ function overviewHtml(all, pinned, c, ok) {
       <div class="ovsec wide2">
         <div class="ovhead"><h2>Quick links</h2><span class="hint" data-tip>Pinned services.</span></div>
         ${pinned.length ? `<div class="qgrid">${pinned.map(qlink).join("")}</div>`
-        : `<div class="empty-hint">Nothing pinned yet — open any entry and tick
+        : `<div class="empty-hint">Nothing pinned yet - open any entry and tick
              <strong>Pin to Quick links</strong> to put it here.</div>`}
       </div>
 
@@ -306,14 +306,14 @@ function wireOverview(box, all) {
       renderOverview(ALL.length ? ALL : ENTRIES);
     };
   });
-  // "Not verified": the person has checked them — say so for all at once.
+  // "Not verified": the person has checked them - say so for all at once.
   box.querySelectorAll("[data-verify]").forEach(b => {
     b.onclick = async (ev) => {
       ev.stopPropagation();
       const ids = b.dataset.verify.split(",").filter(Boolean);
       if (ids.length > 1 && !(await confirmDialog({
         title: `Mark ${ids.length} entries verified?`,
-        body: "Only if their values are checked — each change is in the history.",
+        body: "Only if their values are checked - each change is in the history.",
         ok: "Mark verified", danger: false }))) return;
       try {
         for (const id of ids) await api("/api/entries/" + id, {
@@ -359,7 +359,7 @@ function wireOverview(box, all) {
 }
 
 /* What the inventory is made of. The bar is proportional to the largest
-   category, not to the total — with nine categories a share-of-total bar is
+   category, not to the total - with nine categories a share-of-total bar is
    nine slivers, and the question this answers is "which of these is big",
    not "what fraction of everything is it". */
 function catCardHtml(all) {
@@ -382,7 +382,7 @@ function catCardHtml(all) {
    cell each, which is the right tool for "is .41 free"; this one answers the
    only question the front page should ask, which is whether a subnet is
    filling up. Seen-but-untracked is drawn as its own band because those
-   addresses are occupied — counting them as free is the error this layer was
+   addresses are occupied - counting them as free is the error this layer was
    built to stop. */
 /* Which addresses the firewall holds a reservation for. A reserved address is
    not the same as a used one: it is spoken for whether or not anything is
@@ -405,7 +405,7 @@ function addrCardHtml(all) {
     // caption.
     // The track is fixed rather than fluid. A 1600px bar holding one blue
     // pixel does not read as "one address in use", it reads as an empty
-    // section — the proportion is the information, and the proportion is the
+    // section - the proportion is the information, and the proportion is the
     // same at 200px.
     return `
     <div class="addr" data-goto="network">
@@ -437,6 +437,6 @@ function qlink(e) {
   return `<a class="qlink" title="${esc(why)}" ${href ? `href="${esc(href)}" target="_blank" rel="noopener"` : ""}>
     <i class="qbar ${tone}"></i>
     ${entGlyph(e)}
-    <span class="t"><span class="n">${esc(e.name)}</span><span class="a mono">${esc(addr || "—")}</span></span>
+    <span class="t"><span class="n">${esc(e.name)}</span><span class="a mono">${esc(addr || "-")}</span></span>
   </a>`;
 }

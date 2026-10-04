@@ -1,4 +1,4 @@
-"""Discovery — the front door to the source registry.
+"""Discovery - the front door to the source registry.
 
 Kept as its own module so `from . import discovery` still means what it did
 before there was more than one source. The sources themselves live in

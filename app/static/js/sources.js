@@ -1,7 +1,7 @@
-/* NetMap front end — sources.js: Settings › Sources.
+/* NetMap front end - sources.js: Settings › Sources.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= Settings > Sources ================= */
 // A source id is its type, or "<type>-<n>" for another source of that type.
@@ -167,7 +167,7 @@ async function loadSources() {
   try {
     SOURCES = await api("/api/sources/instances");
     box.innerHTML = SOURCES.length ? SOURCES.map(srcRowHtml).join("")
-      : `<div class="srcempty">No sources yet — add the systems NetMap should read.</div>`;
+      : `<div class="srcempty">No sources yet - add the systems NetMap should read.</div>`;
   } catch {
     box.innerHTML = `<div class="srcempty">Could not load.</div>`;
   }
@@ -188,7 +188,7 @@ function srcFieldHtml(f, existing, prefix = "srcf_") {
     return `<div class="f"><label for="${id}">${esc(f.label)}${f.required && !set ? " *" : ""}</label>
       <input type="password" id="${id}" autocomplete="new-password" placeholder="${esc(f.placeholder || "")}"${
         f.required && !set ? ' aria-required="true"' : ""}${set ? ` aria-describedby="${id}_h"` : ""}>
-      ${set ? `<span class="hint" id="${id}_h">${esc(`currently set (${prev.preview}) — leave blank to keep it`)}</span>` : ""}</div>`;
+      ${set ? `<span class="hint" id="${id}_h">${esc(`currently set (${prev.preview}) - leave blank to keep it`)}</span>` : ""}</div>`;
   }
   // A blank saved value means "the default", so an edit shows the default as
   // the placeholder rather than as a value typed in.
@@ -210,7 +210,7 @@ function srcGather(driver, prefix = "srcf_") {
 }
 
 // The form opens below a list that can be longer than the screen, so opening
-// it brings it into view and puts the cursor in it — otherwise "Edit" looks
+// it brings it into view and puts the cursor in it - otherwise "Edit" looks
 // like it did nothing. Cancel hands focus back to whatever opened it.
 let SRC_OPENER = null;
 function showSrcForm(focus) {
@@ -261,7 +261,7 @@ function openSrcForm(driver, existing) {
             body: JSON.stringify({ type: driver.type, fields: srcGather(driver) }),
           });
       out.textContent = r.ok
-        ? "Reachable" + (r.nodes ? ` — nodes: ${r.nodes.join(", ")}` : "")
+        ? "Reachable" + (r.nodes ? ` - nodes: ${r.nodes.join(", ")}` : "")
         : "Failed: " + (r.error || "unknown error");
     } catch { out.textContent = "Could not run the test."; }
   };
@@ -294,11 +294,11 @@ $("#srcAddBtn").onclick = async () => {
   const drivers = await srcDriversList().catch(() => []);
   if (!drivers.length) { toast("No source types available"); return; }
   const box = $("#srcForm");
-  // Always a type picker first, even with one option — the form for a type
+  // Always a type picker first, even with one option - the form for a type
   // is a second step, not the default. Otherwise "Add source" quietly means
   // "add Proxmox" until a second driver exists, which is the wrong mental
   // model to teach.
-  // Grouped by what a source is for — "DNS", "Reverse proxy" — so the list
+  // Grouped by what a source is for - "DNS", "Reverse proxy" - so the list
   // reads as the parts of a network rather than a list of products.
   const groups = Object.keys(SRC_ROLES).map(role => [role,
     drivers.filter(d => (d.roles || [])[0] === role)]).filter(([, ds]) => ds.length);

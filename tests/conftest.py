@@ -4,7 +4,7 @@ NetMap reads its configuration once, at import: the auth mode and tokens in
 web_security, the database path in db, the MCP path in main. Sources are
 database rows, seeded once from the environment by sources.migrate_legacy(),
 which `make_app` runs like start-up does. A test that needs a particular configuration
-therefore needs those modules *re-imported* under that environment — which is
+therefore needs those modules *re-imported* under that environment - which is
 what `make_app` does. `importlib.reload` re-executes a module inside the same
 module object, so every `from . import db` elsewhere keeps pointing at the
 reloaded one.

@@ -1,19 +1,19 @@
 """Uptime per entry: the share of the last 30 days its health check answered.
 
-Computed from `observations`, which stores transitions only — no new data is
+Computed from `observations`, which stores transitions only - no new data is
 collected for this. Time is *unknown*, never up, when:
 
-  * the entry was not probed (not monitored, health check `none`) — an
+  * the entry was not probed (not monitored, health check `none`) - an
     observation with up = NULL;
   * there is no observation yet (the entry is newer than the window, or its
-    history was pruned) — the result then says "since <date>";
+    history was pruned) - the result then says "since <date>";
   * NetMap itself was not running. Transitions cannot show that: a restart
     that finds the same state records nothing. So every sweep leaves a
     heartbeat, and a silence of more than two sweep intervals found at
     start-up is kept as a gap (kv `uptime_gaps`).
 
 Always computed; where it is *shown* is a rule in Settings (kinds,
-categories, criticalities — default critical and important), overridden per
+categories, criticalities - default critical and important), overridden per
 entry by a tag `uptime:on` / `uptime:off`.
 """
 import calendar
@@ -85,7 +85,7 @@ def save_rule(r: dict, actor: str = "web") -> dict:
 
 
 def shown(entry: dict, r: dict | None = None) -> bool:
-    """Tag first (`uptime:on` / `uptime:off`), then the rule — which never
+    """Tag first (`uptime:on` / `uptime:off`), then the rule - which never
     selects an entry that is not monitored: it has no uptime to show, only an
     empty strip saying so."""
     for t in entry.get("tags") or []:

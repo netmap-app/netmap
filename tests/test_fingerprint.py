@@ -1,6 +1,6 @@
 """What answers on an open port (app/fingerprint.py): rules against canned
-answers, real probes of local servers — HTTP, HTTPS, a greeting, a web
-manifest — the private-address guard, and both scanners using it. Every
+answers, real probes of local servers - HTTP, HTTPS, a greeting, a web
+manifest - the private-address guard, and both scanners using it. Every
 server is on 127.0.0.1."""
 import http.server
 import json
@@ -193,14 +193,14 @@ def test_the_sweep_names_an_undeclared_port_and_drafts_an_entry(make_app, monkey
         sources.create_instance("ports", "", {"enabled": True, "extra_ports": str(w.port)})
         r = sources.scan("ports")
         (f,) = [f for f in r["findings"] if f["type"] == "port-undeclared"]
-        assert f["label"] == f"Grafana (HTTP) on 127.0.0.1:{w.port} — not in NetMap"
+        assert f["label"] == f"Grafana (HTTP) on 127.0.0.1:{w.port} - not in NetMap"
         assert 'title "Grafana"' in f["detail"] and f["entry"]["id"] == host["id"]
         d = f["draft"]
         assert d["name"] == "Grafana" and d["ports"] == str(w.port) and d["host"] == "Docker host"
         assert d["tags"] == "icon:grafana" and d["url"] == f"http://127.0.0.1:{w.port}/"
         assert r["counts"]["identified"] == 1
         facts = {s["fact"]: s["value"] for s in db.sightings_for(host["id"])}
-        assert facts[f"port:{w.port}"] == "open — Grafana (HTTP)"
+        assert facts[f"port:{w.port}"] == "open - Grafana (HTTP)"
         e = db.create_entry(d)                                    # the draft is valid as it is
         assert e["tags"] == ["icon:grafana"]
     finally:
@@ -216,7 +216,7 @@ def test_fingerprinting_can_be_switched_off(make_app, monkeypatch):
     db.create_entry({"name": "Box", "ip": "127.0.0.1"})
     sources.create_instance("ports", "", {"enabled": True, "fingerprint": False})
     (f,) = [f for f in sources.scan("ports")["findings"] if f["type"] == "port-undeclared"]
-    assert f["label"] == "Box — 127.0.0.1:3000 is open (HTTP app)"
+    assert f["label"] == "Box - 127.0.0.1:3000 is open (HTTP app)"
 
 
 def test_the_deep_scan_says_what_answers(make_app):

@@ -81,14 +81,14 @@ def test_the_summary_goes_once_at_the_chosen_hour(app, hook):  # noqa: F811
     assert len(due) == 1
     cid, m = due[0]
     assert cid == app["id"]
-    assert m["title"] == "NetMap — daily summary: 3 events"
+    assert m["title"] == "NetMap - daily summary: 3 events"
     assert "New findings (2): a; b" in m["detail"]
     assert "Certificates (1): nas.example expires in 5 days" in m["detail"]
     assert digest.held(app["id"]) == []
     assert digest.run(at(2026, 9, 29, 8, 30)) == []        # once per day
     notify._QUEUE.extend(due)
     notify.deliver()
-    assert hook.titles() == ["NetMap — daily summary: 3 events"]
+    assert hook.titles() == ["NetMap - daily summary: 3 events"]
 
 
 def test_nothing_held_means_no_message(app):
@@ -115,7 +115,7 @@ def test_a_weekly_summary_waits_for_its_day(app):
     assert digest.run(at(2026, 10, 1, 10, 0)) == []           # Thursday
     assert digest.run(at(2026, 10, 2, 8, 59)) == []           # Friday, too early
     (_, m), = digest.run(at(2026, 10, 2, 9, 0))
-    assert m["title"] == "NetMap — weekly summary: 1 event"
+    assert m["title"] == "NetMap - weekly summary: 1 event"
 
 
 def test_what_is_held_survives_a_restart(app):
@@ -135,7 +135,7 @@ def test_going_back_to_immediate_sends_what_was_held(app, hook):  # noqa: F811
     assert hook.got == []
     set_delivery(app, mode="off")
     notify.deliver()
-    assert hook.titles() == ["NetMap — daily summary: 1 event"]
+    assert hook.titles() == ["NetMap - daily summary: 1 event"]
     assert digest.held(app["id"]) == []
 
 

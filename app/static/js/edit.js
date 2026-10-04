@@ -1,7 +1,7 @@
-/* NetMap front end — edit.js: the entry form, and the header and rail controls.
+/* NetMap front end - edit.js: the entry form, and the header and rail controls.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= edit ================= */
 const FIELDS = ["name", "category", "host", "ip", "mac", "ports", "protocol", "url",
@@ -58,7 +58,7 @@ const dayLabel = (ts) => {
 };
 
 /* Changes, full page. The modal is still there for the narrow-screen toolbar
-   button, but a log you read is not a dialog you dismiss — it wants width and
+   button, but a log you read is not a dialog you dismiss - it wants width and
    a place in the nav, which is what the rail gives it. */
 async function renderChanges() {
   const box = $("#changes");
@@ -84,7 +84,7 @@ async function renderChanges() {
     </div>`;
 }
 
-/* Sign-ins are recorded in the change log but are not changes to anything —
+/* Sign-ins are recorded in the change log but are not changes to anything -
    hidden by default so they do not push real edits off the page. */
 function readLogins() {
   try { return localStorage.getItem("netmap.logins") === "1"; } catch { return false; }
@@ -114,7 +114,7 @@ async function showHistory() {
    highlighted, and unchanged runs cut down to a few words of context. */
 function wordDiff(a, b) {
   const A = a.split(/(\s+)/), B = b.split(/(\s+)/);
-  // Trim the common start and end first — most edits touch one place.
+  // Trim the common start and end first - most edits touch one place.
   let s = 0;
   while (s < A.length && s < B.length && A[s] === B[s]) s++;
   let e = 0;
@@ -139,7 +139,7 @@ function wordDiff(a, b) {
   const kept = mid.filter(([op, t]) => op === "=" && t.trim()).length;
   if (kept && kept < 0.4 * Math.max(words(a2), words(b2)))
     mid = [["-", a2.join("")], ["+", b2.join("")]];
-  // One part per run, not per word — and within a changed run, what went
+  // One part per run, not per word - and within a changed run, what went
   // before what came in, the order a reader expects.
   const runs = [];
   for (const [op, t] of [["=", A.slice(0, s).join("")], ...mid, ["=", A.slice(A.length - e).join("")]]) {

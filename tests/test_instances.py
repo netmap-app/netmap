@@ -95,7 +95,7 @@ def test_removing_a_source_takes_what_it_saw_not_what_was_decided(two_dockers):
 
 def test_home_assistant_ignores_apply(api, monkeypatch):
     """Its keys start "ha:", and ignores used to be looked up as
-    "homeassistant" — so ignoring one never took."""
+    "homeassistant" - so ignoring one never took."""
     from app import db, sources
     from app.sources import homeassistant as mod
     monkeypatch.setattr(mod, "_get", lambda cfg, path: [])

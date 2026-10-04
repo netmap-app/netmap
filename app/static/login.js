@@ -1,4 +1,4 @@
-/* The local sign-in form — see app/accounts.py. A separate file rather than
+/* The local sign-in form - see app/accounts.py. A separate file rather than
    an inline <script>: the Content-Security-Policy allows no inline script. */
 (() => {
   try {

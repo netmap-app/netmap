@@ -1,10 +1,10 @@
-"""What answers on an open port — "Grafana on :3000", not "port 3000 open".
+"""What answers on an open port - "Grafana on :3000", not "port 3000 open".
 
 Used by both scanners: the scheduled sweep (sources/portscan.py), for the
 ports nothing in the inventory accounts for, and the on-demand deep scan
 (deepscan.py). Each open port gets one short conversation:
 
-  1. wait briefly for a greeting — SSH, SMTP, FTP and VNC speak first;
+  1. wait briefly for a greeting - SSH, SMTP, FTP and VNC speak first;
   2. otherwise GET / over plain HTTP, and over TLS when the answer says the
      port wants it;
   3. when the page is an app nobody's rule names, GET /manifest.json, where
@@ -12,7 +12,7 @@ ports nothing in the inventory accounts for, and the on-demand deep scan
 
 Every request is a GET of / or /manifest.json: nothing that can change
 anything. At most a few KB are read. Only private and loopback addresses are
-ever contacted — the same line deepscan.py draws.
+ever contacted - the same line deepscan.py draws.
 
 The rules live in app/fingerprints.json so adding one needs no code. When
 none matches, the name is guessed from the port number (PORT_NAMES), which is
@@ -29,7 +29,7 @@ import ssl
 TIMEOUT = 1.5
 READ = 8192
 
-# What a port number usually means — the one table both scanners use.
+# What a port number usually means - the one table both scanners use.
 # Deliberately short: a wrong confident name is worse than none.
 PORT_NAMES = {
     21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP", 53: "DNS", 80: "HTTP",
@@ -128,7 +128,7 @@ def _get(ip: str, port: int, path: str, tls: bool, limit: int = READ) -> bytes:
 
 
 def parse_http(raw: bytes) -> dict | None:
-    """status, headers (lowercased names), title, body text — or None."""
+    """status, headers (lowercased names), title, body text - or None."""
     m = re.match(rb"HTTP/\d(?:\.\d)?\s+(\d{3})", raw)
     if not m:
         return None
@@ -206,7 +206,7 @@ def probe(ip: str, port: int) -> dict:
         out.update(name=hit["name"], identified=True, icon=hit.get("icon", ""))
         out["protocol"] = hit.get("protocol") or out["protocol"]
     else:
-        # Say what is known: a page title, a server header, a banner — or the
+        # Say what is known: a page title, a server header, a banner - or the
         # port number's usual meaning, marked as a guess by `identified`.
         out["name"] = (out["title"] or out["server"].split("/")[0]
                        or out["banner"][:40] or PORT_NAMES.get(port, ""))
@@ -216,7 +216,7 @@ def probe(ip: str, port: int) -> dict:
 
 
 def label(fp: dict) -> str:
-    """"Grafana (HTTP)", "nginx (HTTPS)", "SSH" — for a finding's headline."""
+    """"Grafana (HTTP)", "nginx (HTTPS)", "SSH" - for a finding's headline."""
     if not fp.get("name"):
         return ""
     proto = fp.get("protocol", "")

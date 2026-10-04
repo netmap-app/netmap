@@ -1,6 +1,6 @@
-"""The Docker source against every way an engine is reached — a socket proxy or
+"""The Docker source against every way an engine is reached - a socket proxy or
 plain TCP (http://), the TLS port with a client certificate (https://), a
-mounted socket (unix://) — and the containers Compose, Swarm and macvlan make.
+mounted socket (unix://) - and the containers Compose, Swarm and macvlan make.
 Every engine here is a local fake that answers /containers/json; nothing
 leaves the machine."""
 import datetime as dt

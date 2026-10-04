@@ -1,19 +1,19 @@
 """Notifications: what already reaches the Overview, delivered to a person who
-is not looking at it. Nothing here detects anything — the scans and the status
+is not looking at it. Nothing here detects anything - the scans and the status
 sweep hand over what they found, and this decides whether it is news.
 
 News is a change of state, never a repetition of one. Every caller describes
 the problems that are true *now* for one scope (one source's findings, one
 source's health, the watched entries); `sync` compares that with what was true
-last time, sends what is new, and — where it means something — says when a
+last time, sends what is new, and - where it means something - says when a
 problem cleared. That state lives in the `kv` table, so a restart compares
 against the state before it: nothing is re-sent, and nothing that changed
 while NetMap was down is lost. The first time a scope is ever seen (a new
 install, a source just added) is recorded and not sent: what was already true
 before anyone was listening is not news.
 
-Channels are stored like sources — `notify_channels`, config plain, secrets
-encrypted — and delivery never raises into the scan or sweep that emitted it:
+Channels are stored like sources - `notify_channels`, config plain, secrets
+encrypted - and delivery never raises into the scan or sweep that emitted it:
 a failure is logged and shown on the channel's row in Settings.
 """
 import asyncio
@@ -34,7 +34,7 @@ WINDOW = 600          # the rate limit counts messages in this many seconds
 STATE_KEY = "notify_state"
 
 EVENTS = {
-    "finding": "A new finding — a source disagrees with the inventory",
+    "finding": "A new finding - a source disagrees with the inventory",
     "entry": "A critical or important entry stops answering, or answers again",
     "source": "A source stops answering, or answers again",
     "cert": "A certificate a health check reads expires soon",
@@ -89,7 +89,7 @@ TYPES = {
                       "wide": True, "default": "https://api.telegram.org", "binds": True},
                      _LINK, _RATE]},
     "webhook": {"label": "Webhook", "hint": "POSTs JSON {kind, key, title, detail, "
-                "url, ts, version} to a URL — an Apprise API, Home Assistant or "
+                "url, ts, version} to a URL - an Apprise API, Home Assistant or "
                 "anything else that takes a webhook.",
                 "fields": [
                     {"key": "url", "label": "Webhook URL", "type": "password",
@@ -126,7 +126,7 @@ def sync(kind: str, scope: str, current: dict[str, dict], known: set | None = No
 
     current   key -> {title, detail, level} for every problem true now
     known     keys whose state was actually checked this time (None: all of
-              them). A key not checked is neither new nor cleared — a source
+              them). A key not checked is neither new nor cleared - a source
               waiting for its first scan has not recovered.
     keep      keys that can still exist; an unchecked key outside it (an
               entry deleted, or no longer critical) is dropped without a word
@@ -156,7 +156,7 @@ def sync(kind: str, scope: str, current: dict[str, dict], known: set | None = No
                 continue
             m = resolved(k, stored) if resolved else None
             if m:
-                # `was`: how bad it was — a summary channel sends the all-clear
+                # `was`: how bad it was - a summary channel sends the all-clear
                 # of an urgent problem as urgently as the problem itself.
                 out.append({**_message(kind, k, {"level": "ok", **m}),
                             "was": stored.get("level", "")})
@@ -169,7 +169,7 @@ def sync(kind: str, scope: str, current: dict[str, dict], known: set | None = No
 
 
 def forget(*scopes: str) -> None:
-    """Drop what was recorded for a scope — a source that was removed."""
+    """Drop what was recorded for a scope - a source that was removed."""
     with _LOCK:
         state = _load()
         if any(s in state for s in scopes):
@@ -185,7 +185,7 @@ def _message(kind: str, key: str, m: dict) -> dict:
 
 
 def tell(kind: str, key: str, m: dict) -> None:
-    """One message that is news by construction — the caller already knows
+    """One message that is news by construction - the caller already knows
     it is a change (a watched device coming back)."""
     emit(_message(kind, key, m))
 
@@ -218,7 +218,7 @@ def after_sweep(entries: list[dict], cache: dict) -> None:
                  and e.get("criticality") in ("critical", "important")}
         known = {k for k in watch if cache.get(int(k), {}).get("up") is not None}
         down = {k: {"title": f"{e['name']} is not answering",
-                    "detail": f"{e['criticality']} — "
+                    "detail": f"{e['criticality']} - "
                               f"{cache.get(int(k), {}).get('target') or 'no target'}",
                     "level": "critical" if e["criticality"] == "critical" else "warn"}
                 for k, e in watch.items() if cache.get(int(k), {}).get("up") is False}
@@ -232,7 +232,7 @@ def after_sweep(entries: list[dict], cache: dict) -> None:
                            if c["days_left"] < 0 else
                            f"The certificate of {c['entry']['name']} expires in "
                            f"{c['days_left']} day{'' if c['days_left'] == 1 else 's'}"),
-                 "detail": f"{c['target']} — valid until {(c['not_after'] or '?')[:10]}",
+                 "detail": f"{c['target']} - valid until {(c['not_after'] or '?')[:10]}",
                  "level": "critical" if c["days_left"] < 0 else "warn"}
               for c in status.expiring(entries, cache)},
              known={str(e["id"]) for e in entries if (cache.get(e["id"]) or {}).get("tls")},
@@ -254,7 +254,7 @@ def after_sweep(entries: list[dict], cache: dict) -> None:
 # Delivery
 # --------------------------------------------------------------------------
 def emit(msg: dict) -> None:
-    """Queue one message for every enabled channel that wants its kind — or,
+    """Queue one message for every enabled channel that wants its kind - or,
     on a summary channel, hold it for the summary unless it is urgent (see
     app/digest.py)."""
     from . import digest
@@ -440,7 +440,7 @@ SENDERS = {"ntfy": _ntfy, "gotify": _gotify, "telegram": _telegram, "webhook": _
 # --------------------------------------------------------------------------
 def _defs(type_: str) -> list[dict]:
     if type_ not in TYPES:
-        raise ValueError(f"unknown channel type '{type_}' — have {', '.join(TYPES)}")
+        raise ValueError(f"unknown channel type '{type_}' - have {', '.join(TYPES)}")
     return TYPES[type_]["fields"]
 
 
@@ -469,7 +469,7 @@ def _events(events) -> list[str]:
         return list(EVENTS)
     bad = [e for e in events if e not in EVENTS]
     if bad:
-        raise ValueError(f"unknown event {', '.join(map(str, bad))} — have {', '.join(EVENTS)}")
+        raise ValueError(f"unknown event {', '.join(map(str, bad))} - have {', '.join(EVENTS)}")
     return [e for e in EVENTS if e in events]
 
 
@@ -498,7 +498,7 @@ def types() -> dict:
 
 
 def describe(ch: dict) -> dict:
-    """One channel for Settings — secrets only as "set" and a last-four preview."""
+    """One channel for Settings - secrets only as "set" and a last-four preview."""
     secrets = {f["key"]: {"set": bool(ch["secrets"].get(f["key"])),
                           "preview": crypto.mask(crypto.decrypt(ch["secrets"].get(f["key"], "")))}
                for f in TYPES.get(ch["type"], {}).get("fields", []) if f.get("secret")}
@@ -549,7 +549,7 @@ def update(channel_id: str, name: str | None = None, fields_in: dict | None = No
         if "url" in plain and before["secrets"].get("url") and before["secrets"].get("token") \
                 and "token" not in plain \
                 and plain["url"].strip() != crypto.decrypt(before["secrets"]["url"]).strip():
-            raise ValueError("changing Webhook URL needs Bearer token entered again — a "
+            raise ValueError("changing Webhook URL needs Bearer token entered again - a "
                              "stored secret is never sent to an address it was not entered for")
         config.update(new_config)
         fields.require(defs, config, {**secrets, **plain})

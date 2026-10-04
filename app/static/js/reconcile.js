@@ -1,22 +1,22 @@
-/* NetMap front end — reconcile.js: reconciliation: source health, findings, ignoring.
+/* NetMap front end - reconcile.js: reconciliation: source health, findings, ignoring.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= reconciliation ================= */
 /* One shape for every source. A finding says what it saw; which buttons it
-   gets follows from what it carries — a draft can be created, a suggest can be
-   accepted, an entry can be opened — so adding a source needs no UI work. */
+   gets follows from what it carries - a draft can be created, a suggest can be
+   accepted, an entry can be opened - so adding a source needs no UI work. */
 let SCAN = null;                 // the whole /api/discovery result
-let SRC_HEALTH = { health: [] }; // /api/discovery/summary — never scans, always free
+let SRC_HEALTH = { health: [] }; // /api/discovery/summary - never scans, always free
 const findingsAll = {};          // per-source "show the tail" flag
 
-/* The sources, as one line: green once a source has answered inside the
+/* The sources, as one row of marks: green once a source has answered inside the
    staleness window, amber once its last good answer is older than that, red
    when its most recent attempt failed outright.
 
    The window is a setting (Settings › Sources, default five hours), sent with
-   the summary. It once followed the scan interval — one and a half of them —
+   the summary. It once followed the scan interval - one and a half of them -
    so a daily scan stayed green for 36 hours, and a source ten hours behind
    looked as good as one that answered a minute ago. */
 const SRC_STALE_DEFAULT_H = 5;
@@ -32,10 +32,28 @@ function srcState(h, staleMs = srcStaleMs(null)) {
 }
 
 // While a sweep runs, each source's name is gray until its own scan answers,
-// then green or red — the sweep is one request per source, so each lands on
+// then green or red - the sweep is one request per source, so each lands on
 // its own. Outside a sweep (null) the colours are the sources' health.
 let SCAN_PROGRESS = null;      // { id: {st: "wait" | "good" | "bad", error} }
 let SCAN_RUN = null;           // the sweep in flight, so two never overlap
+
+/* Each source is its product's mark, with a bar under it in the status
+   colour; the name and the state are in the tooltip. A type with no mark on
+   disk (or one that fails to load) gets a drawn glyph instead. */
+const SRC_GLYPH = {
+  ports: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12l5-5"/>',
+  leasefile: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/>',
+  snmparp: '<rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 16.5h.01M11 16.5h.01"/><path d="M12 13V8"/><path d="M8.5 6.5a5 5 0 0 1 7 0"/>',
+};
+const SRC_GLYPH_ANY = '<ellipse cx="12" cy="6.5" rx="7" ry="3"/><path d="M5 6.5v11c0 1.7 3.1 3 7 3s7-1.3 7-3v-11"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>';
+
+function srcMark(h) {
+  const type = h.type || h.source;
+  const glyph = `<svg viewBox="0 0 24 24" class="ico">${SRC_GLYPH[type] || SRC_GLYPH_ANY}</svg>`;
+  const slug = (SRC_HEALTH.icons || {})[type];
+  const img = slug ? `<img class="svc" src="/api/icon/${encodeURIComponent(slug)}.svg?t=${inkNow()}" alt="">` : "";
+  return `<span class="sm${img ? " svcbox" : ""}">${glyph}${img}</span>`;
+}
 
 function srcChip(h, staleMs) {
   const p = SCAN_PROGRESS && SCAN_PROGRESS[h.source];
@@ -46,15 +64,16 @@ function srcChip(h, staleMs) {
     : st === "bad" ? (h.error || "not answering")
     : st === "stale" ? "last answered " + whenScan(h.last_ok || "") + " (stale)"
     : "last answered " + whenScan(h.last_ok || "");
-  return `<span class="s ${st}" data-srcchip="${esc(h.source)}" title="${esc(title)}">${
-    esc(h.label || h.source)}</span>`;
+  const label = (h.label || h.source) + ": " + title;
+  return `<span class="s ${st}" data-srcchip="${esc(h.source)}" role="img" title="${esc(label)}" aria-label="${
+    esc(label)}">${srcMark(h)}</span>`;
 }
 
 function srcHtml(sources) {
   const hs = (sources.health || []).filter(h => h.configured);
   if (!hs.length) return "";
   const staleMs = srcStaleMs(sources);
-  return `<div class="srcline mono">${hs.map(h => srcChip(h, staleMs)).join('<i>·</i>')}</div>`;
+  return `<div class="srcline">${hs.map(h => srcChip(h, staleMs)).join("")}</div>`;
 }
 
 // Every name again, against the clock: a source crosses into "stale" while
@@ -68,7 +87,7 @@ function repaintSrcChips() {
   }
 }
 
-// Repaint one name in place as its scan lands — not the whole view, which
+// Repaint one name in place as its scan lands - not the whole view, which
 // would re-fetch the topology on every answer.
 function paintSrcChip(id) {
   const h = (SRC_HEALTH.health || []).find(x => x.source === id);
@@ -102,7 +121,7 @@ const FTYPE = {
   "netbox-ip-drift":    { label: "address differs", cls: "f-ports" },
   "netbox-mac-drift":   { label: "MAC differs", cls: "f-ports" },
 };
-// "The inventory describes something that is no longer there" — the only
+// "The inventory describes something that is no longer there" - the only
 // findings where offering to delete an entry is sane.
 const F_ABSENT = new Set(["gone", "nat-stale"]);
 const FORDER = ["new", "nat-unknown", "gone", "nat-stale", "ports", "nat-drift",
@@ -156,7 +175,7 @@ function sourceHtml(r) {
       <span class="more" data-rescan="${esc(r.source)}">Scan</span></div>
     ${body}</div>`;
   if (r.skipped) {
-    return head(`<div class="empty-hint">Not fully configured, or disabled —
+    return head(`<div class="empty-hint">Not fully configured, or disabled -
       <a href="#" data-goto-sources>see Settings › Sources</a>.</div>`);
   }
   if (r.error) return head(`<div class="empty-hint">${esc(r.error)}</div>`);
@@ -179,7 +198,7 @@ function sourceHtml(r) {
       <span class="more" data-rescan="${esc(r.source)}">Scan again</span></div>
     ${fs.length
       ? `<div class="cflist">${shown.map(findingHtml).join("")}</div>${tail}`
-      : `<div class="empty-hint">Nothing to report — everything this source can
+      : `<div class="empty-hint">Nothing to report - everything this source can
          see is already described, and described correctly.</div>`}
   </div>`;
 }
@@ -187,7 +206,7 @@ function sourceHtml(r) {
 function discoveryHtml() {
   if (!SCAN) {
     // The sweep is still running behind the page (see renderNetwork). Say so
-    // rather than leaving a gap where Reconciliation is about to appear —
+    // rather than leaving a gap where Reconciliation is about to appear -
     // but only once there is something to reconcile against.
     const hs = (SRC_HEALTH.health || []).filter(h => h.configured);
     return hs.length ? `
@@ -205,7 +224,7 @@ function discoveryHtml() {
       <div class="empty-hint">NetMap can reconcile itself against Docker,
         OPNsense, Pi-hole, AdGuard Home, a DHCP lease file, router ARP over SNMP,
         UniFi, Home Assistant, NPM, Traefik, Cloudflare, Proxmox VE, NetBox and an
-        open-port sweep. None is added yet —
+        open-port sweep. None is added yet -
         <a href="#" data-goto-sources>add one under Settings › Sources</a>.</div></div>`;
   }
   // A source with nothing to say gets one word, not a card. But it still gets
@@ -216,8 +235,8 @@ function discoveryHtml() {
   // "Agrees" and "could not be read" both produce zero findings, and the
   // difference is the whole point: NPM's token expired and the Overview
   // showed nothing wrong for days. So the count of *working* sources is
-  // stated first, and any that are not working are named. This line — and
-  // who they are, below it — used to live at the top of the Overview; it
+  // stated first, and any that are not working are named. This line - and
+  // who they are, below it - used to live at the top of the Overview; it
   // reads better here, next to what the sources actually found.
   const broken = live.filter(r => r.error);
   const health = `${live.length - broken.length}/${live.length} sources`;
@@ -226,7 +245,7 @@ function discoveryHtml() {
       <div class="ovhead"><h2>Reconciliation</h2>
         <span class="hint ${broken.length ? "shealth bad" : "shealth"}" id="reconHint">${
           SCAN_PROGRESS ? "scanning…" : `${health}
-          ${broken.length ? `— ${broken.map(r => esc(r.label || r.source)).join(", ")} failing`
+          ${broken.length ? `- ${broken.map(r => esc(r.label || r.source)).join(", ")} failing`
                           : "reporting"}${oldest ? ` · checked ${esc(whenScan(oldest))}` : ""}`}</span>
       </div>
       ${srcHtml(SRC_HEALTH)}
@@ -248,7 +267,7 @@ async function scanAll(force) {
     SCAN_PROGRESS = Object.fromEntries(ids.map(id => [id, { st: "wait" }]));
     ids.forEach(paintSrcChip);
     // All at once, each answering on its own. Not forced, a result under 30s
-    // old is reused, as the single sweep did — refreshing the page is not a
+    // old is reused, as the single sweep did - refreshing the page is not a
     // reason to knock on every system again.
     const results = await Promise.all(ids.map(id =>
       api(`/api/discovery/${encodeURIComponent(id)}?max_age=${force ? 0 : 30}`)
@@ -266,7 +285,7 @@ async function scanAll(force) {
 }
 
 async function scanOne(source) {
-  // A live scan, which also refreshes the server's cache — so the badge and
+  // A live scan, which also refreshes the server's cache - so the badge and
   // the Overview are correct straight after an action, without waiting for
   // the next background sweep.
   try {
@@ -336,13 +355,13 @@ async function findingAction(key, what) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ key }),
     });
-    toast("Watching — see Network › Watching");
+    toast("Watching - see Network › Watching");
   } else if (what === "ignore") {
     await api("/api/discovery/ignores", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ key, label: f ? f.label : key }),
     });
-    toast("Ignored — it will not come back");
+    toast("Ignored - it will not come back");
   }
   await scanOne(src);
   await load();

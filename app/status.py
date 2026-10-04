@@ -55,7 +55,7 @@ def set_tls_warn_days(days: int, actor: str = "web") -> int:
 
 def _host(entry: dict) -> str | None:
     host = (entry.get("ip") or "").strip()
-    if not host or host.startswith("—") or " " in host:
+    if not host or host.startswith(("-", "\u2014")) or " " in host:
         # allow a hostname in the ip field, reject free text
         if not re.fullmatch(r"[A-Za-z0-9_.:-]+", host or ""):
             return None
@@ -174,8 +174,8 @@ async def _http_once(p: dict, ctx) -> dict:
 async def probe_http(p: dict) -> dict:
     """GET the path; up when the status is the expected one (or below 500).
     For https the certificate is verified against the URL's name; a failure
-    there is its own state — the service answered, the certificate did not
-    hold up — so the request is repeated unverified to learn the rest."""
+    there is its own state - the service answered, the certificate did not
+    hold up - so the request is repeated unverified to learn the rest."""
     https = p["kind"] == "https"
     tls: dict = {}
     try:
@@ -217,7 +217,7 @@ def _checksum(b: bytes) -> int:
 
 
 def _ping(host: str) -> tuple[bool | None, int | None, str]:
-    """One ICMP echo over an unprivileged ping socket — no ping binary, no
+    """One ICMP echo over an unprivileged ping socket - no ping binary, no
     root: Docker allows these by default (net.ipv4.ping_group_range)."""
     try:
         addr = socket.getaddrinfo(host, None, socket.AF_INET)[0][4][0]
@@ -226,7 +226,7 @@ def _ping(host: str) -> tuple[bool | None, int | None, str]:
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_ICMP)
     except OSError as exc:
-        return None, None, (f"ping is not permitted here ({exc.strerror or exc}) — "
+        return None, None, (f"ping is not permitted here ({exc.strerror or exc}) - "
                             "allow it with the sysctl net.ipv4.ping_group_range")
     with s:
         s.settimeout(TIMEOUT)
@@ -249,12 +249,12 @@ def _summary(p: dict, r: dict) -> str:
     """One line for the status dot's tooltip and the service card."""
     ms = f" in {r['latency_ms']} ms" if r.get("latency_ms") is not None else ""
     if p["kind"] == "tcp":
-        return f"TCP {p['host']}:{p['port']}" + (ms if r["up"] else " — no answer")
+        return f"TCP {p['host']}:{p['port']}" + (ms if r["up"] else " - no answer")
     if p["kind"] == "ping":
-        return f"ping {p['host']}" + (ms if r["up"] else f" — {r.get('error') or 'no reply'}")
+        return f"ping {p['host']}" + (ms if r["up"] else f" - {r.get('error') or 'no reply'}")
     head = f"{p['kind'].upper()} {p['host']}:{p['port']}{p['path']}"
     if r.get("http_status") is None:
-        return f"{head} — {r.get('error') or 'no answer'}"
+        return f"{head} - {r.get('error') or 'no answer'}"
     want = f" (want {p['expect']})" if p["expect"] and not r["up"] else ""
     text = f"{head} → {r['http_status']}{want}{ms}"
     tls = r.get("tls") or {}
@@ -272,7 +272,7 @@ async def run_check(entry: dict) -> dict:
                 "check": None, "summary": "not monitored"}
     if p["kind"] == "none":
         return {"up": None, "latency_ms": None, "checked_at": now, "target": None,
-                "check": "none", "summary": "not probed — the health check is none"}
+                "check": "none", "summary": "not probed - the health check is none"}
     if p["kind"] == "tcp":
         up, ms = await probe(p["host"], p["port"])
         r = {"up": up, "latency_ms": ms, "target": f"{p['host']}:{p['port']}"}
@@ -294,7 +294,7 @@ async def check_entry(entry: dict) -> dict:
     # Store transitions only. Every sweep would be 46 rows a minute of noise;
     # a change of state is the thing anyone ever wants to look back at.
     # The in-memory cache is empty after a restart, so fall back to the last
-    # stored row there — otherwise every restart would log 60 false changes.
+    # stored row there - otherwise every restart would log 60 false changes.
     try:
         if before is None:
             prev = await asyncio.to_thread(db.last_observation, entry["id"])
@@ -334,14 +334,14 @@ async def sweep() -> None:
             await check_entry(e)
 
     await asyncio.gather(*(one(e) for e in entries))
-    # An entry that answered its check exists — see app/stale.py.
+    # An entry that answered its check exists - see app/stale.py.
     await asyncio.to_thread(db.confirm, [i for i, r in CACHE.items() if r.get("up") is True],
                             "health check answered")
     for stale in set(CACHE) - {e["id"] for e in entries}:
         CACHE.pop(stale, None)
     LAST_SWEEP = db.now()
     from . import uptime
-    await asyncio.to_thread(uptime.heartbeat)     # "NetMap was watching" — see uptime.py
+    await asyncio.to_thread(uptime.heartbeat)     # "NetMap was watching" - see uptime.py
     # Critical and important entries that changed state reach whoever is not
     # looking; app/notify.py decides what is news.
     from . import notify

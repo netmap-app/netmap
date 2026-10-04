@@ -8,7 +8,7 @@ On a branch, in the same commit:
 
 - Bump `VERSION` in `app/main.py`. It cache-busts the front-end scripts and
   `style.css` (`?v=__V__`) and is the only way to tell what is live.
-- Add a `CHANGELOG.md` entry: a `## <version> — <YYYY-MM-DD>` heading and one
+- Add a `CHANGELOG.md` entry: a `## <version> - <YYYY-MM-DD>` heading and one
   `- ` bullet per change, each on a single line. Settings › "what's new" reads
   the file through `/api/changelog`, and the Dockerfile ships it from the repo
   root next to `app/`.
@@ -50,8 +50,8 @@ On a push to `main` whose `VERSION` is not yet published,
    (`.github/scripts/prune-images.sh`);
 4. creates the GitHub Release `v<version>` on the commit that set that
    `VERSION`, with that version's `CHANGELOG.md` bullets and the pull command
-   (`.github/scripts/release-notes.sh`) — unless it already exists;
-5. optionally asks a Dockhand instance to recreate the container — only when
+   (`.github/scripts/release-notes.sh`) - unless it already exists;
+5. optionally asks a Dockhand instance to recreate the container - only when
    the repository variable `DOCKHAND_URL` is set. The workflow header lists the
    variables and secrets it needs; none of them belong in the code.
 
@@ -61,7 +61,7 @@ still creates the release for the current version if that one is missing.
 ## 5. Announce
 
 CI writes the release. If an upgrade needs anything beyond `docker compose pull
-&& docker compose up -d`, say so in a `CHANGELOG.md` bullet — that is where the
+&& docker compose up -d`, say so in a `CHANGELOG.md` bullet - that is where the
 release notes come from. Edit the release on GitHub afterwards if needed.
 
 ## 6. Check

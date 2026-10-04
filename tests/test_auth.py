@@ -68,7 +68,7 @@ def test_foreign_host_is_refused(make_app):
     _, c = make_app(NETMAP_API_TOKEN="full-token")
     r = c.get("/api/meta", headers={**TOKEN, "host": "attacker.example"})
     assert r.status_code == 400
-    # It says which name and what to set — a new install opened by its IP
+    # It says which name and what to set - a new install opened by its IP
     # address sees exactly this.
     assert "'attacker.example'" in r.text and "NETMAP_ALLOWED_HOSTS" in r.text
     r = c.get("/api/meta", headers={**TOKEN, "host": "192.0.2.7:8087"})
@@ -177,7 +177,7 @@ def test_allowed_hosts_listed_once(make_app):
 
 # ---- malformed headers and an MCP endpoint without its token ---------------------------------
 def _raw(app, path: str, auth: bytes | None, sent: list | None = None) -> int:
-    """One request straight to the ASGI app — a test client refuses to send
+    """One request straight to the ASGI app - a test client refuses to send
     the malformed header this is about."""
     import asyncio
     sent = [] if sent is None else sent
@@ -250,7 +250,7 @@ def test_with_a_token_only_the_right_bearer_reaches_mcp(make_app):
 
 def test_an_mcp_endpoint_that_is_off_is_said_so_quietly(make_app):
     main, c = make_app(NETMAP_API_TOKEN="full-token", NETMAP_MCP_TOKEN="")
-    assert main.mcp_startup_line() == "[netmap] MCP endpoint off — NETMAP_MCP_TOKEN not set"
+    assert main.mcp_startup_line() == "[netmap] MCP endpoint off - NETMAP_MCP_TOKEN not set"
     # Off is not a problem: nothing on the Overview about it.
     att = c.get("/api/overview", headers=TOKEN).json()["attention"]
     assert not [i for i in att if "mcp" in i["key"].lower() or "MCP" in i["title"]]

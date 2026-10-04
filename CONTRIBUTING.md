@@ -2,7 +2,7 @@
 
 NetMap is a self-hosted inventory and reconciliation app for a home or
 small-office network. Single container: FastAPI + SQLite + an MCP server, no
-build step, no framework. `app/db.py` is meant to be readable in one sitting —
+build step, no framework. `app/db.py` is meant to be readable in one sitting -
 keep it that way.
 
 Issues and pull requests are welcome. Security problems go through
@@ -21,7 +21,7 @@ Issues and pull requests are welcome. Security problems go through
   regenerated, not reused.
 - **Every secret is encrypted at rest.** A source's `secrets` column goes
   through `app/crypto.py`. With `NETMAP_SECRET_KEY` set, the key lives only in
-  the container's environment and the database holds ciphertext alone — a
+  the container's environment and the database holds ciphertext alone - a
   copy of `netmap.db` cannot be decrypted by itself. Without it, a key
   generated on first boot is stored in the database. Setting the variable
   later re-encrypts everything at start-up and deletes the stored key; a key
@@ -31,16 +31,16 @@ Issues and pull requests are welcome. Security problems go through
 - **Every source is read-only.** Four are read-only by enforcement (Docker's
   socket proxy, UniFi's View Only role, NPM's View Only user, Cloudflare's
   scoped token); OPNsense, Pi-hole and Home Assistant are read-only *by
-  promise* — the module contains no code path able to construct a write, and
+  promise* - the module contains no code path able to construct a write, and
   that promise is checkable by reading one file. Keep it true. Every driver
-  holds itself to the same promise — Proxmox issues GETs only, and a token
+  holds itself to the same promise - Proxmox issues GETs only, and a token
   built from its built-in "PVEAuditor" role cannot write even if the code
   tried.
 - **Drivers keep no module state.** Configuration arrives as `cfg`; login
   sessions live in `cfg["_state"]`, which is per instance and dropped on
   every edit. A type can have several instances: ids are the type, then
   `<type>-2`…; drivers write sightings/presence under `cfg["_id"]` and start
-  finding keys with `cfg["_key"]`. Never compare a source id to a type name —
+  finding keys with `cfg["_key"]`. Never compare a source id to a type name -
   use `dynamic.type_of()`. Code outside a scan that needs another source's
   answer uses `sources.by_role(role)` (or `bound_all(type)` for a
   product-specific need); a driver's `ABSENCE` set names findings a sibling
@@ -50,7 +50,7 @@ Issues and pull requests are welcome. Security problems go through
   declaring a role keeps that role's contract, which `tests/test_roles.py`
   checks. The checks a role implies live once, in `_dns.py` / `_proxy.py`; a
   new DNS server or proxy maps its API onto records/routes and calls them.
-- **Nothing assumes one installation** — not a domain, an address or a naming
+- **Nothing assumes one installation** - not a domain, an address or a naming
   convention. Derive it from a source or make it a field.
 - **Discovery never writes to the inventory.** A scan reports; a person
   decides. Firewall changes are made by the person, never by the app.
@@ -70,13 +70,13 @@ python3.12 -m venv .venv
 
 - **A fix comes with a test that fails without it.** `tests/conftest.py`'s
   `make_app(**env)` re-imports the app under a given environment with an empty
-  temporary database — configuration is read at import, so that is the way to
+  temporary database - configuration is read at import, so that is the way to
   test a different auth mode.
 - **A UI change comes with a browser test** in `tests/ui` (Playwright, a real
   server per test; CI runs them and fails if the browser is missing),
   including a check at phone width (375 px, no horizontal scroll).
-- **Test the states the seed data does not produce** — sources reporting, a
-  queue with rows, the all-clear — by intercepting `/api/overview` in the
+- **Test the states the seed data does not produce** - sources reporting, a
+  queue with rows, the all-clear - by intercepting `/api/overview` in the
   test. A build once shipped broken because an empty source list meant the
   code path that referenced a deleted constant never ran.
 - **Run it locally** against a scratch database:
@@ -96,7 +96,7 @@ python3.12 -m venv .venv
 Hand-written, no bundler: `app/static/index.html`, `style.css`, and the plain
 scripts in `app/static/js/`, loaded by `index.html` in order and sharing one
 global scope (core, theme, overview, inventory, edit, profile, network, graph,
-addresses, reconcile, card, palette, sources, notify, import, boot — boot
+addresses, reconcile, card, palette, sources, notify, import, boot - boot
 last). Code that runs at load may only use what the same or an earlier file
 defines; `tests/test_frontend.py` checks that, and that every file is loaded
 once. A new file goes into `index.html` in the right place. `renderOverview`
@@ -124,7 +124,7 @@ Two distinctions worth preserving:
   Recording only disagreements meant the app could say what was wrong and
   never what was true.
 - A **derived** edge is rebuilt by `derive_links`; a hand-made edge is never
-  overwritten by a guess — and permanently blocks the derived one, because
+  overwritten by a guess - and permanently blocks the derived one, because
   `db.link` is `INSERT OR IGNORE`.
 
 Data lives in the container's `/data` volume: `netmap.db` and `icons-v2/`. The

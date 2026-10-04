@@ -1,12 +1,12 @@
 """At-rest encryption for the source secrets entered through Settings.
 
-Ciphertext lives in one place: each source's `secrets` column. The Settings UI never gets a value back — only whether one is set and a
+Ciphertext lives in one place: each source's `secrets` column. The Settings UI never gets a value back - only whether one is set and a
 last-four preview.
 
 Where the key lives decides what encryption is worth:
 
   NETMAP_SECRET_KEY set   the key is in docker-compose.yml, the database holds
-                          only ciphertext — a copy of netmap.db on its own
+                          only ciphertext - a copy of netmap.db on its own
                           (a backup, a support bundle) cannot be decrypted.
   not set                 a key generated on first boot is stored in the
                           database. Anyone with the file can decrypt; this only
@@ -100,7 +100,7 @@ def rotate(token: str) -> str | None:
     primary = Fernet(_keys()[0].encode())
     try:
         primary.decrypt(token.encode())
-        return token            # already under the current key — leave it be
+        return token            # already under the current key - leave it be
     except InvalidToken:
         pass
     try:
@@ -129,7 +129,7 @@ MASK_MIN = 16      # shorter than this, not even the last four are shown
 
 def mask(plaintext: str) -> str:
     """For the Settings list: a fixed row of dots, and the last four
-    characters of a long token — enough to tell two tokens apart, never
+    characters of a long token - enough to tell two tokens apart, never
     enough to reuse. Neither the length nor any part of a short secret (a
     password) is shown: four characters of a six-character password is most
     of it."""

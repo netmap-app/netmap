@@ -3,7 +3,7 @@
 NPM was the last thing in the path a request takes that nothing read. The
 Cloudflare source knows which hostnames arrive at the house; `runs_on` knows
 where services live; between the two sits the proxy that decides which name
-reaches which port, and NetMap could only *infer* it — `exposed_by` edges were
+reaches which port, and NetMap could only *infer* it - `exposed_by` edges were
 guessed from the `url` field, and the Cloudflare source had to ask Pi-hole what
 NPM was probably doing.
 
@@ -52,7 +52,7 @@ ROLES = ("proxy",)  # see dynamic.ROLES
 
 
 # NPM issues a bearer token with an expiry. Kept and reused, in the instance's
-# own state (cfg["_state"]: token, token_at, and expires — whatever NPM said,
+# own state (cfg["_state"]: token, token_at, and expires - whatever NPM said,
 # verbatim, for diagnosis); a fresh login on every scan would be pointless
 # traffic against a service whose whole job is answering other people's
 # requests. Settings drops the state on any change.
@@ -70,7 +70,7 @@ def _why(exc: urllib.error.HTTPError) -> str:
     """NPM's own explanation, which is in the body and not in the status.
 
     It answers 400 for a bad login as readily as for a malformed request, so
-    the code alone cannot tell "wrong password" from "wrong request" — and a
+    the code alone cannot tell "wrong password" from "wrong request" - and a
     scan that reports only the number sends you looking in the wrong place.
     """
     try:
@@ -86,7 +86,7 @@ def _login(cfg: dict) -> str:
     """The one POST in this module."""
     # Exactly these two fields. NPM's token schema sets
     # additionalProperties:false, so sending a documented-looking extra like
-    # `expiry` is refused with "data must NOT have additional properties" —
+    # `expiry` is refused with "data must NOT have additional properties" -
     # a 400 that looks exactly like a rejected login and is not one.
     body = json.dumps({"identity": cfg["user"], "secret": cfg["password"]}).encode()
     req = urllib.request.Request(
@@ -98,7 +98,7 @@ def _login(cfg: dict) -> str:
     except urllib.error.HTTPError as exc:
         why = _why(exc)
         raise RuntimeError(
-            f"login refused, HTTP {exc.code}" + (f" — {why}" if why else "")
+            f"login refused, HTTP {exc.code}" + (f" - {why}" if why else "")
             + (" (the user is the account's e-mail address, not a name)"
                if exc.code in (400, 401) and not why else "")) from None
     token = data.get("token") or ""
@@ -121,8 +121,8 @@ def _get(cfg: dict, path: str, _retry: bool = True):
         with _http.urlopen(req, timeout=cfg["timeout"], context=fields.tls(cfg)) as r:
             return json.loads(r.read())
     except urllib.error.HTTPError as exc:
-        # 400 belongs in this list. NPM answers 400 for credential problems —
-        # that is how "Invalid email or password" arrived — so an expired
+        # 400 belongs in this list. NPM answers 400 for credential problems -
+        # that is how "Invalid email or password" arrived - so an expired
         # token can come back as 400 rather than 401. Retrying only on
         # 401/403 left a stale token cached in this process, and because the
         # cache is ours rather than NPM's, the source stayed broken until
@@ -140,7 +140,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None}
     except urllib.error.HTTPError as exc:
         why = _why(exc)
-        return {"ok": False, "error": f"NPM answered HTTP {exc.code}" + (f" — {why}" if why else "")}
+        return {"ok": False, "error": f"NPM answered HTTP {exc.code}" + (f" - {why}" if why else "")}
     except Exception as exc:
         return {"ok": False, "error": f"NPM at {cfg['url']}: {exc}"}
 
@@ -169,7 +169,7 @@ def scan(cfg: dict) -> dict:
     P = cfg.get("_key", "npm")          # finding-key prefix; see dynamic.py
     # What actually reached the container, not what the compose file says.
     # Docker Compose expands `$` in an environment value, so a password
-    # containing one arrives mangled while looking perfectly correct on disk —
+    # containing one arrives mangled while looking perfectly correct on disk -
     # and NPM reports that as "Invalid email or password", which sends you
     # looking at the account instead. The e-mail is not a secret and is shown
     # in full; the password is reported only as a length and a shape.
@@ -187,7 +187,7 @@ def scan(cfg: dict) -> dict:
                                     if state.get("token_at") else None)},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = ("not configured — add the NPM URL, e-mail and password "
+        out["error"] = ("not configured - add the NPM URL, e-mail and password "
                         "in Settings › Sources")
         return out
     try:
@@ -195,8 +195,8 @@ def scan(cfg: dict) -> dict:
     except urllib.error.HTTPError as exc:
         why = _why(exc)
         out["error"] = (f"NPM answered HTTP {exc.code}"
-                        + (f" — {why}" if why else "")
-                        + (" — the user needs at least View Only on proxy hosts"
+                        + (f" - {why}" if why else "")
+                        + (" - the user needs at least View Only on proxy hosts"
                            if exc.code in (401, 403) and not why else ""))
         return out
     except Exception as exc:
@@ -222,7 +222,7 @@ def scan(cfg: dict) -> dict:
     findings, seen = _proxy.reconcile(P, "NPM", routes, entries)
 
     # One certificate can serve several proxy hosts, so this walks the
-    # certificates rather than the hosts — otherwise one expiry produces one
+    # certificates rather than the hosts - otherwise one expiry produces one
     # finding per name that uses it, all sharing a key.
     today = dt.date.today()
     users: dict[object, list[str]] = {}
@@ -240,7 +240,7 @@ def scan(cfg: dict) -> dict:
             continue
         findings.append({
             "type": "cert-expiring", "key": f"{P}:cert:{cid}",
-            "label": (f"{', '.join(sorted(set(names))[:3])} — certificate "
+            "label": (f"{', '.join(sorted(set(names))[:3])} - certificate "
                       + (f"expires in {left} day(s)" if left >= 0
                          else f"expired {-left} day(s) ago")),
             "detail": (f"valid until {when.isoformat()}, covering "

@@ -1,7 +1,7 @@
-/* NetMap front end — import.js: Settings › Data: JSON import.
+/* NetMap front end - import.js: Settings › Data: JSON import.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= JSON import ================= */
 let IMPORT = null;   // the parsed file, held between preview and apply
@@ -28,7 +28,7 @@ function planHtml(plan) {
     ${plan.delete.length ? `<div class="impnames warnrow">deletes: ${
       plan.delete.slice(0, 12).map(x => esc(x.name)).join(", ")}</div>` : ""}
     ${plan.problems.length ? `<div class="impnames warnrow">skipped: ${
-      plan.problems.map(p => esc(p.name) + " — " + esc(p.why)).join("; ")}</div>` : ""}
+      plan.problems.map(p => esc(p.name) + " - " + esc(p.why)).join("; ")}</div>` : ""}
     <div class="setrow">
       <button class="btn ${c.delete ? "danger" : "primary"}" id="impApply"
         ${c.create + c.update + c.delete === 0 && !(plan.relations
@@ -56,7 +56,7 @@ async function importPreview() {
     });
     const c = res.counts;
     $("#impPlan").innerHTML = `<div class="impplan"><div class="impsum">
-      <span class="in">Imported — ${c.create} new, ${c.update} changed, ${c.delete} deleted.</span>
+      <span class="in">Imported - ${c.create} new, ${c.update} changed, ${c.delete} deleted.</span>
       </div></div>`;
     IMPORT = null;
     toast("Import applied");

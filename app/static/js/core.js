@@ -1,7 +1,7 @@
-/* NetMap front end — core.js: shared state and helpers: $, esc, api(), toast, formatting, theme.
+/* NetMap front end - core.js: shared state and helpers: $, esc, api(), toast, formatting, theme.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c =>
@@ -18,7 +18,7 @@ const ICON = {
    with no outbound dependency, and a dashboard that goes grey when a CDN is
    unreachable is worse than one with plainer marks. Same 24-grid stroke style
    as the rest of the chrome, so they sit with the toolbar icons.
-   The key is the category's own name — an unknown category gets the dot. */
+   The key is the category's own name - an unknown category gets the dot. */
 const CAT = {
   "Core Network":              ["core",  '<path d="M4 13h16v6H4z"/><path d="M8 16h.01M11 16h.01"/><path d="M12 10V6"/><path d="M8.5 7.5L12 4l3.5 3.5"/>'],
   "Infrastructure & Management":["infra", '<rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M7.5 7.5h.01M7.5 17h.01"/>'],
@@ -36,7 +36,7 @@ const catKey = (c) => (CAT[c] || ["misc"])[0];
    404 per row is a worse cost than one small map. */
 let ICONS = {};
 /* Single-colour brand marks are painted in the interface's ink, so the server
-   has to know which one — an <img> cannot inherit `currentColor`. Some marks
+   has to know which one - an <img> cannot inherit `currentColor`. Some marks
    also ship a variant drawn for dark backgrounds. Both need the theme, and it
    goes in the URL so the browser caches one file per theme rather than
    serving the wrong one from cache after a switch. */
@@ -61,7 +61,7 @@ const svcImg = (e) => {
 document.addEventListener("error", ev => {
   const img = ev.target;
   if (img instanceof HTMLImageElement && img.classList.contains("svc")) {
-    const box = img.closest(".cg");
+    const box = img.closest(".cg, .sm");
     if (box) box.classList.add("noicon");
   }
 }, true);
@@ -87,7 +87,7 @@ let editingId = null;
 const GROUPS = { category: "Uncategorised", host: "No host set", kind: "No kind set" };
 let groupBy = GROUPS[localStorage.getItem("netmap.groupby")] ? localStorage.getItem("netmap.groupby") : "category";
 const VIEWS = ["overview", "inventory", "network", "changes", "settings"];
-// Always Overview on load — it is the one page that answers "is anything
+// Always Overview on load - it is the one page that answers "is anything
 // wrong", which is the only question worth asking before you've looked at
 // anything else. Remembering the last tab meant a Network visit yesterday
 // silently became tomorrow's startup page.
@@ -116,7 +116,7 @@ function confirmDialog({ title, body = "", ok = "Delete", danger = true }) {
     yes.onclick = () => done(true);
     no.onclick = () => done(false);
     m.onclick = ev => { if (ev.target === m) done(false); };
-    // Esc answers this dialog only — not the global handler, which would
+    // Esc answers this dialog only - not the global handler, which would
     // also close the dialog underneath that asked the question.
     m.onkeydown = ev => { if (ev.key === "Escape") { ev.stopPropagation(); done(false); } };
     m.hidden = false;
@@ -128,8 +128,8 @@ function confirmDialog({ title, body = "", ok = "Delete", danger = true }) {
    An explanation of how something works sits behind an "i" next to what it
    explains, instead of as a line of text on the page. What the page *reports*
    (a count, a state, an error) stays visible. Markup: any element carrying
-   `data-tip` is the explanation; tipify() — run on everything the page draws,
-   by boot.js — puts the "i" button before it and hides it. The button shows
+   `data-tip` is the explanation; tipify() - run on everything the page draws,
+   by boot.js - puts the "i" button before it and hides it. The button shows
    it on mouse hover and on keyboard focus, and a tap or click pins it open
    until a tap elsewhere or Esc. A screen reader gets it as the button's
    description. */
@@ -216,7 +216,7 @@ document.addEventListener("click", ev => {
   }
   if (!(ev.target.closest && ev.target.closest(".tipbox"))) tipHideAll();
 }, true);
-// Esc closes an open explanation first — not the dialog it sits in.
+// Esc closes an open explanation first - not the dialog it sits in.
 document.addEventListener("keydown", ev => {
   if (ev.key === "Escape" && document.querySelector(".tipwrap.open")) {
     tipHideAll(); ev.stopPropagation();
@@ -227,7 +227,7 @@ addEventListener("resize", tipHideAll);
 
 /* ---- how old is what this tab shows ------------------------------------------
    A laptop that slept, or a server that stopped answering, leaves the page
-   showing what was true when it last loaded — with every colour still green.
+   showing what was true when it last loaded - with every colour still green.
    LAST_REFRESH is when data last arrived; past STALE_PAGE_MS the status
    colours go grey and a line says since when, until a refresh succeeds. */
 let LAST_REFRESH = Date.now();
@@ -243,7 +243,7 @@ function pageFreshness() {
     const d = new Date(LAST_REFRESH);
     const today = d.toDateString() === new Date().toDateString();
     const t = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-    b.textContent = `Not refreshed since ${today ? t : d.toLocaleDateString() + " " + t} — `
+    b.textContent = `Not refreshed since ${today ? t : d.toLocaleDateString() + " " + t} - `
       + "what this page shows may be out of date. Refresh now";
   }
   return old;

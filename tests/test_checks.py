@@ -1,5 +1,5 @@
 """Health checks beyond "port open" (app/status.py): the grammar, an HTTP(S)
-GET with an expected status, the certificate an https check reads — and that
+GET with an expected status, the certificate an https check reads - and that
 an empty check is exactly the TCP connect it always was. Every target is a
 local server."""
 import asyncio

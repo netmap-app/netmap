@@ -1,6 +1,6 @@
 """Stale entries: nothing has confirmed they exist for N days.
 
-An entry that no longer exists — a retired machine, a removed container —
+An entry that no longer exists - a retired machine, a removed container -
 otherwise sits in the inventory for ever. db.entry_seen records when each
 entry was last confirmed: a source's sighting, an address a source sees at
 its MAC (or, for hardware and VMs, its address), or its health check
@@ -11,8 +11,8 @@ see them, so silence about them is not news.
 One Overview note, not a finding per entry. Entries a source already reports
 gone by its own check (GONE: Docker's "no container", a NAT rule or tunnel
 route or Home Assistant entity that no longer exists) are left out: said once
-is enough. Not every ABSENCE type means gone — netbox-missing only says
-NetBox does not list it — so the list is explicit.
+is enough. Not every ABSENCE type means gone - netbox-missing only says
+NetBox does not list it - so the list is explicit.
 """
 import calendar
 import time
@@ -44,7 +44,7 @@ def set_days(n: int, actor: str = "web") -> int:
 
 def backfill() -> int:
     """Once: an entry whose health check stopped answering and never came
-    back was last confirmed when it stopped — so a long-dead entry is stale
+    back was last confirmed when it stopped - so a long-dead entry is stale
     from the first day, not fourteen days after this version started."""
     if db.get_setting(BACKFILL_KEY):
         return 0

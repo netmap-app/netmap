@@ -56,7 +56,7 @@ def reconcile(P: str, product: str, records: list[dict], entries: list[dict]
             e = moved[0]
             findings.append({
                 "type": "dns-drift", "key": key,
-                "label": f"{label} — NetMap has {e['name']} at {e['ip']}",
+                "label": f"{label} - NetMap has {e['name']} at {e['ip']}",
                 "detail": ("a local DNS record and the inventory disagree about "
                            "this name's address. After a renumbering the record "
                            "is usually the stale one."),
@@ -70,7 +70,7 @@ def reconcile(P: str, product: str, records: list[dict], entries: list[dict]
             })
 
     # A name belongs to the entry that claims it. The host that answers all of
-    # them gets one line saying so, not twenty-three identical ones — a fact
+    # them gets one line saying so, not twenty-three identical ones - a fact
     # repeated is not a fact confirmed.
     seen: list[dict] = []
     host_names: dict[int, list[str]] = {}

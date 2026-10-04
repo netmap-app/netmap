@@ -2,12 +2,12 @@
 
 Pi-hole holds two things NetMap cares about and cannot see for itself:
 
-  /api/config/dns   the local DNS records — what a name resolves to on this LAN
+  /api/config/dns   the local DNS records - what a name resolves to on this LAN
   /api/clients      the clients that carry group assignments, and
   /api/groups       the groups those assignments point at
 
 The DNS half catches a common failure: renumbering
-a host is easy, and what breaks is never the host — it is whatever still points
+a host is easy, and what breaks is never the host - it is whatever still points
 at the old address. A local A record is exactly that kind of pointer.
 
 The group half exists for a failure that is worse because it is silent. A
@@ -18,7 +18,7 @@ the entry as a `pihole:<Group>` tag and this source verifies it.
 
 Unlike Docker there is no read-only credential here, and unlike OPNsense there
 is not even a per-request one: Pi-hole issues a session. This module therefore
-does make one POST — `/api/auth`, to log in — and nothing else. Every other
+does make one POST - `/api/auth`, to log in - and nothing else. Every other
 request is a GET, and no code path here can construct a write.
 """
 import json
@@ -42,7 +42,7 @@ FIELDS = [
 
 ROLES = ("dns", "leases")  # see dynamic.ROLES
 
-# "Not here" findings — dropped when another pihole source sees the entry.
+# "Not here" findings - dropped when another pihole source sees the entry.
 ABSENCE = {'group-missing'}
 
 TAG_RE = re.compile(r"^pihole:(.+)$", re.I)
@@ -85,7 +85,7 @@ def _get(cfg: dict, path: str, _retry: bool = True):
         with _http.urlopen(req, timeout=cfg["timeout"], context=fields.tls(cfg)) as r:
             return json.loads(r.read())
     except urllib.error.HTTPError as exc:
-        # The session expired or was evicted. Log in once more, then give up —
+        # The session expired or was evicted. Log in once more, then give up -
         # retrying forever against a wrong password is how you get locked out.
         if exc.code in (401, 403) and _retry:
             state["sid"] = None
@@ -94,13 +94,13 @@ def _get(cfg: dict, path: str, _retry: bool = True):
 
 
 def test(cfg: dict) -> dict:
-    """Log in and read one small thing — cheaper than a scan."""
+    """Log in and read one small thing - cheaper than a scan."""
     try:
         _get(cfg, "/api/groups")
         return {"ok": True, "error": None}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"Pi-hole answered HTTP {exc.code}"
-                + (" — check the password" if exc.code in (401, 403) else "")}
+                + (" - check the password" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach Pi-hole at {cfg['url']}: {exc}"}
 
@@ -144,7 +144,7 @@ def scan(cfg: dict) -> dict:
     out = {"source": cfg.get("_id", "pihole"), "configured": configured(cfg), "scanned_at": db.now(),
            "host": {"url": cfg.get("url", "")}, "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — add the API URL and password in Settings › Sources"
+        out["error"] = "not configured - add the API URL and password in Settings › Sources"
         return out
     try:
         conf = _get(cfg, "/api/config/dns")
@@ -152,7 +152,7 @@ def scan(cfg: dict) -> dict:
         groups = _get(cfg, "/api/groups").get("groups", [])
     except urllib.error.HTTPError as exc:
         out["error"] = (f"Pi-hole answered HTTP {exc.code}"
-                        + (" — check the password; an app password is "
+                        + (" - check the password; an app password is "
                            "revoked separately from the web password"
                            if exc.code in (401, 403) else ""))
         return out
@@ -199,7 +199,7 @@ def scan(cfg: dict) -> dict:
             if g.lower() not in known:
                 findings.append({
                     "type": "group-unknown", "key": f"{P}:group:{e['id']}:{g}",
-                    "label": f"{e['name']} — no Pi-hole group called \"{g}\"",
+                    "label": f"{e['name']} - no Pi-hole group called \"{g}\"",
                     "detail": (f"tagged pihole:{g}, but Pi-hole has "
                                + (", ".join(sorted(x for x in gname.values() if x))
                                   or "no groups")),
@@ -209,7 +209,7 @@ def scan(cfg: dict) -> dict:
             if hit is None:
                 findings.append({
                     "type": "group-missing", "key": f"{P}:group:{e['id']}:{g}",
-                    "label": f"{e['name']} — not a Pi-hole client at all",
+                    "label": f"{e['name']} - not a Pi-hole client at all",
                     "detail": (f"tagged pihole:{g}, but no Pi-hole client matches "
                                f"{', '.join(sorted(ids)) or 'this entry'}. Whatever "
                                "that group does is not being applied to it."),
@@ -220,7 +220,7 @@ def scan(cfg: dict) -> dict:
             if g.lower() not in mine:
                 findings.append({
                     "type": "group-drift", "key": f"{P}:group:{e['id']}:{g}",
-                    "label": f"{e['name']} — not in \"{g}\"",
+                    "label": f"{e['name']} - not in \"{g}\"",
                     "detail": (f"tagged pihole:{g}, but Pi-hole has this client "
                                f"({hit.get('client')}) in "
                                + (", ".join(sorted(x for x in mine if x)) or "no group")),
@@ -235,7 +235,7 @@ def scan(cfg: dict) -> dict:
                               ((gname.get(i) or "") for i in (c.get("groups") or [])) if x))
         findings.append({
             "type": "client-untracked", "key": f"{P}:client:{ident}",
-            "label": f"{c.get('comment') or ident} — Pi-hole client, not in NetMap",
+            "label": f"{c.get('comment') or ident} - Pi-hole client, not in NetMap",
             "detail": (f"has group assignments ({gs or 'default only'}) but no "
                        "inventory entry, so nothing records what it is or why "
                        "it is filtered that way"),

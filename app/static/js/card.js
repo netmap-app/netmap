@@ -1,7 +1,7 @@
-/* NetMap front end — card.js: the service card, and the port page.
+/* NetMap front end - card.js: the service card, and the port page.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= service card ================= */
 const EDGE_LABEL = {
@@ -27,7 +27,7 @@ const TOPO_HINT = {
 };
 let shownView = null;
 
-/* The last 30 days as a strip: green up, red down, grey unknown — the
+/* The last 30 days as a strip: green up, red down, grey unknown - the
    gaps where nothing was checked are shown, not smoothed over. */
 function uptimeHtml(u) {
   if (!u || !u.shown) return "";
@@ -88,7 +88,7 @@ function edgeList(edges, dir) {
 // finding is an argument; a sighting is a witness statement, and most of the
 // time the interesting thing is that five of them agree.
 // A source's own name ("Docker 2") from the last health read, falling back to
-// its id — ids are what sightings carry.
+// its id - ids are what sightings carry.
 const srcLabel = id => ((SRC_HEALTH.health || []).find(h => h.source === id) || {}).label || id;
 
 function sightRows(list, { withEntry = false } = {}) {
@@ -162,7 +162,7 @@ async function showPort(port) {
     <div class="setsec"><h3>Entries <i>who claims this port</i></h3>
       ${d.entries.length ? `<div class="edges">${d.entries.map(e => `
         <div class="edge">
-          <span class="et mono">${esc(e.ip || "—")}</span>
+          <span class="et mono">${esc(e.ip || "-")}</span>
           <span class="en" data-card="${e.id}">${esc(e.name)}</span>
           ${e.kind ? `<span class="kind ${esc(e.kind)}">${esc(e.kind)}</span>` : ""}
           ${d.declared_by.includes(e.id) ? "" : `<span class="derived" title="not in this entry's ports field">observed</span>`}
@@ -211,8 +211,8 @@ async function showCard(id, push = true) {
     ["Host", e.host], ["Address", e.ip], ["MAC", e.mac], ["Ports", e.ports],
     ["Access", e.protocol], ["Zone", e.zone], ["Category", e.category],
     ["Credentials", e.secret_ref],
-    // When something last confirmed it exists — see app/stale.py.
-    ["Last seen", c.last_seen ? `${when(c.last_seen.last_seen)} — ${c.last_seen.how}` : ""],
+    // When something last confirmed it exists - see app/stale.py.
+    ["Last seen", c.last_seen ? `${when(c.last_seen.last_seen)} - ${c.last_seen.how}` : ""],
   ].filter(([, v]) => v);
 
   const obs = c.observations.length ? `<div class="obs">${c.observations.map(o => `

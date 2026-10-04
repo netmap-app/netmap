@@ -1,9 +1,9 @@
-"""The local account: one user, one password — the way in when Cloudflare
+"""The local account: one user, one password - the way in when Cloudflare
 Access is not.
 
 Access stays the front door. This is the spare key for the day it is
-misconfigured — a wrong team name or AUD tag after a deploy, or Cloudflare
-itself having a bad day — when every request would otherwise be refused and
+misconfigured - a wrong team name or AUD tag after a deploy, or Cloudflare
+itself having a bad day - when every request would otherwise be refused and
 the only fix would be a shell on the VM.
 
 **There is no default password in the code.** The first start takes
@@ -19,7 +19,7 @@ Storage is the `kv` table, nothing new in the schema:
 
 Passwords are hashed with scrypt from the standard library. Sessions are
 stateless signed cookies carrying the username, an expiry, and a fingerprint of
-the password hash — so changing the password logs out every other session
+the password hash - so changing the password logs out every other session
 without a sessions table to keep.
 
 Forgot it? On the VM:  docker exec -it netmap python -m app.accounts reset
@@ -155,7 +155,7 @@ def reset(actor: str = "shell") -> str:
 # ---- sessions ---------------------------------------------------------------
 def _key() -> bytes:
     """The key that signs session cookies. With NETMAP_SECRET_KEY set it is
-    derived from that as well, so — like the source secrets — a copy of
+    derived from that as well, so - like the source secrets - a copy of
     netmap.db alone is not enough to forge a session. Setting or changing the
     variable signs everyone out, once."""
     k = db.get_setting("session_key")
@@ -199,7 +199,7 @@ def check_session(token: str) -> str | None:
 
 # ---- throttling ---------------------------------------------------------------
 # Per client and overall. Behind the tunnel every request arrives from the
-# cloudflared container, so "per client" uses the address Cloudflare reports —
+# cloudflared container, so "per client" uses the address Cloudflare reports -
 # which a LAN client could forge, hence the overall ceiling as well. Hitting it
 # locks the password door only; Access and the API token still work.
 WINDOW = 15 * 60

@@ -7,7 +7,7 @@ neither shows up until a page fails to load, so they are checked here:
     const/let initialiser) only uses names defined in the same file or an
     earlier one. Inside one big file every function was hoisted to the top;
     across files it is not, and a forward reference is a ReferenceError at
-    load — a blank page. Function bodies run later and may use anything.
+    load - a blank page. Function bodies run later and may use anything.
 
 The file is consistently indented, so "top level" is "starts at column 0".
 The browser tests (tests/ui) catch the same failure in practice; this names

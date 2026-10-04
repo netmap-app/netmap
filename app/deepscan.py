@@ -7,13 +7,13 @@ the difference is the design:
 |---|---|---|
 | when | on a schedule, unattended | when a person asks |
 | what | 111 common ports, every tracked address | all 65535, one address |
-| output | findings — the inventory contradicted | an answer to a question |
+| output | findings - the inventory contradicted | an answer to a question |
 | duration | seconds | minutes |
 
 A scheduled job that takes minutes and a person waiting on an answer need
 different machinery, so this one is a **job**: it is started, it reports
 progress, and its result is fetched. Nothing about it is stored between
-restarts and it writes nothing to the inventory — the same rule the discovery
+restarts and it writes nothing to the inventory - the same rule the discovery
 sources hold to. What it produces is evidence for a person to act on.
 
 **It refuses to scan anything that is not a private address.** Port-scanning
@@ -45,7 +45,7 @@ WORKERS = 128
 TIMEOUT = 0.35
 CHUNK = 512                       # ports per progress update
 
-# What a port number usually means — shared with the scheduled sweep, in
+# What a port number usually means - shared with the scheduled sweep, in
 # app/fingerprint.py, which also asks each open port what it is.
 WELL_KNOWN = fingerprint.PORT_NAMES
 FINGERPRINT_MAX = 64
@@ -64,7 +64,7 @@ def _private(ip: str) -> ipaddress.IPv4Address:
         raise ValueError("only IPv4 is supported")
     if not (addr.is_private or addr.is_loopback):
         raise ValueError(
-            f"{addr} is a public address. This scans private networks only — "
+            f"{addr} is a public address. This scans private networks only - "
             "probing the internet from your own connection is a different act "
             "with different consequences.")
     return addr
@@ -113,7 +113,7 @@ def _run(job: dict) -> None:
 
     The first version guarded only the socket loop, so an exception in the
     reconciliation afterwards escaped and left the job saying "running"
-    forever — and a caller polling until it stops running polls until it is
+    forever - and a caller polling until it stops running polls until it is
     killed. A job that cannot fail visibly is worse than one that fails.
     """
     ip = job["ip"]
@@ -151,7 +151,7 @@ def _run(job: dict) -> None:
         job["closed"] = closed
         job["filtered"] = filtered
         job["owners"] = owners
-        # Ask each open port what it is — the undeclared ones first, since
+        # Ask each open port what it is - the undeclared ones first, since
         # those are the question this scan was run to answer.
         todo = sorted(open_now, key=lambda p: (p in declared, p))[:FINGERPRINT_MAX]
         fps = {} if job["state"] == "cancelled" else fingerprint.many(ip, todo)
@@ -184,7 +184,7 @@ def start(ip: str, first: int = 1, last: int = 65535) -> dict:
     if not (1 <= first <= last <= 65535):
         raise ValueError("port range must be within 1-65535")
 
-    # The Open ports source's "Never probe" list applies here too — a deep scan
+    # The Open ports source's "Never probe" list applies here too - a deep scan
     # is the one sweep most likely to hit a port that breaks when probed.
     from .sources import by_role, portscan
     b = next(iter(by_role("scanner", configured_only=False)), None)
@@ -232,12 +232,12 @@ def summarise(job: dict) -> str:
     if not job:
         return "No scan has been run."
     if job["state"] == "running":
-        return (f"Scanning {job['ip']} — {job['done']} of {job['total']} ports "
+        return (f"Scanning {job['ip']} - {job['done']} of {job['total']} ports "
                 f"({job['percent']}%), {len(job['open'])} open so far.")
     if job["state"] == "error":
         return f"Scan of {job['ip']} failed: {job['error']}"
     if job.get("silent"):
-        return (f"{job['ip']} answered nothing on any of {job['total']} ports — "
+        return (f"{job['ip']} answered nothing on any of {job['total']} ports - "
                 "no refusals either, so the host is unreachable or dropping "
                 "every packet. That is not evidence that its ports are closed.")
     lines = [f"{job['ip']}: {len(job['open'])} open of {job['total']} scanned "
@@ -245,7 +245,7 @@ def summarise(job: dict) -> str:
              + (f" Not probed (Never probe): {', '.join(map(str, job['skipped']))}."
                 if job.get("skipped") else "")]
     for r in job["results"]:
-        lines.append(f"  {r['port']:>5}  {r['service'] or '—':<22}"
+        lines.append(f"  {r['port']:>5}  {r['service'] or '-':<22}"
                      f"{'declared' if r['declared'] else 'NOT DECLARED'}")
     if job["undeclared"]:
         lines.append(f"{len(job['undeclared'])} port(s) nothing in the "

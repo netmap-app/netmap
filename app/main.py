@@ -1,9 +1,9 @@
-"""NetMap — homelab infrastructure / IP / port tracker.
+"""NetMap - homelab infrastructure / IP / port tracker.
 
 Serves:
   /            responsive web UI
   /api/...     JSON REST API
-  /mcp         Model Context Protocol (streamable HTTP) endpoint for Claude —
+  /mcp         Model Context Protocol (streamable HTTP) endpoint for Claude -
                off unless NETMAP_MCP_TOKEN is set (README section 10)
 """
 import csv
@@ -28,7 +28,7 @@ from .sources import dynamic
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
 CHANGELOG_PATH = os.path.join(os.path.dirname(HERE), "CHANGELOG.md")
-VERSION = "2.0.2"
+VERSION = "2.1.0"
 STARTED = time.time()
 notify.VERSION = VERSION
 
@@ -38,7 +38,7 @@ MCP_PATH = os.environ.get("NETMAP_MCP_PATH", "/mcp")
 if not MCP_PATH.startswith("/"):
     MCP_PATH = "/" + MCP_PATH
 # The switch and the credential in one: set, the path requires
-# "Authorization: Bearer <token>"; empty, the path is refused outright — the
+# "Authorization: Bearer <token>"; empty, the path is refused outright - the
 # web UI and API require a login by default, and so does MCP.
 MCP_TOKEN = os.environ.get("NETMAP_MCP_TOKEN", "")
 MCP_OFF_TEXT = b"MCP is off: set NETMAP_MCP_TOKEN to enable it \xe2\x80\x94 README section 10\n"
@@ -46,7 +46,7 @@ MCP_OFF_TEXT = b"MCP is off: set NETMAP_MCP_TOKEN to enable it \xe2\x80\x94 READ
 # The MCP SDK refuses any Host header it does not recognise (HTTP 421), which
 # is DNS-rebinding protection: it stops a malicious web page from making a
 # browser POST to this endpoint on your LAN. Localhost is always allowed; list
-# every other name this server is reached by — public hostname, LAN IP:port.
+# every other name this server is reached by - public hostname, LAN IP:port.
 # Set to "*" to switch the protection off entirely.
 _ALLOWED = os.environ.get("NETMAP_ALLOWED_HOSTS", "").strip()
 if _ALLOWED == "*":
@@ -70,7 +70,7 @@ else:
 # --------------------------------------------------------------------------
 def service_context(entry_id: int) -> dict | None:
     """One entry with its live status, both edge directions (with the other
-    end's status), recent transitions and edits, and every current sighting —
+    end's status), recent transitions and edits, and every current sighting -
     the agreements, which the findings deliberately never mention."""
     ctx = db.service_context(entry_id)
     if not ctx:
@@ -114,7 +114,7 @@ async def list_entries(query: str = "", category: str = "", tag: str = "",
     query: free text matched against name, host, ip, ports, protocol, notes, tags.
     category / tag / kind / criticality / zone: exact filters. Omit all to get
     everything. criticality is one of critical, important, normal, experimental.
-    kind is what a thing IS — hardware, vm, container, service, rule — as
+    kind is what a thing IS - hardware, vm, container, service, rule - as
     opposed to category (what it does) or host (where it runs).
     """
     rows = await anyio.to_thread.run_sync(
@@ -183,7 +183,7 @@ async def update_entry(entry_id: int, name: str | None = None, category: str | N
     pinned: show this entry in the dashboard's Quick links row.
     mac: one or more MAC addresses, comma separated; normalised on write.
     healthcheck: "" (TCP to the first port), tcp, tcp:<port>,
-    http or https[:<port>][/<path>][=<code>], ping or none — see create_entry.
+    http or https[:<port>][/<path>][=<code>], ping or none - see create_entry.
     """
     data = {k: v for k, v in dict(
         name=name, category=category, host=host, ip=ip, mac=mac,
@@ -215,7 +215,7 @@ async def list_categories() -> dict:
 
 @mcp.tool()
 async def check_status(entry_id: int | None = None) -> Any:
-    """Run the reachability check now — for one entry, or all of them. Each
+    """Run the reachability check now - for one entry, or all of them. Each
     entry is checked as its healthcheck field says (a TCP connect by default,
     or HTTP(S), ping); `summary` says what was checked and what answered."""
     if entry_id is not None:
@@ -244,7 +244,7 @@ async def get_service_context(entry_id: int) -> dict:
 async def whats_wrong() -> dict:
     """The control room: what needs a person right now, worst first.
 
-    One ranked queue rather than one list per subsystem — a source that has
+    One ranked queue rather than one list per subsystem - a source that has
     stopped answering, a critical service that is down, a public hostname with
     nothing in front of it and a mismatch between NetMap and a system it reads
     all compete on what it costs to ignore them. A dead source ranks above
@@ -264,7 +264,7 @@ async def deep_scan(ip: str, wait_seconds: int = 90) -> dict:
 
     Different in kind from `scan_ports`, which checks 111 common ports on every
     tracked address on a schedule. This is one address, every port, when a
-    person asks — it takes minutes, so it runs as a job: this call starts it
+    person asks - it takes minutes, so it runs as a job: this call starts it
     and waits up to `wait_seconds`, returning either the finished result or a
     progress snapshot to poll with `deep_scan_status`.
 
@@ -273,7 +273,7 @@ async def deep_scan(ip: str, wait_seconds: int = 90) -> dict:
     consequences, and it is refused rather than silently skipped.
 
     Each open port is marked `declared` or not, against the union of what every
-    inventory entry at that address claims — twenty containers share one IP, so
+    inventory entry at that address claims - twenty containers share one IP, so
     the question is about the address, not any one entry. Writes nothing."""
     await anyio.to_thread.run_sync(lambda: deepscan.start(ip))
     deadline = time.time() + max(0, min(int(wait_seconds), 600))
@@ -301,7 +301,7 @@ async def deep_scan_status() -> dict:
 async def explain_service(entry_id: int) -> dict:
     """Say in plain sentences what is known about one entry: what it is, where
     it runs, what answers where, who can reach it from outside, what it
-    touches, and — the part that matters — what no source can see about it.
+    touches, and - the part that matters - what no source can see about it.
 
     Everything is derived from the inventory, the edges and the sightings the
     discovery sources left behind. Nothing here is guessed; "nothing
@@ -319,7 +319,7 @@ async def link_entries(src_id: int, dst_id: int, type: str, note: str = "") -> d
     """Record a relationship: "src runs_on dst", "src depends_on dst", and so on.
 
     type is one of runs_on, depends_on, exposed_by, connects_to, resolves_to,
-    backs_up_to. src is the subject — a service runs_on its host, not the
+    backs_up_to. src is the subject - a service runs_on its host, not the
     reverse.
     """
     return await anyio.to_thread.run_sync(
@@ -336,7 +336,7 @@ async def unlink_entries(src_id: int, dst_id: int, type: str) -> dict:
 
 @mcp.tool()
 async def derive_links(dry_run: bool = True) -> dict:
-    """Infer relationships from the entries themselves — `host` becomes
+    """Infer relationships from the entries themselves - `host` becomes
     runs_on, a hostname the public edge publishes becomes exposed_by the
     tunnel, a
     port-forward becomes exposed_by that rule. Ambiguous matches are reported
@@ -349,7 +349,7 @@ async def derive_links(dry_run: bool = True) -> dict:
 
 @mcp.tool()
 async def map_host(host: str, entry_id: int) -> dict:
-    """Teach NetMap which entry a free-text `host` value means — "VM 101" is
+    """Teach NetMap which entry a free-text `host` value means - "VM 101" is
     one Proxmox VM, "CT 107" one LXC container. One mapping per distinct
     string places every entry that uses it. Run derive_links afterwards.
     Call derive_links(dry_run=True) first: its "unmapped" list is exactly the
@@ -363,7 +363,7 @@ async def scan_docker() -> dict:
     """Compare the Docker host's running containers with the inventory.
 
     Read-only in both directions: it writes nothing, and reaches Docker
-    through a socket proxy that refuses every write verb. Returns findings —
+    through a socket proxy that refuses every write verb. Returns findings -
     "new" (a container with no entry, with a ready-made draft), "gone" (an
     entry on that host with no container), "ports" (published ports differ
     from what is recorded) and "stopped". Use create_entry with the draft to
@@ -376,7 +376,7 @@ async def scan_docker() -> dict:
 async def scan_opnsense() -> dict:
     """Compare OPNsense with the inventory. Read-only: this issues GETs only.
 
-    Reads three things the firewall knows and NetMap only believes — the DHCP
+    Reads three things the firewall knows and NetMap only believes - the DHCP
     lease table (what holds an address now), the reservations (what is meant
     to), and the inbound NAT rules (what is exposed). Findings:
 
@@ -384,15 +384,15 @@ async def scan_opnsense() -> dict:
       nat-stale          an entry describing a forward the firewall no longer has
       nat-drift          entry and rule disagree about ports
       mac-unrecorded     a reservation carrying a hardware address the entry
-                         does not — the field UniFi and Pi-hole match on
+                         does not - the field UniFi and Pi-hole match on
       addr-unreserved    NetMap records a fixed address that is a dynamic lease,
                          so it can move on the next renewal
       reservation-mismatch a reservation naming a hardware address the machine
-                         at that address does not use, so it can never match —
+                         at that address does not use, so it can never match -
                          the address only looks reserved
       reservation-orphan a reservation with nothing in NetMap at that address
       lease-unknown      something on the network NetMap has never heard of
-                         (off unless the source's report-unknown setting is on —
+                         (off unless the source's report-unknown setting is on -
                          otherwise every phone and lightbulb is a finding)
 
     Accept one with create_entry (using its draft) or update_entry; silence one
@@ -408,7 +408,7 @@ async def scan_pihole() -> dict:
     Reads the local DNS records and the client/group assignments. Findings:
 
       dns-drift        a local A record and the inventory disagree about an
-                       address — usually a pointer left behind by a renumbering
+                       address - usually a pointer left behind by a renumbering
       dns-orphan       a local record for an address NetMap does not track
       group-missing    an entry tagged `pihole:<Group>` that Pi-hole has no
                        client for at all, so that group is not being applied
@@ -416,7 +416,7 @@ async def scan_pihole() -> dict:
       group-unknown    the tag names a group Pi-hole does not have
       client-untracked a Pi-hole client with group assignments and no entry
 
-    The group findings only exist for entries tagged `pihole:<Group>` — that
+    The group findings only exist for entries tagged `pihole:<Group>` - that
     tag is how the inventory states what it expects, and without it there is
     nothing to check against. Add the tag to anything whose filtering matters."""
     return await anyio.to_thread.run_sync(lambda: discovery.scan_type("pihole"))
@@ -425,13 +425,13 @@ async def scan_pihole() -> dict:
 @mcp.tool()
 async def scan_unifi() -> dict:
     """Compare the UniFi controller with the inventory. Read-only apart from
-    logging in — and unlike the other sources this one can be given a genuinely
+    logging in - and unlike the other sources this one can be given a genuinely
     read-only credential, because UniFi has roles.
 
     UniFi is the only source that knows the *physical* layer. Findings:
 
       device-untracked  an adopted UniFi device with no entry (with a draft)
-      device-drift      the controller's address differs from the inventory's —
+      device-drift      the controller's address differs from the inventory's -
                         what a device that fell back to DHCP looks like
       device-down       adopted but offline, or not adopted
       link-missing      the controller reports an uplink NetMap has no
@@ -453,17 +453,17 @@ async def scan_home_assistant() -> dict:
     """Compare Home Assistant's view of reality with the inventory. GET only.
 
     The other sources answer "does this exist, and where". This one answers
-    "is it actually working" — which matters for things NetMap cannot probe.
+    "is it actually working" - which matters for things NetMap cannot probe.
     Zigbee2MQTT publishes no port, so a TCP check is impossible and
     critical_down silently excludes it; Home Assistant knows the answer.
 
-    Only entries carrying an `ha:<entity_id>` tag are checked — that tag is the
+    Only entries carrying an `ha:<entity_id>` tag are checked - that tag is the
     inventory stating what it believes, and it is the only thing a scan can
     contradict. Add `=<state>` to expect something other than the default
     ("on" for binary_sensor, switch, light, automation; availability only for
     a sensor). Findings:
 
-      ha-missing      the tagged entity does not exist — renamed, removed, or
+      ha-missing      the tagged entity does not exist - renamed, removed, or
                       its integration failed to load, so nothing is checked
       ha-unavailable  the entity exists but has no value, which usually means
                       the integration behind it is down
@@ -476,17 +476,17 @@ async def scan_cloudflare() -> dict:
     """Compare the Cloudflare Tunnel's ingress with the inventory. GET only,
     with a scoped API token that cannot write whatever this code does.
 
-    This is the only source that looks at the *edge* — which public hostnames
+    This is the only source that looks at the *edge* - which public hostnames
     reach into the network, where each lands, and whether Access stands in
     front of them. Findings:
 
       tunnel-down       the tunnel is down, degraded or has never connected
       ingress-orphan    a published hostname no inventory entry accounts for
-      origin-untracked  an ingress rule pointing at an address nothing holds —
+      origin-untracked  an ingress rule pointing at an address nothing holds -
                         a renumbering nobody finished: the name breaks while
                         the service itself is healthy
       route-missing     an entry publishing a public URL that neither the
-                        tunnel nor Pi-hole's local records serve — the same
+                        tunnel nor Pi-hole's local records serve - the same
                         failure seen from the inventory's side. A name Pi-hole
                         answers for is LAN-only by design and is not reported
       access-open       a hostname published with no Access application in
@@ -500,7 +500,7 @@ async def scan_cloudflare() -> dict:
 @mcp.tool()
 async def scan_npm() -> dict:
     """Compare Nginx Proxy Manager with the inventory. Read-only apart from
-    logging in — and this credential can be genuinely read-only, because NPM
+    logging in - and this credential can be genuinely read-only, because NPM
     has per-resource permissions and a non-admin user set to View Only on
     proxy hosts is enforced by NPM itself.
 
@@ -508,9 +508,9 @@ async def scan_npm() -> dict:
     reaches which port. Findings:
 
       proxy-drift      NPM forwards a name to an ip:port the entry does not
-                       record. Meaningful here and nowhere else — NPM forwards
+                       record. Meaningful here and nowhere else - NPM forwards
                        to the service itself, not to another proxy
-      proxy-orphan     forwards to an address no entry holds — a renumbering
+      proxy-orphan     forwards to an address no entry holds - a renumbering
                        nobody finished, the inside twin of origin-untracked
       proxy-untracked  a name NPM serves that no entry claims (with a draft)
       proxy-disabled   an entry publishes a URL whose proxy host is switched
@@ -543,7 +543,7 @@ async def scan_ports() -> dict:
 
 @mcp.tool()
 async def scan_all_sources() -> dict:
-    """Every added discovery source at once — whichever of Docker, OPNsense,
+    """Every added discovery source at once - whichever of Docker, OPNsense,
     Pi-hole, AdGuard Home, a DHCP lease file, router ARP over SNMP, UniFi,
     Home Assistant, NPM, Traefik, Cloudflare, Open ports, Proxmox VE and
     NetBox have been added.
@@ -551,10 +551,10 @@ async def scan_all_sources() -> dict:
     Findings stay grouped by source: the same service reported by two sources
     is usually corroboration, not duplication, and merging the lists would hide
     that. A type can have several sources (two Docker hosts, two Pi-holes):
-    each has its own `source` id — "docker", "docker-2" — and its finding keys
+    each has its own `source` id - "docker", "docker-2" - and its finding keys
     start with that id ("ha" for the first Home Assistant). Use this to answer
     "does the inventory still match reality?" in one call; use the per-type
-    tools when acting on one system's findings — with several sources of a
+    tools when acting on one system's findings - with several sources of a
     type they return each one under `sources`."""
     return await anyio.to_thread.run_sync(discovery.scan_all)
 
@@ -562,7 +562,7 @@ async def scan_all_sources() -> dict:
 @mcp.tool()
 async def list_sources() -> list[dict]:
     """Every source that has been added, without scanning anything: its id
-    (what scan_source and finding keys use — "docker", "docker-2",
+    (what scan_source and finding keys use - "docker", "docker-2",
     "adguard"…), name, type, roles (containers, hypervisor, firewall, dns,
     proxy, edge, leases, layer2, health, intent, scanner), and whether it is
     set up and answering, with its last error. No credentials, not even
@@ -572,7 +572,7 @@ async def list_sources() -> list[dict]:
 
 @mcp.tool()
 async def scan_source(source: str) -> dict:
-    """Scan one source by its id and return its findings — any type,
+    """Scan one source by its id and return its findings - any type,
     including those without a scan_<type> tool of their own (AdGuard Home,
     Traefik, Proxmox VE, NetBox, a DHCP lease file, router ARP over SNMP) and
     the second or third source of a type
@@ -582,13 +582,13 @@ async def scan_source(source: str) -> dict:
     try:
         return await anyio.to_thread.run_sync(lambda: discovery.scan(source))
     except KeyError:
-        raise ValueError(f"no source '{source}' — have {', '.join(discovery.names()) or 'none'}")
+        raise ValueError(f"no source '{source}' - have {', '.join(discovery.names()) or 'none'}")
 
 
 @mcp.tool()
 async def ignore_finding(key: str, reason: str = "", label: str = "") -> dict:
     """Permanently stop a discovery finding from being reported. `key` comes
-    from a scan result — for example "docker:new:watchtower". Use this for
+    from a scan result - for example "docker:new:watchtower". Use this for
     things that are deliberately not in the inventory; use list_ignored to see
     what is currently suppressed. Un-ignoring is done from the Network view."""
     return await anyio.to_thread.run_sync(
@@ -626,9 +626,9 @@ async def recent_changes(limit: int = 25, include_logins: bool = False) -> list[
 
 def mcp_startup_line() -> str:
     """What start-up says about the MCP endpoint. Without NETMAP_MCP_TOKEN it
-    is off — not a problem, just a state."""
+    is off - not a problem, just a state."""
     if not MCP_TOKEN:
-        return "[netmap] MCP endpoint off — NETMAP_MCP_TOKEN not set"
+        return "[netmap] MCP endpoint off - NETMAP_MCP_TOKEN not set"
     return f"[netmap] MCP endpoint mounted at {MCP_PATH} (bearer token required)"
 
 
@@ -645,12 +645,12 @@ async def lifespan(_app: FastAPI):
     discovery.migrate_legacy()
     paused = discovery.fold_scan_switch()
     if paused:
-        print(f"[netmap] {', '.join(paused)}: paused with its own switch before 1.93.0 — "
+        print(f"[netmap] {', '.join(paused)}: paused with its own switch before 1.93.0 - "
               "now paused with the source's Enabled switch", flush=True)
     pinned = discovery.pin_defaults()
     if pinned:
         print(f"[netmap] kept the old \"Categories never swept\" default on "
-              f"{', '.join(pinned)} — it is now blank for new sources", flush=True)
+              f"{', '.join(pinned)} - it is now blank for new sources", flush=True)
     rot = discovery.rotate_secrets()
     notify.upgrade_events()
     back = stale.backfill()
@@ -680,7 +680,7 @@ async def lifespan(_app: FastAPI):
               "NETMAP_SECRET_KEY does not match the key they were saved with.", flush=True)
     generated = accounts.bootstrap()
     if generated:
-        # Once, on the very first start — the only time it is ever shown.
+        # Once, on the very first start - the only time it is ever shown.
         print("[netmap] ------------------------------------------------------\n"
               f"[netmap] local login created: user 'admin', password: {generated}\n"
               "[netmap] sign in at /login and change it under Settings > Profile.\n"
@@ -688,7 +688,7 @@ async def lifespan(_app: FastAPI):
               "[netmap] ------------------------------------------------------",
               flush=True)
     # A new install starts empty. NETMAP_SEED_FILE loads a JSON export into an
-    # empty database once — how to start from an inventory kept elsewhere.
+    # empty database once - how to start from an inventory kept elsewhere.
     seed = os.environ.get("NETMAP_SEED_FILE", "").strip()
     n = db.seed_if_empty(seed) if seed else 0
     if n:
@@ -713,8 +713,8 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="NetMap", version=VERSION, lifespan=lifespan)
 
-# Outermost last. Host first: DNS rebinding — a page on another site that
-# re-points its own name at this LAN address — arrives with that site's name in
+# Outermost last. Host first: DNS rebinding - a page on another site that
+# re-points its own name at this LAN address - arrives with that site's name in
 # Host, and is refused before anything else looks at it. The MCP path never
 # reaches these; _MCPDispatcher routes it first and it has its own Host check.
 app.add_middleware(web_security.SecurityHeaders)
@@ -728,7 +728,7 @@ app.add_middleware(
 
 def actor(request: Request) -> str:
     """Who made a change: the identity web_security verified for this request
-    — the Cloudflare Access e-mail, or "api-token". Never a header the client
+    - the Cloudflare Access e-mail, or "api-token". Never a header the client
     chose, which is what this used to read."""
     return getattr(request.state, "actor", None) or "web"
 
@@ -798,7 +798,7 @@ async def api_status_refresh(entry_id: int | None = Query(None)):
 
 @app.get("/api/summary")
 def api_summary():
-    """Compact counters — designed for a dashboard widget (e.g. Homepage's customapi)."""
+    """Compact counters - designed for a dashboard widget (e.g. Homepage's customapi)."""
     rows = db.list_entries()
     up = sum(1 for r in rows if status.CACHE.get(r["id"], {}).get("up") is True)
     down = sum(1 for r in rows if status.CACHE.get(r["id"], {}).get("up") is False)
@@ -863,7 +863,7 @@ def api_about():
 
 @app.get("/api/changelog")
 def api_changelog():
-    """Parsed CHANGELOG.md — a '## <version> — <date>' heading per release,
+    """Parsed CHANGELOG.md - a '## <version> - <date>' heading per release,
     followed by '- ' bullet lines. Missing file just means an empty list."""
     try:
         with open(CHANGELOG_PATH, encoding="utf-8") as fh:
@@ -873,7 +873,7 @@ def api_changelog():
     entries = []
     for block in text.split("\n## ")[1:]:
         head, _, body = block.partition("\n")
-        version, _, date = head.partition("—")
+        version, _, date = head.partition(" - ")
         entries.append({
             "version": version.strip(),
             "date": date.strip(),
@@ -893,7 +893,7 @@ def api_context(entry_id: int):
 
 @app.post("/api/scan/deep", status_code=201)
 def api_deep_start(payload: dict = Body(...)):
-    """Start a full-port sweep of one private address — see app/deepscan.py."""
+    """Start a full-port sweep of one private address - see app/deepscan.py."""
     try:
         return deepscan.start(str(payload.get("ip", "")),
                               int(payload.get("from", 1)),
@@ -914,7 +914,7 @@ def api_deep_cancel():
 
 # ---- service marks --------------------------------------------------------
 # Addressed by entry rather than by slug, so the browser never has to know how
-# a name becomes a mark — it asks for "the icon for entry 24" and either gets
+# a name becomes a mark - it asks for "the icon for entry 24" and either gets
 # one or doesn't. A 404 here is the normal, expected answer for most entries.
 ICON_HEADERS = {"Cache-Control": "private, max-age=604800",
                 "Content-Security-Policy": web_security.ICON_CSP}
@@ -922,7 +922,7 @@ ICON_HEADERS = {"Cache-Control": "private, max-age=604800",
 
 @app.get("/api/icon/{slug}.svg")
 def api_icon(slug: str, t: str = "dark"):
-    """A mark by name, for the parts of the interface that are not an entry —
+    """A mark by name, for the parts of the interface that are not an entry -
     the discovery sources, which are products with their own marks."""
     got = icons_mod.read(slug, "light" if t == "light" else "dark")
     if not got:
@@ -946,7 +946,7 @@ def api_entry_icon(entry_id: int, t: str = "dark"):
 @app.get("/api/icons")
 def api_icons():
     """Which entries have a mark on disk right now. The browser asks this so
-    it never requests one that does not exist — the fallback glyph is then the
+    it never requests one that does not exist - the fallback glyph is then the
     normal state for an unknown product rather than a failed image."""
     return {"icons": icons_mod.list_cached()}
 
@@ -960,20 +960,20 @@ def api_icons_warm():
 
 @app.get("/api/presence")
 def api_presence(all: bool = False):
-    """Addresses a source has seen. Default: only those no entry claims — the
+    """Addresses a source has seen. Default: only those no entry claims - the
     address map already draws the tracked ones. See db.record_presence."""
     return {"presence": newdevices.enrich(db.presence(untracked_only=not all))}
 
 
 @app.get("/api/overview")
 def api_overview():
-    """The control-room snapshot — see app/overview.py."""
+    """The control-room snapshot - see app/overview.py."""
     return overview_mod.snapshot(status.CACHE)
 
 
 @app.post("/api/overview/dismiss", status_code=201)
 def api_dismiss(payload: dict = Body(...)):
-    """Set one attention item aside. See app/overview.py — a dismissal is not
+    """Set one attention item aside. See app/overview.py - a dismissal is not
     a mute: it records what was seen, and the item returns when that changes."""
     key = str(payload.get("key", "")).strip()
     if not key:
@@ -989,7 +989,7 @@ def api_undismiss(key: str):
 
 @app.get("/api/entries/{entry_id}/explain")
 def api_explain(entry_id: int):
-    """The service card in sentences — see app/explain.py."""
+    """The service card in sentences - see app/explain.py."""
     d = explain_mod.explain(entry_id, status.CACHE.get(entry_id, {}))
     if not d:
         raise HTTPException(404, "not found")
@@ -1096,7 +1096,7 @@ def api_ignores():
 
 @app.post("/api/discovery/ignores", status_code=201)
 def api_ignore(request: Request, payload: dict = Body(...)):
-    """One key, or `keys` for a whole source at once — a first scan against a
+    """One key, or `keys` for a whole source at once - a first scan against a
     drifted inventory can produce thirty findings that are all the same
     decision, and clicking Ignore thirty times is how people stop scanning."""
     who = actor(request)
@@ -1163,9 +1163,10 @@ def api_watch_stop(request: Request, key: str, ignore: bool = False):
 
 @app.get("/api/discovery/summary")
 def api_discovery_summary():
-    """Finding counts from the last background scan. Free — never scans, so
-    the nav badge can poll it without touching the firewall."""
-    return discovery.summary()
+    """Finding counts from the last background scan. Free - never scans, so
+    the nav badge can poll it without touching the firewall. `icons` names
+    the source marks on disk, by source type."""
+    return {**discovery.summary(), "icons": icons_mod.source_marks()}
 
 
 @app.get("/api/discovery/findings")
@@ -1190,12 +1191,12 @@ def api_discovery_all():
 @app.get("/api/discovery/{source}")
 def api_discovery_one(source: str, max_age: float = 0):
     """Scan one source. `max_age` seconds: a result that recent is returned
-    instead of scanning again — what the Network view sends when it is only
+    instead of scanning again - what the Network view sends when it is only
     being opened; its "scan again" sends 0."""
     try:
         return discovery.scan(source, max(0.0, min(max_age, 300.0)))
     except KeyError:
-        raise HTTPException(404, f"unknown source '{source}' — "
+        raise HTTPException(404, f"unknown source '{source}' - "
                                  f"have {', '.join(discovery.names())}")
 
 
@@ -1246,7 +1247,7 @@ def api_timezone_set(request: Request, payload: dict = Body(...)):
 
 @app.get("/api/settings/stale")
 def api_stale_settings():
-    """After how many days unseen an entry is flagged — see app/stale.py."""
+    """After how many days unseen an entry is flagged - see app/stale.py."""
     return {"days": stale.days(), "default": stale.DAYS_DEFAULT}
 
 
@@ -1324,7 +1325,7 @@ def api_sources_drivers():
 
 @app.get("/api/sources/instances")
 def api_sources_instances():
-    """Every source. Secrets never come back as plaintext — only whether one
+    """Every source. Secrets never come back as plaintext - only whether one
     is set, and a last-four-characters preview."""
     return discovery.list_instances()
 
@@ -1377,7 +1378,7 @@ def api_sources_instance_test(instance_id: str):
 
 @app.post("/api/sources/test")
 def api_sources_test(payload: dict = Body(...)):
-    """Test connection details before they are saved — the Add-source form
+    """Test connection details before they are saved - the Add-source form
     has no instance id yet to test against."""
     try:
         return discovery.test_fields(str(payload["type"]), payload.get("fields") or {})
@@ -1396,8 +1397,8 @@ def api_notify_types():
 
 @app.get("/api/notify/channels")
 def api_notify_channels():
-    """Every channel. Secrets never come back — only whether one is set and a
-    last-four-characters preview — plus how the last delivery went."""
+    """Every channel. Secrets never come back - only whether one is set and a
+    last-four-characters preview - plus how the last delivery went."""
     return notify.list_channels()
 
 
@@ -1443,7 +1444,7 @@ def api_notify_test(channel_id: str):
 
 @app.post("/api/notify/test")
 def api_notify_test_fields(payload: dict = Body(...)):
-    """Send a test with details not saved yet — the Add form has no id."""
+    """Send a test with details not saved yet - the Add form has no id."""
     try:
         return notify.test_fields(str(payload.get("type") or ""), payload.get("fields") or {})
     except ValueError as exc:
@@ -1476,7 +1477,7 @@ def api_export_json():
 def api_import(request: Request, payload: dict = Body(...),
                mode: str = Query("merge", pattern="^(merge|replace)$"),
                dry_run: bool = Query(True)):
-    """Import a JSON export. Defaults to a dry run — pass dry_run=false to commit.
+    """Import a JSON export. Defaults to a dry run - pass dry_run=false to commit.
 
     Accepts either a whole export document or a bare {"entries": [...]}.
     """
@@ -1493,7 +1494,7 @@ def api_import(request: Request, payload: dict = Body(...),
         plan["relations"] = {"links": len(edges), "hosts_mapped": len(hmap)}
         return plan
     # One transaction: entries, then the relationships that need both ends to
-    # exist, then the audit rows — all of it lands, or none of it does.
+    # exist, then the audit rows - all of it lands, or none of it does.
     try:
         with db.transaction():
             plan = db.import_entries(rows, mode=mode, dry_run=False, actor=who)
@@ -1505,7 +1506,7 @@ def api_import(request: Request, payload: dict = Body(...),
         # Rolled back. Record that it was tried, outside the rolled-back block.
         db.log(who, "import-failed", None, f"{mode} import",
                {"error": f"{type(exc).__name__}: {exc}"[:300]})
-        raise HTTPException(500, f"import failed and was rolled back — nothing "
+        raise HTTPException(500, f"import failed and was rolled back - nothing "
                                  f"changed: {type(exc).__name__}: {exc}")
     return plan
 
@@ -1562,7 +1563,7 @@ async def api_login(request: Request, payload: dict = Body(...)):
     who = _client(request)
     wait = accounts.throttled(who)
     if wait:
-        raise HTTPException(429, f"too many failed attempts — try again in {wait // 60 + 1} min")
+        raise HTTPException(429, f"too many failed attempts - try again in {wait // 60 + 1} min")
     user, pw = str(payload.get("username", "")), str(payload.get("password", ""))
     ok = await anyio.to_thread.run_sync(lambda: accounts.verify(user, pw))
     if not ok:
@@ -1607,7 +1608,7 @@ async def api_password(request: Request, payload: dict = Body(...)):
     who = _client(request)
     wait = accounts.throttled(who)
     if wait:
-        raise HTTPException(429, f"too many failed attempts — try again in {wait // 60 + 1} min")
+        raise HTTPException(429, f"too many failed attempts - try again in {wait // 60 + 1} min")
     try:
         await anyio.to_thread.run_sync(lambda: accounts.change_password(
             str(payload.get("current", "")), str(payload.get("new", "")), actor(request)))
@@ -1616,7 +1617,7 @@ async def api_password(request: Request, payload: dict = Body(...)):
         raise HTTPException(403, str(exc))
     except ValueError as exc:
         raise HTTPException(400, str(exc))
-    # Changing the password ends every session, this one included — issue
+    # Changing the password ends every session, this one included - issue
     # this browser a fresh one so the person who just changed it stays in.
     resp = JSONResponse({"ok": True, **accounts.profile()})
     if getattr(request.state, "auth", "") == "password":
@@ -1660,7 +1661,7 @@ class _MCPDispatcher:
     """Send exactly one path to the MCP app; everything else to FastAPI.
 
     This used to be `app.mount("/", mcp.streamable_http_app())`, which made the
-    MCP app the handler for every unmatched path — including Cloudflare's
+    MCP app the handler for every unmatched path - including Cloudflare's
     /cdn-cgi/access/* callbacks, which broke Access login with a bare
     "Not Found". Matching one exact path keeps the rest of the URL space ours.
     """
@@ -1677,7 +1678,7 @@ class _MCPDispatcher:
             # with or without a trailing slash, and never issues a redirect.
             if not MCP_TOKEN:
                 # Off: nothing reaches the MCP app. A path alone is no
-                # credential — it travels in URLs, logs and screenshots.
+                # credential - it travels in URLs, logs and screenshots.
                 return await self._off(send)
             if not web_security.bearer_ok(dict(scope.get("headers") or []), MCP_TOKEN):
                 return await self._deny(send)
@@ -1702,5 +1703,5 @@ class _MCPDispatcher:
         await send({"type": "http.response.body", "body": MCP_OFF_TEXT})
 
 
-# ASGI entrypoint — uvicorn serves `application`, not `app`.
+# ASGI entrypoint - uvicorn serves `application`, not `app`.
 application = _MCPDispatcher(app, mcp.streamable_http_app(), MCP_PATH)

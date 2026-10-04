@@ -3,8 +3,8 @@ lightbulbs into the inventory (presence stays a layer, not records).
 
 db.presence_seen remembers when each device was first and last seen. A device
 first seen within the window that no entry claims is a `new-device` finding,
-raised by the source that first saw it — one finding per device, however many
-sources see it — with a draft entry built from what is known. Ignore works as
+raised by the source that first saw it - one finding per device, however many
+sources see it - with a draft entry built from what is known. Ignore works as
 for every finding. What a source saw the first time it reported (a new
 install, the upgrade that added this, a source just added) is the baseline,
 never new.
@@ -110,11 +110,11 @@ def findings(source_id: str, prefix: str) -> list[dict]:
         what = ("randomised MAC" if oui.randomised(mac) else vendor) if mac else ""
         out.append({
             "type": "new-device", "key": f"{prefix}:new:{h['key']}",
-            "label": f"{name} — new on the network at {ip}",
+            "label": f"{name} - new on the network at {ip}",
             "detail": (f"first seen {h['first_seen'][:16].replace('T', ' ')} UTC, last "
                        f"{h['last_seen'][:16].replace('T', ' ')}"
                        + (f" · {mac}" if mac else "") + (f" · {what}" if what else "")
-                       + ". Not in the inventory — add it, watch it, or ignore it."),
+                       + ". Not in the inventory - add it, watch it, or ignore it."),
             # Thin, like every draft: the category is a guess nobody should
             # have to undo, so it is left for the person.
             "draft": {"name": name, "category": "Uncategorised", "kind": "hardware",

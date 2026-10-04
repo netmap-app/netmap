@@ -1,7 +1,7 @@
-/* NetMap front end — notify.js: Settings › Notifications.
+/* NetMap front end - notify.js: Settings › Notifications.
    One of the plain scripts index.html loads in order; they share one
    global scope. Code that runs at load may only use what an earlier
-   file (or this one) defines — tests/test_frontend.py checks. */
+   file (or this one) defines - tests/test_frontend.py checks. */
 
 /* ================= Settings > Notifications ================= */
 // Where Overview news goes when nobody is looking: ntfy, Gotify, Telegram or
@@ -76,7 +76,7 @@ async function loadNotify() {
   try {
     NOTIFY = await api("/api/notify/channels");
     box.innerHTML = NOTIFY.length ? NOTIFY.map(notifyRowHtml).join("")
-      : `<div class="srcempty">No channels yet — add one to hear about problems
+      : `<div class="srcempty">No channels yet - add one to hear about problems
          when NetMap is not open.</div>`;
   } catch {
     box.innerHTML = `<div class="srcempty">Could not load.</div>`;
@@ -193,7 +193,7 @@ function openNotifyForm(type, events, existing) {
     const out = $("#notifyTestOut");
     out.textContent = "Sending…";
     try {
-      // An edit tests what is saved — its secrets never come back to the
+      // An edit tests what is saved - its secrets never come back to the
       // browser to be sent along. Save first to test a change.
       const r = existing
         ? await api(`/api/notify/channels/${existing.id}/test`, { method: "POST" })
@@ -201,7 +201,7 @@ function openNotifyForm(type, events, existing) {
             method: "POST", headers: { "content-type": "application/json" },
             body: JSON.stringify({ type: type.type, fields: gather().fields }),
           });
-      out.textContent = r.ok ? "Sent — check that it arrived" + (existing ? " (the saved settings)" : "")
+      out.textContent = r.ok ? "Sent - check that it arrived" + (existing ? " (the saved settings)" : "")
         : "Failed: " + (r.error || "unknown error");
     } catch { out.textContent = "Could not send the test."; }
   };

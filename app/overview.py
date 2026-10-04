@@ -1,13 +1,13 @@
 """The control room: what needs a person, and nothing else.
 
-The old Overview answered "how much is there" — entries tracked, categories,
+The old Overview answered "how much is there" - entries tracked, categories,
 a bar chart of the inventory. That is a fine thing to be able to look up and a
 poor thing to open every day, because none of it changes and none of it asks
 anything of you.
 
 This answers one question instead: **is anything wrong, and what do I do
 first**. Everything here is either a problem, the evidence that there is no
-problem, or the exposure surface — which is the one standing fact in this
+problem, or the exposure surface - which is the one standing fact in this
 network worth keeping in front of a person, since it is the only part an
 attacker also reads.
 
@@ -33,7 +33,7 @@ SEV = {"critical": 0, "warn": 1, "note": 2}
 
 # A dismissal is not a mute. It says "I have seen this and it is fine as it
 # is", and the moment the situation is no longer the one that was seen, it has
-# to come back — otherwise the page slowly becomes a list of things somebody
+# to come back - otherwise the page slowly becomes a list of things somebody
 # once clicked away, which is worse than no page.
 #
 # So a dismissal stores a fingerprint of what was dismissed, and an item whose
@@ -128,7 +128,7 @@ def exposure() -> dict:
     names = {e["id"]: e["name"] for e in db.list_entries()}
 
     # Keyed by hostname, not by row. Several entries can legitimately witness
-    # the same name — the service and the host it runs on — and a hostname
+    # the same name - the service and the host it runs on - and a hostname
     # published twice is still one hostname facing the internet. Counting rows
     # here is what turned two open names into twenty-seven.
     published: set[str] = set()
@@ -150,11 +150,11 @@ def exposure() -> dict:
                 if has_role(r["source"], "firewall") and r["fact"].startswith("port:")]
 
     # One forward, not two. Since v1.36.1 a port forward is credited to both
-    # the rule entry that describes it and the service behind it — deliberately,
-    # because a reader of either wants to know — but they are one hole in the
+    # the rule entry that describes it and the service behind it - deliberately,
+    # because a reader of either wants to know - but they are one hole in the
     # firewall and counting both said seven where there are four. Grouped by
     # port, and the service wins the label: "32400 Plex" is what the hole is
-    # for, "Port forward — Plex" only says that it exists.
+    # for, "Port forward - Plex" only says that it exists.
     kinds = {e["id"]: e.get("kind") for e in db.list_entries()}
     best: dict[str, dict] = {}
     for f in sorted(forwards, key=lambda f: (f["entry"], f["port"])):
@@ -165,8 +165,8 @@ def exposure() -> dict:
     uniq = [best[p] for p in sorted(best, key=lambda x: (len(x), x))]
 
     # Open on purpose? A hostname whose `access-open` finding was ignored is
-    # still published with nothing in front of it — that stays a fact on this
-    # list — but it is a decision, not news. Say which, with the reason given,
+    # still published with nothing in front of it - that stays a fact on this
+    # list - but it is a decision, not news. Say which, with the reason given,
     # so a reader (or an MCP client) can tell the two apart; the attention
     # queue already leaves these out.
     ign = _access_ignores()
@@ -182,7 +182,7 @@ def exposure() -> dict:
 
 
 def reached_from_internet() -> list[dict]:
-    """Which entries the internet reaches, and how — for the topology graph's
+    """Which entries the internet reaches, and how - for the topology graph's
     top node. A public hostname an edge source publishes, or a WAN port a
     firewall forwards; the same sightings exposure() reads."""
     by: dict[int, set[str]] = {}
@@ -219,7 +219,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
         if h.get("pending"):
             # Never tried. During the start-up pass that is its turn not
             # having come yet; after it, a source added from Settings since
-            # the last scan — worth saying, but it has not failed anything.
+            # the last scan - worth saying, but it has not failed anything.
             if not sources.FIRST_PASS_DONE:
                 continue
             items.append({
@@ -253,7 +253,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
             "title": f"{n} stored credential{'s' if n != 1 else ''} cannot be decrypted",
             "detail": (", ".join(crypto.UNDECRYPTABLE[:6])
                        + ". NETMAP_SECRET_KEY does not match the key they were saved "
-                         "with — restore that key, or re-enter them in Settings › Sources "
+                         "with - restore that key, or re-enter them in Settings › Sources "
                          "and Settings › Notifications."),
             "fingerprint": ",".join(crypto.UNDECRYPTABLE),
         })
@@ -261,14 +261,14 @@ def snapshot(status_cache: dict | None = None) -> dict:
     # ---- 2. critical things that stopped answering ----------------------
     def went_down(entry_id: int):
         """`observations` stores transitions only, so the last one for a host
-        that is down is the moment it went down — an actual event, not the
+        that is down is the moment it went down - an actual event, not the
         moment this page first noticed."""
         o = db.last_observation(entry_id)
         return o["ts"] if o and o.get("up") is False else None
 
     # Several entries down at one address are usually one machine down, not
     # a dozen separate failures: one item for the address, a chip per entry.
-    # The key keeps the "down:" prefix — notifications send these as entry
+    # The key keeps the "down:" prefix - notifications send these as entry
     # events of their own, and leave them out of the generic critical ones.
     at: dict[str, list[dict]] = {}
     for e in down:
@@ -282,7 +282,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
                 "level": "critical" if crit else "warn", "order": 1 if crit else 2,
                 "key": f"down:{e['id']}", "since": went_down(e["id"]),
                 "title": f"{e['name']} is not answering",
-                "detail": f"marked critical — {target or 'no target'}" if crit else target,
+                "detail": f"marked critical - {target or 'no target'}" if crit else target,
                 "entry_id": e["id"],
             })
             continue
@@ -302,7 +302,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
         })
 
     # ---- 2b. certificates about to expire --------------------------------
-    # Read by the https health checks, so this covers what NetMap probes —
+    # Read by the https health checks, so this covers what NetMap probes -
     # not only the certificates a reverse proxy happens to hold. An expired
     # one is critical: every client is already refusing it.
     from . import status as _status
@@ -313,13 +313,13 @@ def snapshot(status_cache: dict | None = None) -> dict:
             "key": f"cert:{e['id']}",
             "title": (f"The certificate of {e['name']} has expired" if days < 0 else
                       f"The certificate of {e['name']} expires on {(c['not_after'] or '')[:10]}"),
-            "detail": f"checked on {c['target'] or '?'} — renew it, or check what serves it",
+            "detail": f"checked on {c['target'] or '?'} - renew it, or check what serves it",
             "entry_id": e["id"],
         })
 
     # ---- 3. published with nothing in front of it -----------------------
     # A hostname whose `access-open` finding was ignored is a decision already
-    # taken — plex and seerr are open on purpose. Re-raising it here under a
+    # taken - plex and seerr are open on purpose. Re-raising it here under a
     # different heading would be the same nag wearing a new hat, and would
     # teach the reader that this list is not worth reading. It stays visible
     # under "reachable from outside", which is a statement of fact rather than
@@ -364,7 +364,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
 
     # ---- 6. critical things nothing is watching -------------------------
     # `monitor: false` is not the same as unwatched. Some things cannot be
-    # probed over TCP at all — an HA add-on behind ingress publishes no port —
+    # probed over TCP at all - an HA add-on behind ingress publishes no port -
     # and the answer there was never to switch monitoring on but to name an
     # entity the Home Assistant source can check instead. An entry carrying an
     # `ha:` expectation is watched by something better than a port test, and
@@ -384,7 +384,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
         })
 
     # ---- 6b. entries nothing has seen for a while --------------------------
-    # Only ones something confirmed once — see app/stale.py.
+    # Only ones something confirmed once - see app/stale.py.
     from . import stale as _stale
     gone = _stale.stale(entries, status_cache)
     if gone:
@@ -394,7 +394,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
             "title": f"{n} entr{'y' if n == 1 else 'ies'} nothing has seen for "
                      f"{_stale.days()} days",
             "detail": (", ".join(g["name"] for g in gone[:6]) + (" …" if n > 6 else "")
-                       + " — no source, address or health check has confirmed "
+                       + " - no source, address or health check has confirmed "
                          f"{'it' if n == 1 else 'them'} since. Retired, or moved?"),
             "entries": gone,
         })
@@ -406,7 +406,7 @@ def snapshot(status_cache: dict | None = None) -> dict:
             "title": f"{len(unver)} entr{'y' if len(unver) == 1 else 'ies'} "
                      "not verified",
             # Every one as a chip that opens its card, and the ids for "Mark
-            # verified" — a person checks them, then says so in one click.
+            # verified" - a person checks them, then says so in one click.
             "entries": [{"id": e["id"], "name": e["name"]} for e in unver[:12]],
             "more": max(0, len(unver) - 12),
             "verify": [e["id"] for e in unver],

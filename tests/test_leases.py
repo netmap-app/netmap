@@ -180,7 +180,7 @@ def test_the_module_can_only_read():
 
 class Agent:
     """A fake SNMP v2c agent: answers GetBulk from a table of oid -> (tag,
-    value), for one community only — silence otherwise, as a real one does."""
+    value), for one community only - silence otherwise, as a real one does."""
 
     def __init__(self, table: dict, community="public"):
         from app.sources import snmparp as s

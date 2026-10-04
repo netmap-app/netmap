@@ -1,4 +1,4 @@
-"""A router's ARP table over SNMP as a discovery source — the `leases` role.
+"""A router's ARP table over SNMP as a discovery source - the `leases` role.
 
 Every IPv4 neighbour the router has resolved: which hardware address answers
 at which address, whatever handed the address out (DHCP anywhere, or a static
@@ -6,7 +6,7 @@ setting on the host). Reads `ipNetToMediaTable` (RFC 1213), or
 `ipNetToPhysicalTable` (RFC 4293) where the router only offers that.
 
 SNMP v2c with a community string, spoken by the small client below rather
-than a library — the protocol needed here is one request type. Read-only by
+than a library - the protocol needed here is one request type. Read-only by
 construction: the only PDUs this module can build are GetBulkRequest; there
 is no SetRequest in it. Give it a read-only community (`rocommunity`) anyway.
 SNMPv3 is not supported yet.
@@ -125,7 +125,7 @@ def parse_response(data: bytes) -> tuple[int, int, list[tuple[str, int, bytes]]]
 
 def walk(cfg: dict, base: str, limit: int = 20000) -> list[tuple[str, int, bytes]]:
     """Every (oid, tag, value) under `base`, with GetBulk. Raises OSError on
-    no answer — which is also what a wrong v2c community looks like."""
+    no answer - which is also what a wrong v2c community looks like."""
     host, port = str(cfg["host"]).strip(), int(cfg.get("port") or 161)
     addr = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_DGRAM)[0][4]
     out: list = []
@@ -150,7 +150,7 @@ def walk(cfg: dict, base: str, limit: int = 20000) -> list[tuple[str, int, bytes
                 binds = got
                 break
             if binds is None:
-                raise OSError(f"no answer from {host}:{port} — check the address, "
+                raise OSError(f"no answer from {host}:{port} - check the address, "
                               "port and community")
             done = not binds
             for oid, tag, val in binds:
@@ -211,7 +211,7 @@ def scan(cfg: dict) -> dict:
            "scanned_at": db.now(), "host": {"address": cfg.get("host", "")},
            "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = "not configured — add the router address and community in Settings › Sources"
+        out["error"] = "not configured - add the router address and community in Settings › Sources"
         return out
     try:
         rows = neighbours(cfg)

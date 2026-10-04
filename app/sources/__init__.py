@@ -7,14 +7,14 @@ A source is a module with two functions:
                               findings, counts, error}
 
 and one rule: it never writes to the inventory. A scan reports; a person (or
-Claude) decides. Nothing about a finding is stored between scans — findings are
-recomputed every time — so the only state is the decision to stop being told
+Claude) decides. Nothing about a finding is stored between scans - findings are
+recomputed every time - so the only state is the decision to stop being told
 about something, in `db.ignores`.
 
 Findings share a shape so the UI, the ignores table and the MCP tools work for
 every source without knowing which one produced them:
 
-    key      stable id, "<source>:<type>:<thing>" — what ignoring records
+    key      stable id, "<source>:<type>:<thing>" - what ignoring records
     type     source-specific, drives the badge
     label    one line, the headline
     detail   one line, the evidence
@@ -36,14 +36,14 @@ from .. import crypto, db
 
 from . import dynamic, fields
 
-# Per-instance working state — login sessions, tokens — keyed by instance id.
+# Per-instance working state - login sessions, tokens - keyed by instance id.
 # Outlives a registry rebuild (which happens on every call), and is dropped
 # whenever the instance is edited or removed, so a session never rides on to
 # an address or user it was not opened for.
 _STATE: dict[str, dict] = {}
 
 def single(type_: str) -> bool:
-    """A type that can be added only once — see MULTI in its driver."""
+    """A type that can be added only once - see MULTI in its driver."""
     return not dynamic.multi(type_)
 
 
@@ -90,7 +90,7 @@ class _Instance:
 
 
 def _registry() -> dict:
-    """Every added source, in driver order. Rebuilt on every call — instances
+    """Every added source, in driver order. Rebuilt on every call - instances
     rarely change and the list is short, so this is cheaper than keeping it in
     sync by hand."""
     order = {t: i for i, t in enumerate(dynamic.DRIVERS)}
@@ -112,7 +112,7 @@ class Bound(NamedTuple):
 
 def bound_all(type_: str, configured_only: bool = True) -> list[Bound]:
     """Every instance of a type as (driver module, cfg), for code outside a
-    scan that needs other sources' answers — links asking each UniFi
+    scan that needs other sources' answers - links asking each UniFi
     controller for its topology, Cloudflare asking every NPM which names it
     serves. With configured_only, only those set up and enabled."""
     driver = dynamic.DRIVERS.get(type_)
@@ -128,25 +128,25 @@ def bound_all(type_: str, configured_only: bool = True) -> list[Bound]:
 
 
 def by_role(role: str, configured_only: bool = True) -> list[Bound]:
-    """Every instance of every type that declares `role` — how shared code
+    """Every instance of every type that declares `role` - how shared code
     asks for "the DNS servers" or "the reverse proxies" without naming one.
     See dynamic.ROLES for what each role promises."""
     return [b for t in dynamic.types_with(role) for b in bound_all(t, configured_only)]
 
 
 def bound(type_: str, configured_only: bool = True) -> Bound | None:
-    """The first of bound_all() — for a single-instance type."""
+    """The first of bound_all() - for a single-instance type."""
     b = bound_all(type_, configured_only)
     return b[0] if b else None
 
 
 # How often the background refresh re-scans every configured source. This
 # exists so the UI can show a finding count without scanning on every page
-# load — a badge that costs three HTTP calls to the firewall every time
+# load - a badge that costs three HTTP calls to the firewall every time
 # somebody switches tabs is a badge that gets removed. Findings themselves are
 # still never stored; this is a cache of the last scan, nothing more.
 # Daily, not quarter-hourly. Discovery is reconciliation, not monitoring:
-# nothing it detects — DNS drift, a stale rule, an undeclared port — changes
+# nothing it detects - DNS drift, a stale rule, an undeclared port - changes
 # on a fifteen-minute timescale, and "is it up" is the status check's job.
 # The port sweep in particular is ~2,000 TCP connects against machines we do
 # not own, which is not a thing to do ninety-six times a day.
@@ -189,7 +189,7 @@ def set_interval(seconds: int, actor: str = "web") -> int:
 
 
 # When a source's chip turns amber: its last good answer is older than this.
-# A fixed number of hours, not a multiple of the interval — a daily scan
+# A fixed number of hours, not a multiple of the interval - a daily scan
 # that last answered ten hours ago is exactly what a person wants to notice.
 STALE_KEY, STALE_DEFAULT, STALE_MAX = "source_stale_hours", 5, 720
 
@@ -226,14 +226,14 @@ _CACHE: dict[str, dict] = {}
 
 # Whether each source is *working*, which is not the same as whether it has
 # findings. NPM's token expired and the source was dead for days while the
-# Overview cheerfully showed zero findings — zero because nothing could be
+# Overview cheerfully showed zero findings - zero because nothing could be
 # read, and nothing recorded the difference. A long scan interval makes this
 # worse, so the two changes belong together.
 _HEALTH: dict[str, dict] = {}
 
 # Whether the start-up pass over every source has finished. Until it has, a
-# source with no attempt recorded is waiting its turn — the pass is sequential
-# and the port sweep alone takes seconds — not failing. Reporting it as "not
+# source with no attempt recorded is waiting its turn - the pass is sequential
+# and the port sweep alone takes seconds - not failing. Reporting it as "not
 # answering" made every restart raise a critical alert that cleared itself
 # half a minute later.
 FIRST_PASS_DONE = False
@@ -276,19 +276,19 @@ def names() -> list[str]:
 
 
 def configured(name: str | None = None) -> bool:
-    """One source, or — with no argument — whether any source is set up."""
+    """One source, or - with no argument - whether any source is set up."""
     if name is None:
         return any(s["mod"].configured() for s in _registry().values())
     s = _registry().get(name)
     return bool(s and s["mod"].configured())
 
 
-# One scan per source at a time. Two at once — the nightly pass and a click,
-# two open tabs, an MCP client and the UI — doubled the calls to a firewall or
+# One scan per source at a time. Two at once - the nightly pass and a click,
+# two open tabs, an MCP client and the UI - doubled the calls to a firewall or
 # controller and raced on the modules' shared login sessions (NPM's token,
 # Pi-hole's sid, UniFi's cookie jar). A request that arrives mid-scan now
 # waits for that scan and gets its result. "Scan everything" also reuses a
-# result younger than REUSE seconds — nine systems per click is the call a
+# result younger than REUSE seconds - nine systems per click is the call a
 # refresh-happy page should not be able to repeat every second. A single
 # source asked for by name is always scanned fresh (after ignoring a finding,
 # the rescan must not hand back the finding), just never twice at once.
@@ -304,7 +304,7 @@ def _lock(name: str) -> threading.Lock:
 
 
 def scan(name: str, max_age: float = 0) -> dict:
-    """Scan one source. Unknown names are an error, not an empty result —
+    """Scan one source. Unknown names are an error, not an empty result -
     a typo should not look like agreement. `max_age` is how old a cached
     result may be and still be returned instead; 0 (the default) always
     scans, though never alongside a scan of the same source already running."""
@@ -313,11 +313,11 @@ def scan(name: str, max_age: float = 0) -> dict:
         d = dynamic.DRIVERS.get(name)
         if d:
             # A known kind of source that has not been added: an answer, not
-            # an error — the MCP scan_* tools exist whether or not it is.
+            # an error - the MCP scan_* tools exist whether or not it is.
             return {"source": name, "label": d["label"], "hint": d["hint"],
                     "configured": False, "scanned_at": db.now(), "host": {},
                     "findings": [], "counts": {},
-                    "error": f"not added — add {d['label']} in Settings › Sources"}
+                    "error": f"not added - add {d['label']} in Settings › Sources"}
         raise KeyError(name)
     lock = _lock(name)
     if not lock.acquire(blocking=False):
@@ -366,7 +366,7 @@ def _scan_now(name: str, s: dict) -> dict:
 
 
 def _new_devices(name: str, out: dict) -> None:
-    """Devices this source was the first to see, this week — see
+    """Devices this source was the first to see, this week - see
     app/newdevices.py. Only a scan that worked says anything."""
     if out.get("error"):
         return
@@ -379,7 +379,7 @@ def _new_devices(name: str, out: dict) -> None:
 
 
 def _watch(out: dict) -> None:
-    """Watched devices against what the sources see now — see app/watch.py.
+    """Watched devices against what the sources see now - see app/watch.py.
     Never breaks the scan."""
     if out.get("error"):
         return
@@ -401,9 +401,9 @@ def _notify(name: str, s: dict, out: dict) -> None:
 def _shadow(name: str, out: dict) -> None:
     """Two Docker hosts, two tunnels, two Home Assistants: each sees only its
     own part of the estate, so one saying an entry is *missing* is not news
-    when a sibling of the same type sees it. Such a finding — a type the
+    when a sibling of the same type sees it. Such a finding - a type the
     driver lists in ABSENCE, about an entry another instance of the same type
-    has a sighting for — is dropped and counted as `shadowed`. Uses the
+    has a sighting for - is dropped and counted as `shadowed`. Uses the
     siblings' last scan; nothing is re-scanned for it."""
     type_ = dynamic.type_of(name)
     absence = getattr(dynamic.DRIVERS.get(type_, {}).get("mod"), "ABSENCE", set())
@@ -422,7 +422,7 @@ def _shadow(name: str, out: dict) -> None:
 
 
 def scan_type(type_: str) -> dict:
-    """Every instance of one type — what the MCP scan_<type> tools answer.
+    """Every instance of one type - what the MCP scan_<type> tools answer.
     One instance (or none): exactly the shape of scan(). Several: their
     results under `sources`, with the findings counted across them."""
     ids = [i["id"] for i in db.list_source_instances(type_)]
@@ -439,7 +439,7 @@ def cached(name: str) -> dict | None:
 
 
 def summary() -> dict:
-    """Finding counts from the last scan of each source. Never scans — this is
+    """Finding counts from the last scan of each source. Never scans - this is
     what the nav badge and the Overview read, so it must stay free.
 
     `scanned_at` is the *oldest* source's timestamp, because the summary is
@@ -522,7 +522,7 @@ async def loop() -> None:
             print(f"[discovery] refresh failed: {exc}", flush=True)
         FIRST_PASS_DONE = True
         last = time.time()
-        # Sleep until the next pass is due — re-reading the interval whenever
+        # Sleep until the next pass is due - re-reading the interval whenever
         # Settings changes it, so a new value applies now, not after the old
         # (possibly day-long) wait.
         while True:
@@ -538,7 +538,7 @@ async def loop() -> None:
 
 
 # --------------------------------------------------------------------------
-# Settings › Sources — CRUD over app.db.source_instances. See
+# Settings › Sources - CRUD over app.db.source_instances. See
 # app/sources/dynamic.py for what a driver is.
 # --------------------------------------------------------------------------
 def rotate_secrets() -> dict:
@@ -546,7 +546,7 @@ def rotate_secrets() -> dict:
 
     Run once at start-up. With NETMAP_SECRET_KEY set, this moves secrets
     written under the database's own key onto the environment's key, and then
-    deletes the database key — but only if nothing still needs it. Secrets no
+    deletes the database key - but only if nothing still needs it. Secrets no
     known key opens are left as they are and reported in crypto.UNDECRYPTABLE.
     """
     bad: list[str] = []
@@ -594,7 +594,7 @@ def migrate_legacy() -> dict:
     Before 1.75 the eight original sources were configured by NETMAP_*
     environment variables, overridden field by field from Settings (the
     source_settings table). Each type with anything set becomes an instance
-    whose id is its type — so finding keys, ignores and sightings, all keyed
+    whose id is its type - so finding keys, ignores and sightings, all keyed
     by that name, carry on unchanged. Settings overrides win over the
     environment, as they did. A type with nothing set, or not enough to
     scan, is not created. The existing Proxmox instance is renamed to the
@@ -681,7 +681,7 @@ PINNED_KEY = "defaults_pinned"
 def fold_scan_switch() -> list[str]:
     """Before 1.93.0 the Open ports source had an "Enabled" field of its own,
     beside the switch every source has. One switch now: a source paused with
-    the old field stays paused. Idempotent — the field is removed once read."""
+    the old field stays paused. Idempotent - the field is removed once read."""
     done = []
     for inst in db.list_source_instances("ports"):
         if "enabled" not in inst["config"]:
@@ -729,18 +729,18 @@ def drivers() -> list[dict]:
 
 
 def roles() -> dict:
-    """Every role, its label and what it promises — for Settings."""
+    """Every role, its label and what it promises - for Settings."""
     return {r: {"label": label, "contract": contract}
             for r, (label, contract) in dynamic.ROLES.items()}
 
 
 def _form(defs: list[dict]) -> list[dict]:
-    """A driver's FIELDS for the browser — without the legacy env name."""
+    """A driver's FIELDS for the browser - without the legacy env name."""
     return [{k: v for k, v in f.items() if k != "env"} for f in defs]
 
 
 def _describe(inst: dict) -> dict:
-    """One instance for the Settings list — secrets never leave this process
+    """One instance for the Settings list - secrets never leave this process
     as plaintext, only as "is one set" plus a last-four-characters preview."""
     driver = dynamic.DRIVERS.get(inst["type"], {})
     field_defs = driver["mod"].FIELDS if driver.get("mod") else []
@@ -772,7 +772,7 @@ def list_instances() -> list[dict]:
 
 
 def _split(type_: str, fields_in: dict) -> tuple[dict, dict]:
-    """A form submission into (config, encrypted secrets) — see fields.split."""
+    """A form submission into (config, encrypted secrets) - see fields.split."""
     config, secrets = fields.split(dynamic.fields(type_), fields_in)
     return config, {k: crypto.encrypt(v) for k, v in secrets.items()}
 
@@ -784,7 +784,7 @@ def _require(type_: str, config: dict, secret_keys) -> None:
 def create_instance(type_: str, name: str, fields_in: dict, enabled: bool = True,
                     actor: str = "web") -> dict:
     if type_ not in dynamic.DRIVERS:
-        raise ValueError(f"unknown source type '{type_}' — "
+        raise ValueError(f"unknown source type '{type_}' - "
                          f"have {', '.join(dynamic.DRIVERS)}")
     label = dynamic.DRIVERS[type_]["label"]
     existing = db.list_source_instances(type_)
@@ -854,11 +854,11 @@ def _test(mod, cfg: dict) -> dict:
 
 
 def test_fields(type_: str, fields_in: dict) -> dict:
-    """Test connection details before they are saved anywhere — the "Test"
+    """Test connection details before they are saved anywhere - the "Test"
     button on the Add-source form, which has no instance id yet."""
     driver = dynamic.DRIVERS.get(type_)
     if not driver:
-        raise ValueError(f"unknown source type '{type_}' — "
+        raise ValueError(f"unknown source type '{type_}' - "
                          f"have {', '.join(dynamic.DRIVERS)}")
     cfg = fields.coerce(driver["mod"].FIELDS, dict(fields_in or {}))
     cfg["_state"] = {}
@@ -867,7 +867,7 @@ def test_fields(type_: str, fields_in: dict) -> dict:
 
 def test_instance(instance_id: str) -> dict:
     """A connectivity check with a fresh session, independent of enabled and
-    of the cache — the button in Settings you press to see whether what is
+    of the cache - the button in Settings you press to see whether what is
     saved works."""
     inst = db.get_source_instance(instance_id)
     if not inst:

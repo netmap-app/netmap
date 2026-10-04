@@ -12,7 +12,7 @@ hand: the lease table shows only what is online, so a reservation for a powered
 observation; NetMap is the third opinion. Disagreements between them are the
 findings.
 
-Unlike the Docker source there is no read-only credential to hand out — an
+Unlike the Docker source there is no read-only credential to hand out - an
 OPNsense API key carries its user's privileges. The safeguard here is that this
 module only ever issues GETs, and nothing in it can construct a write.
 """
@@ -50,7 +50,7 @@ FIELDS = [
 
 ROLES = ("firewall", "leases")  # see dynamic.ROLES
 
-# "Not here" findings — dropped when another opnsense source sees the entry.
+# "Not here" findings - dropped when another opnsense source sees the entry.
 ABSENCE = {'nat-stale'}
 
 PORT_RE = re.compile(r"\b(\d{1,5})\b")
@@ -76,7 +76,7 @@ def test(cfg: dict) -> dict:
         return {"ok": True, "error": None}
     except urllib.error.HTTPError as exc:
         return {"ok": False, "error": f"OPNsense answered HTTP {exc.code}"
-                + (" — check the API key and secret" if exc.code in (401, 403) else "")}
+                + (" - check the API key and secret" if exc.code in (401, 403) else "")}
     except Exception as exc:
         return {"ok": False, "error": f"cannot reach OPNsense at {cfg['url']}: {exc}"}
 
@@ -105,7 +105,7 @@ def _draft(name: str, ip: str, mac: str, iface: str, descr: str,
     about; the name is its DHCP hostname and the category is a guess nobody
     should have to undo, so it is left blank rather than filed somewhere wrong.
     `zone` comes from OPNsense's own interface name, not from parsing the
-    subnet — the firewall is the thing that decides which segment an address is
+    subnet - the firewall is the thing that decides which segment an address is
     on. Everything else is for a person to fill in after the one click.
     """
     note = f"{why}, discovered from OPNsense {db.now()[:10]}."
@@ -127,8 +127,8 @@ def _ref(e: dict) -> dict:
 def _machine(here: list[dict]) -> dict | None:
     """The entry a DHCP reservation is really about.
 
-    One entry at the address: that one. Several — a Docker host and the twenty
-    containers sharing its IP — the single hardware or VM among them, because
+    One entry at the address: that one. Several - a Docker host and the twenty
+    containers sharing its IP - the single hardware or VM among them, because
     that is what holds the network interface the reservation names. Two
     machines at one address is a genuine ambiguity and gets nothing.
     """
@@ -143,7 +143,7 @@ def scan(cfg: dict) -> dict:
     out = {"source": cfg.get("_id", "opnsense"), "configured": configured(cfg), "scanned_at": db.now(),
            "host": {"url": cfg.get("url", "")}, "findings": [], "counts": {}, "error": None}
     if not configured(cfg):
-        out["error"] = ("not configured — add the API URL, key and secret in "
+        out["error"] = ("not configured - add the API URL, key and secret in "
                         "Settings › Sources")
         return out
     try:
@@ -152,7 +152,7 @@ def scan(cfg: dict) -> dict:
         rules = _get(cfg, "/api/firewall/d_nat/search_rule").get("rows", [])
     except urllib.error.HTTPError as exc:
         out["error"] = (f"OPNsense answered HTTP {exc.code}"
-                        + (" — check the API key and that its user may reach "
+                        + (" - check the API key and that its user may reach "
                            "these endpoints" if exc.code in (401, 403) else ""))
         return out
     except Exception as exc:
@@ -161,7 +161,7 @@ def scan(cfg: dict) -> dict:
 
     entries = db.list_entries()
     # Interface per address, straight from the lease table. Used to fill a
-    # draft's `zone` — LAN / IoT are OPNsense's own names for the segments, so
+    # draft's `zone` - LAN / IoT are OPNsense's own names for the segments, so
     # this is read from the firewall rather than inferred from the subnet.
     iface_of = {(ls.get("address") or "").strip(): (ls.get("if_descr") or "")
                 for ls in leases}
@@ -176,8 +176,8 @@ def scan(cfg: dict) -> dict:
     findings: list[dict] = []
 
     # ---- port forwards -------------------------------------------------
-    # A NAT rule has two ports — the one the world knocks on and the one it is
-    # sent to — and an entry may record either, or both. Matching on only one
+    # A NAT rule has two ports - the one the world knocks on and the one it is
+    # sent to - and an entry may record either, or both. Matching on only one
     # of them produces the worst possible answer: the same forward reported as
     # both "not in NetMap" and "no such rule", which reads as two problems
     # instead of none. So: match on the target address plus *either* port,
@@ -242,10 +242,10 @@ def scan(cfg: dict) -> dict:
         if missing:
             findings.append({
                 "type": "nat-drift", "key": f"{P}:nat:{v['uuid']}",
-                "label": f"{e['name']} — recorded ports differ",
+                "label": f"{e['name']} - recorded ports differ",
                 "detail": (f"live rule is WAN {v['wan_raw']} → {v['target']}:"
                            f"{v['local_raw']} ({v['descr'] or 'no description'}); "
-                           f"NetMap records '{e.get('ports') or '—'}'"),
+                           f"NetMap records '{e.get('ports') or '-'}'"),
                 "entry": _ref(e),
                 "suggest": {"ports": f"{v['local_raw']} (WAN {v['wan_raw']})"},
             })
@@ -254,12 +254,12 @@ def scan(cfg: dict) -> dict:
         desc = v["descr"] or "(no description)"
         findings.append({
             "type": "nat-unknown", "key": f"{P}:nat:{v['uuid']}",
-            "label": f"inbound rule not in NetMap — {desc}",
+            "label": f"inbound rule not in NetMap - {desc}",
             "detail": (f"WAN {v['wan_raw']} → {v['target']}:{v['local_raw']} on "
                        f"{v['iface']}, {v['proto']}. Something is exposed that the "
                        "inventory does not describe."),
             "draft": {
-                "name": f"Port forward — {desc}",
+                "name": f"Port forward - {desc}",
                 "category": "Remote Access", "kind": "rule",
                 "host": "OPNsense", "ip": v["target"],
                 "ports": f"{v['local_raw']} (WAN {v['wan_raw']})",
@@ -287,7 +287,7 @@ def scan(cfg: dict) -> dict:
             names = ", ".join(e["name"] for e in here[:3])
             findings.append({
                 "type": "addr-unreserved", "key": f"{P}:unreserved:{ip}",
-                "label": f"{names} — {ip} is not reserved",
+                "label": f"{names} - {ip} is not reserved",
                 "detail": (f"NetMap records this address as fixed, but it is a "
                            f"dynamic lease (hostname {ls.get('hostname') or '*'}, "
                            f"{ls.get('mac_info') or ls.get('hwaddr')}). It can move "
@@ -308,7 +308,7 @@ def scan(cfg: dict) -> dict:
 
     # A reservation holds the one thing three sources join on. Copying it into
     # the entry by hand is the sort of work nobody does, and without it a
-    # device can sit outside the physical map with nothing explaining why —
+    # device can sit outside the physical map with nothing explaining why -
     # UniFi identifies a wired client by MAC, and an address the controller
     # never saw handed out gives it nothing else to match on.
     for h in hosts:
@@ -322,7 +322,7 @@ def scan(cfg: dict) -> dict:
         mac = found[0].replace("-", ":").lower()
         findings.append({
             "type": "mac-unrecorded", "key": f"{P}:mac:{e['id']}",
-            "label": f"{e['name']} — reserved as {mac}, not recorded",
+            "label": f"{e['name']} - reserved as {mac}, not recorded",
             "detail": ("the DHCP reservation for this address carries a "
                        "hardware address the entry does not. That field is "
                        "what UniFi and Pi-hole match on, so without it the "
@@ -336,7 +336,7 @@ def scan(cfg: dict) -> dict:
     # in both the firewall UI and the inventory, and can never match, because
     # the machine answers with a different interface. Nothing breaks while the
     # address is also set statically on the host or sits outside the DHCP pool
-    # — until one of those stops being true, and then the address moves with no
+    # - until one of those stops being true, and then the address moves with no
     # warning and every reference to it goes stale at once.
     #
     # Typical case: reserved as ...aa:07 while the bridge answers on ...aa:06,
@@ -348,7 +348,7 @@ def scan(cfg: dict) -> dict:
             continue
         mine = _macs(e.get("mac", ""))
         # Only an entry that states its MACs can contradict a reservation.
-        # Silence is not disagreement — that gap is `mac-unrecorded`'s job.
+        # Silence is not disagreement - that gap is `mac-unrecorded`'s job.
         if not mine:
             continue
         want = _macs(h.get("hwaddr"))
@@ -356,12 +356,12 @@ def scan(cfg: dict) -> dict:
             continue
         findings.append({
             "type": "reservation-mismatch", "key": f"{P}:resmac:{h.get('uuid')}",
-            "label": f"{e['name']} — reserved as {', '.join(sorted(want))}, "
+            "label": f"{e['name']} - reserved as {', '.join(sorted(want))}, "
                      f"but answers on {', '.join(sorted(mine))}",
             "detail": ("the DHCP reservation for this address names a hardware "
                        "address this machine does not use, so it can never "
                        "match. The address is not actually held by the "
-                       "reservation — check whether the host sets it statically, "
+                       "reservation - check whether the host sets it statically, "
                        "and fix the MAC on the firewall. If the machine really "
                        "does have that interface, record it on the entry "
                        "instead."),
@@ -375,7 +375,7 @@ def scan(cfg: dict) -> dict:
                 "type": "reservation-orphan", "key": f"{P}:host:{h.get('uuid')}",
                 "label": f"{h.get('host') or '?'} reserved at {ip}",
                 "detail": ("a DHCP reservation with nothing in NetMap at that "
-                           "address — either untracked infrastructure, or a "
+                           "address - either untracked infrastructure, or a "
                            "leftover holding an address hostage"),
                 "draft": _draft(h.get("host") or ip, ip,
                                 h.get("hwaddr") or mac_of.get(ip, ""),
@@ -415,7 +415,7 @@ def scan(cfg: dict) -> dict:
                      "value": f"dynamic lease {ip}"})
     # ---- presence: who holds an address, tracked or not -------------------
     # Two traps in this payload. `mac_info` is the *vendor* string, not a
-    # hardware address — "asustek computer inc." went straight into the mac
+    # hardware address - "asustek computer inc." went straight into the mac
     # field the first time. And a lease with no hostname reports "*", which is
     # a placeholder that then outranked UniFi's real name when the two were
     # merged. Both are filtered here rather than in the UI, because every
@@ -425,7 +425,7 @@ def scan(cfg: dict) -> dict:
         return "" if v in ("*", "-", "?") else v
 
     def _pair(raw_mac, raw_info) -> tuple[str, str]:
-        """(mac, vendor) — whichever of the two fields actually holds which."""
+        """(mac, vendor) - whichever of the two fields actually holds which."""
         found = MAC_RE.findall(str(raw_mac or "")) or MAC_RE.findall(str(raw_info or ""))
         mac = found[0].replace("-", ":").lower() if found else ""
         vendor = str(raw_info or "").strip()

@@ -18,7 +18,7 @@ def toast(page):
 
 # ---- Overview ---------------------------------------------------------------------------------
 def _overview_with(page, server, **changes):
-    """Serve the real /api/overview with some fields replaced — the states the
+    """Serve the real /api/overview with some fields replaced - the states the
     test data does not produce by itself."""
     real = server.api("GET", "/api/overview")
     page.route("**/api/overview", lambda route: route.fulfill(
@@ -141,7 +141,7 @@ def test_port_page_tells_published_from_forwarded(page, server):
     page.evaluate("showPort(32400)")
     expect(page.locator("#portBody")).to_contain_text("forwarded from the WAN by 1 rule")
 
-    # Any edge source — here a second Cloudflare — makes it published.
+    # Any edge source - here a second Cloudflare - makes it published.
     server.sightings("cloudflare-2", [{"entry_id": plex["id"], "fact": "hostname:plex.example.org",
                                        "value": "→ http://10.0.0.7:32400"}])
     page.evaluate("showPort(32400)")
@@ -163,7 +163,7 @@ def test_phone_width_never_scrolls_sideways(page, server):
 # ---- every view opens -------------------------------------------------------------------------
 def test_every_view_tab_and_dialog_opens(page, server):
     """A smoke pass over everything a person can open. Any uncaught error on
-    the way fails the test (see the page fixture) — which is how a script
+    the way fails the test (see the page fixture) - which is how a script
     loaded in the wrong order, or a render exception, shows up."""
     e = server.api("POST", "/api/entries", {"name": "Router", "ip": "10.0.0.1", "ports": "443"})
     page.reload()
@@ -212,7 +212,7 @@ def test_long_sheets_close_from_the_top(page):
         expect(page.locator(modal)).to_be_visible()
         x = page.locator(f"{modal} .sheetx")
         expect(x).to_be_in_viewport()
-        # Still there at the bottom of a long list — the reason it exists.
+        # Still there at the bottom of a long list - the reason it exists.
         page.locator(f"{modal} .sheet").evaluate("s => s.scrollTop = s.scrollHeight")
         expect(x).to_be_in_viewport()
         x.click()
@@ -252,7 +252,7 @@ def test_each_source_turns_green_or_red_as_its_own_scan_lands(page, server):
 
 
 def test_the_refresh_button_greys_the_sources_at_once(page, server):
-    """Pressing refresh turns every source gray straight away — not after the
+    """Pressing refresh turns every source gray straight away - not after the
     reachability sweep, which runs alongside and is held back here."""
     for port in (9, 10):                  # refused at once, so each fails fast
         server.api("POST", "/api/sources/instances", {"type": "docker", "fields": {
@@ -280,7 +280,7 @@ def test_a_newer_server_version_offers_a_reload(page, server):
                                                  body=json.dumps({**real, "version": "99.0.0"})))
     page.evaluate("checkVersion()")
     banner = page.locator("#updBanner")
-    expect(banner).to_have_text("NetMap was updated to 99.0.0 — reload to use it.")
+    expect(banner).to_have_text("NetMap was updated to 99.0.0 - reload to use it.")
     page.unroute("**/healthz")
     with page.expect_navigation():
         banner.click()                                          # reloads the page
@@ -545,7 +545,7 @@ def test_a_lease_file_source_is_added_tested_and_its_finding_shown(page, server,
 
     page.click('#railnav [data-view="network"]')
     net = page.locator("#network")
-    expect(net).to_contain_text("Camera — 192.168.10.11 is held by aa:bb:cc:00:00:99")
+    expect(net).to_contain_text("Camera - 192.168.10.11 is held by aa:bb:cc:00:00:99")
     expect(net.locator(".cf .sev", has_text="other MAC")).to_have_count(1)
     expect(net).to_contain_text("2 addresses")
 
@@ -858,7 +858,7 @@ def test_mcp_off_is_in_about_and_not_a_warning(page, server):
     expect(page.locator("#overview .at", has_text="MCP")).to_have_count(0)
     open_settings(page, "about")
     body = page.locator("#aboutBody")
-    expect(body).to_contain_text("off — set NETMAP_MCP_TOKEN to enable it")
+    expect(body).to_contain_text("off - set NETMAP_MCP_TOKEN to enable it")
     expect(body).not_to_contain_text("MCP accepts Host")
     page.set_viewport_size({"width": 375, "height": 812})
     page.wait_for_timeout(150)
@@ -1175,7 +1175,7 @@ def test_watching_fits_a_phone(page, server):
 
 def test_a_new_device_finding_offers_watch(page):
     html = page.evaluate("""findingHtml({type: "new-device", key: "unifi:new:aa:bb:cc:dd:ee:ff",
-        label: "x — new on the network at 10.0.0.9", detail: "",
+        label: "x - new on the network at 10.0.0.9", detail: "",
         draft: {name: "x"}})""")
     assert 'data-fwatch="unifi:new:aa:bb:cc:dd:ee:ff"' in html
     assert "data-fwatch" not in page.evaluate(
@@ -1230,3 +1230,61 @@ def test_not_verified_lists_the_entries_and_marks_them_verified(page, server):
     expect(toast(page)).to_contain_text("2 entries marked verified")
     expect(page.locator("#overview .at", has_text="not verified")).to_have_count(0)
     assert all(e["verified"] for e in server.api("GET", "/api/entries"))
+
+
+def test_sources_show_as_marks_with_a_status_bar(page, server):
+    """Each source is its product's mark with a bar under it in the status
+    colour; the name is in the tooltip. A type with no mark, or a mark that
+    fails to load, falls back to a drawn glyph. Fits a phone screen."""
+    now = page.evaluate("new Date().toISOString()")
+    old = page.evaluate("new Date(Date.now() - 10 * 3600 * 1000).toISOString()")
+    real = server.api("GET", "/api/discovery/summary")
+    health = [
+        {"source": "docker", "label": "Docker", "type": "docker", "configured": True,
+         "pending": False, "ok": True, "last_ok": now, "error": None},
+        {"source": "proxmox", "label": "Proxmox VE", "type": "proxmox", "configured": True,
+         "pending": False, "ok": True, "last_ok": old, "error": None},
+        {"source": "ports", "label": "Open ports", "type": "ports", "configured": True,
+         "pending": False, "ok": False, "last_ok": None, "error": "timed out"},
+    ]
+    summary = {**real, "health": health, "icons": {"docker": "docker", "proxmox": "proxmox"}}
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#08f"/></svg>'
+
+    def scan(route):
+        sid = route.request.url.split("/api/discovery/")[1].split("?")[0]
+        body = {"source": sid, "label": sid, "configured": True, "findings": [], "counts": {},
+                "error": "timed out" if sid == "ports" else None,
+                "scanned_at": "2026-01-01T00:00:00Z", "host": {}}
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(body))
+    page.route("**/api/discovery/*", scan)
+    page.route("**/api/discovery/summary", lambda r: r.fulfill(
+        status=200, content_type="application/json", body=json.dumps(summary)))
+    page.route("**/api/icon/docker.svg*", lambda r: r.fulfill(
+        status=200, content_type="image/svg+xml", body=svg))
+    page.route("**/api/icon/proxmox.svg*", lambda r: r.fulfill(status=404, body=""))
+    page.click('#railnav [data-view="network"]')
+    expect(page.locator("#reconHint")).not_to_contain_text("scanning")
+
+    chips = page.locator("#network [data-srcchip]")
+    assert chips.evaluate_all("els => els.map(e => e.dataset.srcchip)") == ["docker", "proxmox", "ports"]
+    expect(page.locator("#network .srcline")).to_have_text("")              # marks, not names
+    chip = lambda i: page.locator(f'#network [data-srcchip="{i}"]')         # noqa: E731
+    expect(chip("docker")).to_have_attribute("title", re.compile(r"^Docker: last answered"))
+    expect(chip("ports")).to_have_attribute("title", "Open ports: timed out")
+    expect(chip("docker").locator("img.svc")).to_be_visible()
+    expect(chip("docker").locator("svg.ico")).to_be_hidden()
+    expect(chip("ports").locator("img")).to_have_count(0)
+    expect(chip("ports").locator("svg.ico")).to_be_visible()
+    expect(chip("proxmox").locator(".sm")).to_have_class(re.compile(r"\bnoicon\b"))   # 404: glyph
+    expect(chip("proxmox").locator("svg.ico")).to_be_visible()
+
+    bar = """([el, v]) => {
+      const probe = document.createElement('b'); probe.style.color = `var(${v})`;
+      document.body.append(probe); const want = getComputedStyle(probe).color; probe.remove();
+      return getComputedStyle(el, '::after').backgroundColor === want; }"""
+    for sid, var in (("docker", "--up"), ("proxmox", "--warn"), ("ports", "--down")):
+        assert chip(sid).evaluate(f"el => ({bar})([el, '{var}'])"), sid
+
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375

@@ -3,7 +3,7 @@
 # everything they reference; delete every other package version.
 #
 # "Everything they reference" is the point. Each push creates three package
-# versions: the tagged image index, and the untagged manifests it points to —
+# versions: the tagged image index, and the untagged manifests it points to -
 # one image per architecture and their build attestations. A cleanup that deletes untagged
 # versions as garbage deletes the image under a tag that is still there, and
 # the next pull of that tag fails. So the untagged versions to keep are read
@@ -31,7 +31,7 @@ versions=$(gh api --paginate "$API?per_page=100" | jq -s 'add')
 # Newest first; a version with any tag counts as a release.
 kept_tagged=$(jq -r --argjson n "$KEEP" \
   '[.[] | select(.metadata.container.tags | length > 0)] | sort_by(.created_at) | reverse | .[:$n][] | .name' <<<"$versions")
-[ -n "$kept_tagged" ] || { echo "no tagged versions found — refusing to prune"; exit 1; }
+[ -n "$kept_tagged" ] || { echo "no tagged versions found - refusing to prune"; exit 1; }
 
 # The registry's own view of what each kept index points to.
 bearer=$(printf %s "$GH_TOKEN" | base64 | tr -d '\n')
