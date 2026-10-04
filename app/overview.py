@@ -25,6 +25,8 @@ Three rules:
 """
 from __future__ import annotations
 
+import json
+
 from . import db, sources
 from .sources.dynamic import has_role
 
@@ -458,7 +460,8 @@ def snapshot(status_cache: dict | None = None) -> dict:
         "sources": {"ok": summary.get("sources_ok", 0),
                     "total": summary.get("sources_total", 0),
                     "health": summary.get("health", []),
-                    "scanned_at": summary.get("scanned_at")},
+                    "scanned_at": summary.get("scanned_at"),
+                    "next_scan": summary.get("next_scan")},
         "exposure": {
             "published": len(exp["published"]),
             "no_access": exp["no_access"],
@@ -466,3 +469,74 @@ def snapshot(status_cache: dict | None = None) -> dict:
         },
         "sightings": db.sighting_stats(),
     }
+
+
+# ---- layout ------------------------------------------------------------------
+# Which cards the Overview shows, and in what order. One layout for the whole
+# instance, kept in kv, so every device and every login sees the same page.
+# The status strip (verdict, Needs you, Set aside) is not in this list: it is
+# always first and cannot be hidden, so a problem can never be laid out of
+# sight.
+CARDS = [
+    ("exposure", "Reachable from outside"),
+    ("quicklinks", "Quick links"),
+    ("changes", "Recent changes"),
+    ("categories", "Inventory by category"),
+    ("addresses", "Address space"),
+]
+LAYOUT_KEY = "overview_layout"
+
+
+def _merge(stored: list[dict]) -> list[dict]:
+    """The stored order for the cards it names, then every card it does not
+    name (one added in a later release) shown, right after the card it follows
+    by default."""
+    labels = dict(CARDS)
+    out = [{"id": c["id"], "label": labels[c["id"]], "show": bool(c["show"])}
+           for c in stored if c.get("id") in labels]
+    have = {c["id"] for c in out}
+    for i, (cid, label) in enumerate(CARDS):
+        if cid in have:
+            continue
+        before = [p for p, _ in CARDS[:i] if p in have]
+        at = (next(k for k, c in enumerate(out) if c["id"] == before[-1]) + 1) if before else 0
+        out.insert(at, {"id": cid, "label": label, "show": True})
+        have.add(cid)
+    return out
+
+
+def layout() -> list[dict]:
+    try:
+        stored = json.loads(db.get_setting(LAYOUT_KEY) or "[]")
+    except ValueError:
+        stored = []
+    return _merge(stored if isinstance(stored, list) else [])
+
+
+def set_layout(cards, actor: str = "web") -> list[dict]:
+    """Save an order and visibility. Every id must be a known card, once;
+    a card left out keeps its default place and is shown."""
+    if not isinstance(cards, list):
+        raise ValueError("cards must be a list of {id, show}")
+    known, seen = dict(CARDS), set()
+    for c in cards:
+        if not isinstance(c, dict) or c.get("id") not in known:
+            raise ValueError(f"unknown card {c.get('id') if isinstance(c, dict) else c!r}")
+        if c["id"] in seen:
+            raise ValueError(f"card {c['id']} is listed twice")
+        if not isinstance(c.get("show"), bool):
+            raise ValueError(f"card {c['id']}: show must be true or false")
+        seen.add(c["id"])
+    before = layout()
+    clean = [{"id": c["id"], "show": c["show"]} for c in cards]
+    db.set_setting(LAYOUT_KEY, json.dumps(clean))
+    after = layout()
+    if after != before:
+        db.log(actor, "setting", None, "overview layout",
+               {"from": [c["id"] for c in before if c["show"]],
+                "to": [c["id"] for c in after if c["show"]]})
+    return after
+
+
+def reset_layout(actor: str = "web") -> list[dict]:
+    return set_layout([{"id": cid, "show": True} for cid, _ in CARDS], actor)

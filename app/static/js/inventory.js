@@ -293,6 +293,7 @@ async function load(opts = {}) {
   FINDINGS = fnd;
   LAST_REFRESH = Date.now();
   pageFreshness();
+  paintFreshness();
   const sig = signature(rows, cf);
   if (opts.quiet && sig === lastSig) return;      // nothing moved; leave the DOM alone
   lastSig = sig;

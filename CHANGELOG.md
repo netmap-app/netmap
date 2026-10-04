@@ -4,6 +4,14 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.2.0 - 2026-10-04
+
+- Customize overview: show, hide and reorder the Overview's cards (button at the bottom of the page). The layout is stored on the server, one for the instance; the status and Needs you always show first. API: `GET`/`PUT /api/settings/overview`.
+- The header says when the sources were last scanned and when the next automatic scan is due ("Scanned 12:15 · next in 40 min"); `/api/discovery/summary` and `/api/overview` carry `next_scan`.
+- The header's Export CSV button is gone (export stays in Settings › Data), and the page name is no longer shown next to the search box: the side rail or the tabs already say which page this is.
+- The search placeholder shows the quick-search shortcut for this keyboard (⌘K or Ctrl+K); the rescan button has a spoken name.
+- Closing a dialog returns focus to the button that opened it even when the page redrew that button meanwhile.
+
 ## 2.1.1 - 2026-10-04
 
 - CI: the Dockhand address for the optional deploy is now the repository secret `DOCKHAND_URL` instead of a variable, so public CI logs no longer print it. If you deploy through Dockhand, add the secret and delete the variable.

@@ -468,6 +468,7 @@ def summary() -> dict:
             "sources_total": len(live),
             "sources_pending": sum(1 for h in hs if h["pending"]),
             "interval": interval(),
+            "next_scan": schedule()["next_scan"],
             # A source whose last good answer is older than this is stale.
             "stale_hours": stale_hours(),
             "configured": [n for n, s in reg.items() if s["mod"].configured()]}

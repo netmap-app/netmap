@@ -940,11 +940,9 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 @media (min-width:981px){
   .barbrand,.viewtabs,#histBtn,#setBtn{display:none}
 }
-@media (max-width:980px){
-  /* The tab group is the navigation down here, so the title would only
-     repeat what the active tab already says. */
-  .pagetitle{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-}
+/* The rail (wide) or the tab group (narrow) already says which page this is,
+   so the title is there for screen readers only and the search gets the room. */
+.pagetitle{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------- collapsed rail ---------- */
 .railtog{position:absolute;top:14px;right:10px;background:none;border:none;
@@ -1306,3 +1304,23 @@ td,.qlink,.lchip,.kv{overflow-wrap:anywhere}
    goes grey until fresh data arrives, so an old green is never read as now. */
 body.pagestale :is(.dot, .srcline .s, .vfact, .vstate, .vlv, .at .atl, .cs, .gu, .gd, .lat){filter:grayscale(1);opacity:.6}
 .stalebanner{cursor:pointer}
+
+/* ---------- header freshness ---------- */
+.fresh{font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.fresh:empty{display:none}
+/* Narrow: its own line above the buttons, so they keep one row. */
+@media (max-width:980px){ .fresh{flex:1 0 100%;order:-1} }
+
+/* ---------- customize overview ---------- */
+.ovfoot{display:flex;justify-content:flex-end;margin:4px 0 22px}
+.ovfoot .btn{color:var(--dim)}
+.layoutlist{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.layoutlist .lrow{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+.layoutlist .lrow.fixed{opacity:.75}
+.layoutlist .lchk{display:flex;align-items:center;gap:9px;min-width:0}
+.layoutlist .lchk label{cursor:pointer}
+.layoutlist .lrow.fixed label{cursor:default}
+.layoutlist .lmove{display:flex;gap:4px;flex:none}
+.layoutlist .lmove .btn[disabled]{opacity:.35;cursor:default}

@@ -76,6 +76,39 @@ function srcHtml(sources) {
   return `<div class="srcline">${hs.map(h => srcChip(h, staleMs)).join("")}</div>`;
 }
 
+/* "Scanned 12:15 · next in 40 min" in the header, on every page. Scanned is
+   the oldest source's last scan (the summary is only as fresh as its stalest
+   part); next is the automatic pass, left out when none is scheduled. */
+function fmtWait(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 1) return "under a minute";
+  if (m < 60) return `${m} min`;
+  const h = Math.round(m / 60);
+  return h < 48 ? `${h} h` : `${Math.round(h / 24)} d`;
+}
+function paintFreshness() {
+  const el = $("#freshness");
+  if (!el) return;
+  const at = SRC_HEALTH.scanned_at, nx = SRC_HEALTH.next_scan;
+  if (!at && !(SRC_HEALTH.health || []).some(h => h.configured)) { el.textContent = ""; el.title = ""; return; }
+  const p2 = (n) => String(n).padStart(2, "0");
+  const asDate = (ts) => new Date(ts.endsWith("Z") ? ts : ts + "Z");
+  let scanned = "Not scanned yet";
+  if (at) {
+    const d = asDate(at), today = new Date();
+    scanned = "Scanned " + (d.toDateString() === today.toDateString()
+      ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : whenScan(at));
+  }
+  let next = "";
+  if (nx) {
+    const wait = asDate(nx).getTime() - Date.now();
+    next = wait > 0 ? ` · next in ${fmtWait(wait)}` : " · next scan due now";
+  }
+  el.textContent = scanned + next;
+  el.title = (at ? `Oldest source scan: ${whenScan(at)}` : "No source has been scanned yet")
+    + (nx ? ` · next automatic scan: ${whenScan(nx)}` : " · no automatic scan scheduled");
+}
+
 // Every name again, against the clock: a source crosses into "stale" while
 // the page sits there, and no new data has to arrive for that to show.
 function repaintSrcChips() {
@@ -280,6 +313,7 @@ async function scanAll(force) {
              findings: got.reduce((n, r) => n + (r.findings || []).length, 0),
              errors: got.filter(r => r.error).length };
     SRC_HEALTH = await api("/api/discovery/summary").catch(() => SRC_HEALTH);
+    paintFreshness();
   })().finally(() => { SCAN_PROGRESS = null; SCAN_RUN = null; });
   return SCAN_RUN;
 }

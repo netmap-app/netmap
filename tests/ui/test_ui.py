@@ -1288,3 +1288,79 @@ def test_sources_show_as_marks_with_a_status_bar(page, server):
     page.set_viewport_size({"width": 375, "height": 812})
     page.wait_for_timeout(100)
     assert page.evaluate("document.documentElement.scrollWidth") <= 375
+
+
+# ---- Customize overview / header ---------------------------------------------------------------
+def _ov_cards(page):
+    return page.locator("#overview [data-ovcard]").evaluate_all("els => els.map(e => e.dataset.ovcard)")
+
+
+def test_overview_cards_can_be_hidden_reordered_and_reset(page, server):
+    assert _ov_cards(page) == ["exposure", "quicklinks", "changes", "categories", "addresses"]
+    page.click("#ovCustomize")
+    dlg = page.locator("#layoutModal")
+    expect(dlg).to_be_visible()
+    expect(dlg.locator("#lyStatus")).to_be_disabled()             # the status strip always shows
+    dlg.get_by_label("Address space", exact=True).uncheck()
+    expect(page.locator('#overview [data-ovcard="addresses"]')).to_have_count(0)
+    up = dlg.get_by_role("button", name="Move Quick links up")
+    up.click()
+    expect(page.locator("#overview [data-ovcard]").first).to_have_attribute("data-ovcard", "quicklinks")
+    # Focus stays on the control that moved, so the keyboard can keep going.
+    expect(dlg.get_by_role("button", name="Move Quick links down")).to_be_focused()
+    page.keyboard.press("Escape")
+    expect(dlg).to_be_hidden()
+    expect(page.locator("#ovCustomize")).to_be_focused()
+
+    page.reload()                                                   # saved on the server
+    page.wait_for_selector("#overview .verdict")
+    assert _ov_cards(page) == ["quicklinks", "exposure", "changes", "categories"]
+    page.click("#ovCustomize")
+    page.click("#layoutReset")
+    expect(page.locator('#overview [data-ovcard="addresses"]')).to_have_count(1)
+    assert _ov_cards(page) == ["exposure", "quicklinks", "changes", "categories", "addresses"]
+
+
+def test_every_card_hidden_leaves_the_status_and_the_way_back(page, server):
+    server.api("PUT", "/api/settings/overview", {"cards": [
+        {"id": i, "show": False} for i in ("exposure", "quicklinks", "changes", "categories", "addresses")]})
+    page.reload()
+    page.wait_for_selector("#overview .verdict")
+    expect(page.locator("#overview [data-ovcard]")).to_have_count(0)
+    expect(page.locator("#overview .verdict")).to_be_visible()
+    expect(page.locator("#ovCustomize")).to_be_visible()
+
+
+def test_header_shows_freshness_and_drops_the_csv_button(page, server):
+    real = server.api("GET", "/api/discovery/summary")
+    scanned = page.evaluate("new Date(Date.now() - 5 * 60 * 1000).toISOString()")
+    nxt = page.evaluate("new Date(Date.now() + 40 * 60 * 1000 + 20000).toISOString()")
+    health = [{"source": "docker", "label": "Docker", "type": "docker", "configured": True,
+               "pending": False, "ok": True, "last_ok": scanned, "error": None}]
+    page.route("**/api/discovery/summary", lambda r: r.fulfill(
+        status=200, content_type="application/json",
+        body=json.dumps({**real, "health": health, "scanned_at": scanned, "next_scan": nxt})))
+    page.reload()
+    page.wait_for_selector("#overview .verdict")
+    hm = page.evaluate(f"(() => {{ const d = new Date('{scanned}'); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }})()")
+    expect(page.locator("#freshness")).to_have_text(f"Scanned {hm} · next in 40 min")
+
+    # No scheduled scan: only the "Scanned" part.
+    page.evaluate("SRC_HEALTH.next_scan = null; paintFreshness()")
+    expect(page.locator("#freshness")).to_have_text(f"Scanned {hm}")
+
+    expect(page.locator('header a[href="/api/export.csv"]')).to_have_count(0)
+    expect(page.locator('#refreshBtn')).to_have_attribute("aria-label", "Rescan all sources")
+    expect(page.get_by_label("Search the inventory")).to_have_attribute(
+        "placeholder", re.compile(r"^Search name, IP, port, tag….*(Ctrl\+K|⌘K)$"))
+    # The page name is still there for screen readers, just not on screen.
+    expect(page.locator("#ptName")).to_have_text("Overview")
+    box = page.locator(".pagetitle").bounding_box()
+    assert box["width"] <= 1 and box["height"] <= 1
+
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375
+    page.click("#ovCustomize")
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375

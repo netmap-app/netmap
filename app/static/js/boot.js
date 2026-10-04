@@ -53,7 +53,13 @@ async function recheckAll() {
   }
 }
 $("#refreshBtn").onclick = recheckAll;
-for (const m of ["editModal", "histModal", "palModal", "cardModal", "portModal", "changelogModal"])
+$("#refreshBtn").setAttribute("aria-label", "Rescan all sources");
+// The shortcut in the placeholder is the one this keyboard has.
+$("#search").placeholder = "Search name, IP, port, tag…   "
+  + (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "⌘K" : "Ctrl+K");
+// "Next in 40 min" counts down without new data arriving.
+setInterval(paintFreshness, 30000);
+for (const m of ["editModal", "histModal", "palModal", "cardModal", "portModal", "changelogModal", "layoutModal"])
   $("#" + m).addEventListener("click", ev => {
     if (ev.target.id !== m) return;
     if (m === "cardModal") closeCard(); else $("#" + m).hidden = true;
@@ -84,8 +90,11 @@ new MutationObserver(muts => {
       if (a && el.contains(a)) a = FOCUS_BEFORE;
       if (a && a !== document.body && !el.contains(a)) MODAL_OPENER.set(el.id, a);
     } else {
-      const back = MODAL_OPENER.get(el.id);
+      let back = MODAL_OPENER.get(el.id);
       MODAL_OPENER.delete(el.id);
+      // The opener may have been re-rendered while the dialog was open (the
+      // Overview redraws as its layout changes); its replacement has its id.
+      if (back && !document.contains(back) && back.id) back = document.getElementById(back.id);
       const lost = !document.activeElement || document.activeElement === document.body
         || el.contains(document.activeElement);
       if (back && document.contains(back) && lost) back.focus({ preventScroll: true });
@@ -102,6 +111,7 @@ document.addEventListener("keydown", ev => {
     palClose(); closeEdit(); $("#histModal").hidden = true;
     closeCard();
     $("#portModal").hidden = true; $("#changelogModal").hidden = true;
+    $("#layoutModal").hidden = true;
   }
   if (ev.key === "/" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) {
     ev.preventDefault(); $("#search").focus();
@@ -278,7 +288,8 @@ setInterval(() => {
   checkVersion();
   if ($("#editModal").hidden && $("#histModal").hidden &&
       $("#palModal").hidden && $("#cardModal").hidden &&
-      $("#portModal").hidden && $("#changelogModal").hidden) load({ quiet: true }).catch(() => {});
+      $("#portModal").hidden && $("#changelogModal").hidden &&
+      $("#layoutModal").hidden) load({ quiet: true }).catch(() => {});
 }, 60000);
 // Coming back to the tab is the moment stale data is most likely and most
 // noticed, so refresh then rather than waiting out the interval.

@@ -333,7 +333,13 @@ where *not verified* lists the entries and offers **Mark all verified**; a
 **Quick links** row of pinned services, an
 inventory-by-category breakdown, and the six most recent changes. The tiles and
 the breakdown always describe the whole inventory, never the current filter.
-Clicking a category jumps to Inventory filtered to it.
+Clicking a category jumps to Inventory filtered to it. **Customize overview**
+at the bottom of the page shows, hides and reorders the cards below the status;
+the layout is stored on the server, one for the instance. The status and
+**Needs you** are always shown, first.
+
+The header says when the sources were last scanned and when the next automatic
+scan is due ("Scanned 12:15 · next in 40 min").
 
 **Inventory** is the editable table (cards on a phone), grouped by category with
 a per-group health summary in each heading.

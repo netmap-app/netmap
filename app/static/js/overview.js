@@ -218,6 +218,8 @@ async function renderOverview(all) {
     } catch { /* no reservation label, everything else still true */ }
   }
 
+  if (!OV_LAYOUT) await loadOvLayout();
+
   const pinned = all.filter(e => e.pinned);
   const c = OV.counts;
   const ok = OV.level === "ok";
@@ -239,7 +241,48 @@ async function renderOverview(all) {
   wireOverview(box, all);
 }
 
+/* The cards below the status strip, by id. Which ones show, and in what
+   order, is the layout in Settings (one for the whole instance, see
+   overview.py); the status strip above them is not in it and always shows. */
+const OV_CARDS = {
+  exposure: () => `
+    <div class="ovsec wide2" data-ovcard="exposure">
+      <div class="ovhead"><h2>Reachable from outside</h2>
+        <span class="hint" data-tip>What the edge actually says - the firewall, proxy and
+          tunnel sources, not the inventory.</span></div>
+      ${exposureHtml(OV.exposure)}
+    </div>`,
+  quicklinks: (all, pinned) => `
+    <div class="ovsec wide2" data-ovcard="quicklinks">
+      <div class="ovhead"><h2>Quick links</h2><span class="hint" data-tip>Pinned services.</span></div>
+      ${pinned.length ? `<div class="qgrid">${pinned.map(qlink).join("")}</div>`
+      : `<div class="empty-hint">Nothing pinned yet - open any entry and tick
+           <strong>Pin to Quick links</strong> to put it here.</div>`}
+    </div>`,
+  changes: () => `
+    <div class="ovsec" data-ovcard="changes">
+      <div class="ovhead"><h2>Recent changes</h2><span class="more" id="ovHist">View all</span></div>
+      <div class="card2"><div class="feed" id="ovFeed"><div class="empty-hint">Loading…</div></div></div>
+    </div>`,
+  categories: (all) => `
+    <div class="ovsec" data-ovcard="categories">
+      <div class="ovhead"><h2>Inventory by category</h2>
+        <span class="hint">${all.length} tracked</span></div>
+      <div class="card2">${catCardHtml(all)}</div>
+    </div>`,
+  addresses: (all) => `
+    <div class="ovsec wide2" data-ovcard="addresses">
+      <div class="ovhead"><h2>Address space</h2>
+        <span class="hint" data-tip>Every /24 in the inventory.</span></div>
+      <div class="card2">${addrCardHtml(all)}</div>
+    </div>`,
+};
+// Until the saved layout arrives (or if it cannot), every card in this order.
+let OV_LAYOUT = null;
+const ovLayout = () => OV_LAYOUT || Object.keys(OV_CARDS).map(id => ({ id, show: true }));
+
 function overviewHtml(all, pinned, c, ok) {
+  const cards = ovLayout().filter(x => x.show && OV_CARDS[x.id]);
   return `
     ${verdictHtml(all, c)}
 
@@ -252,40 +295,76 @@ function overviewHtml(all, pinned, c, ok) {
 
     ${dismissedHtml(OV.dismissed)}
 
-    <div class="ovsec">
-      <div class="ovhead"><h2>Reachable from outside</h2>
-        <span class="hint" data-tip>What the edge actually says - the firewall, proxy and
-          tunnel sources, not the inventory.</span></div>
-      ${exposureHtml(OV.exposure)}
-    </div>
+    ${cards.length ? `<div class="ovgrid">${cards.map(x => OV_CARDS[x.id](all, pinned)).join("")}</div>` : ""}
 
-    <div class="ovgrid">
-      <div class="ovsec wide2">
-        <div class="ovhead"><h2>Quick links</h2><span class="hint" data-tip>Pinned services.</span></div>
-        ${pinned.length ? `<div class="qgrid">${pinned.map(qlink).join("")}</div>`
-        : `<div class="empty-hint">Nothing pinned yet - open any entry and tick
-             <strong>Pin to Quick links</strong> to put it here.</div>`}
-      </div>
-
-      <div class="ovsec">
-        <div class="ovhead"><h2>Recent changes</h2><span class="more" id="ovHist">View all</span></div>
-        <div class="card2"><div class="feed" id="ovFeed"><div class="empty-hint">Loading…</div></div></div>
-      </div>
-
-      <div class="ovsec">
-        <div class="ovhead"><h2>Inventory by category</h2>
-          <span class="hint">${all.length} tracked</span></div>
-        <div class="card2">${catCardHtml(all)}</div>
-      </div>
-
-      <div class="ovsec wide2">
-        <div class="ovhead"><h2>Address space</h2>
-          <span class="hint" data-tip>Every /24 in the inventory.</span></div>
-        <div class="card2">${addrCardHtml(all)}</div>
-      </div>
-    </div>`;
-
+    <div class="ovfoot"><button class="btn" id="ovCustomize" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+      Customize overview</button></div>`;
 }
+
+/* ---- Customize: show, hide and reorder the cards ---- */
+async function loadOvLayout() {
+  try { OV_LAYOUT = (await api("/api/settings/overview")).cards; }
+  catch { /* the default order stands */ }
+}
+
+function layoutListHtml() {
+  const rows = ovLayout();
+  const label = (x) => x.label || x.id;
+  const arrow = (d) => `<svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="${
+    d === "up" ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"}"/></svg>`;
+  return `
+    <li class="lrow fixed"><span class="lchk"><input type="checkbox" checked disabled
+      id="lyStatus"><label for="lyStatus">Status and Needs you</label></span>
+      <span class="hint">always shown, always first</span></li>
+    ${rows.map((x, i) => `
+    <li class="lrow" data-lid="${esc(x.id)}">
+      <span class="lchk"><input type="checkbox" id="ly-${esc(x.id)}" data-lshow="${esc(x.id)}"${
+        x.show ? " checked" : ""}><label for="ly-${esc(x.id)}">${esc(label(x))}</label></span>
+      <span class="lmove">
+        <button class="btn icon-only" data-lmove="-1" data-lid="${esc(x.id)}"${i ? "" : " disabled"}
+          aria-label="Move ${esc(label(x))} up">${arrow("up")}</button>
+        <button class="btn icon-only" data-lmove="1" data-lid="${esc(x.id)}"${i < rows.length - 1 ? "" : " disabled"}
+          aria-label="Move ${esc(label(x))} down">${arrow("down")}</button>
+      </span>
+    </li>`).join("")}`;
+}
+
+async function saveOvLayout(body, focusSel) {
+  try {
+    OV_LAYOUT = (await api("/api/settings/overview", {
+      method: "PUT", headers: { "content-type": "application/json" },
+      body: JSON.stringify(body) })).cards;
+  } catch { /* api() said why; the list redraws from what is stored */ }
+  $("#layoutList").innerHTML = layoutListHtml();
+  const f = focusSel && $(focusSel);
+  if (f && !f.disabled) f.focus();
+  else if (f) $("#layoutList").querySelector(`[data-lid="${CSS.escape(f.dataset.lid)}"] [data-lmove]:not([disabled])`)?.focus();
+  renderOverview(ALL.length ? ALL : ENTRIES);
+}
+
+async function openLayout() {
+  await loadOvLayout();
+  $("#layoutList").innerHTML = layoutListHtml();
+  $("#layoutModal").hidden = false;
+  $("#layoutList").querySelector("[data-lshow]")?.focus();
+}
+
+$("#layoutList").addEventListener("change", ev => {
+  const cb = ev.target.closest("[data-lshow]"); if (!cb) return;
+  const cards = ovLayout().map(x => ({ id: x.id, show: x.id === cb.dataset.lshow ? cb.checked : x.show }));
+  saveOvLayout({ cards }, `[data-lshow="${CSS.escape(cb.dataset.lshow)}"]`);
+});
+$("#layoutList").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-lmove]"); if (!b) return;
+  const cards = ovLayout().map(x => ({ id: x.id, show: x.show }));
+  const i = cards.findIndex(x => x.id === b.dataset.lid), j = i + Number(b.dataset.lmove);
+  if (i < 0 || j < 0 || j >= cards.length) return;
+  [cards[i], cards[j]] = [cards[j], cards[i]];
+  saveOvLayout({ cards }, `[data-lid="${CSS.escape(b.dataset.lid)}"][data-lmove="${b.dataset.lmove}"]`);
+});
+$("#layoutReset").onclick = () => saveOvLayout({ reset: true });
+$("#layoutClose").onclick = () => ($("#layoutModal").hidden = true);
 
 function wireOverview(box, all) {
   // When the house was last looked at is a fact about the whole app, not
@@ -335,6 +414,9 @@ function wireOverview(box, all) {
   });
   const sd = $("#ovShowDis");
   if (sd) sd.onclick = () => { OVSHOW = !OVSHOW; renderOverview(ALL.length ? ALL : ENTRIES); };
+
+  const cz = $("#ovCustomize");
+  if (cz) cz.onclick = openLayout;
 
   box.querySelectorAll("[data-goto]").forEach(el => {
     el.onclick = (ev) => {

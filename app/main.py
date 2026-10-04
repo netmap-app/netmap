@@ -28,7 +28,7 @@ from .sources import dynamic
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
 CHANGELOG_PATH = os.path.join(os.path.dirname(HERE), "CHANGELOG.md")
-VERSION = "2.1.1"
+VERSION = "2.2.0"
 STARTED = time.time()
 notify.VERSION = VERSION
 
@@ -1226,6 +1226,23 @@ def api_scan_schedule_set(request: Request, payload: dict = Body(...)):
         except ValueError as exc:
             raise HTTPException(400, str(exc))
     return discovery.schedule()
+
+
+@app.get("/api/settings/overview")
+def api_overview_layout():
+    """The Overview's cards in order, each with whether it is shown."""
+    return {"cards": overview_mod.layout()}
+
+
+@app.put("/api/settings/overview")
+def api_overview_layout_set(request: Request, payload: dict = Body(...)):
+    """`cards`: [{id, show}] in display order, or `reset`: true for the default."""
+    try:
+        if payload.get("reset"):
+            return {"cards": overview_mod.reset_layout(actor(request))}
+        return {"cards": overview_mod.set_layout(payload.get("cards"), actor(request))}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
 
 
 @app.get("/api/settings/timezone")
