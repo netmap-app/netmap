@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.6.2 - 2026-10-04
+
+- The Address space legend shows reserved addresses the way the grid draws them: "reserved, in use" (a framed filled cell) and "reserved, unused" (an outline), after the four fills (used, shared, seen, free).
+
 ## 2.6.1 - 2026-10-04
 
 - Address space starts at .1 and ends at .254: the network and broadcast addresses (.0, .255) are no longer drawn.

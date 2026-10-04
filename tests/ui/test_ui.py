@@ -1588,7 +1588,8 @@ def test_address_space_draws_every_address_and_opens_one(page, server):
     page.evaluate("SEEN = {}; RESV = new Set()")
     page.reload()
     card = page.locator('#overview [data-ovcard="addresses"]')
-    expect(card.locator(".alegend span")).to_have_text(["used", "shared", "seen", "reserved", "free"])
+    expect(card.locator(".alegend span:not(.asep)")).to_have_text(
+        ["used", "shared", "seen", "free", "reserved, in use", "reserved, unused"])
     block = card.locator(".ablock").first
     expect(block.locator(".ahead")).to_contain_text("10.0.0.0/24")
     expect(block.locator(".azone")).to_have_text("LAN")

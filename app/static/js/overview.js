@@ -583,7 +583,10 @@ let RESV = new Set();
    reservation) or free. Every cell names its address and state on hover;
    the ones with entries are buttons that open Inventory on exactly that
    address. .0 and .255 (network, broadcast) are never assignable, so not drawn. */
-const ADDR_STATES = [["used", "used"], ["dup", "shared"], ["seen", "seen"], ["resv", "reserved"], ["free", "free"]];
+// Fill says what holds an address; a frame says it is reserved, so the
+// legend shows both reserved forms rather than one that matches few cells.
+const ADDR_STATES = [["used", "used"], ["dup", "shared"], ["seen", "seen"], ["free", "free"]];
+const ADDR_RESV = [["used resv", "reserved, in use"], ["resv", "reserved, unused"]];
 
 function addrCell(base, i, here) {
   const ip = base + i;
@@ -603,8 +606,9 @@ function addrCell(base, i, here) {
 function addrCardHtml(all) {
   const nets = subnets(all);
   if (!nets.length) return `<div class="empty-hint">No addresses recorded yet.</div>`;
-  const legend = `<div class="alegend">${ADDR_STATES.map(([k, label]) =>
-    `<span><i class="acell ${k}" aria-hidden="true"></i>${label}</span>`).join("")}</div>`;
+  const sw = ([k, label]) => `<span><i class="acell ${k}" aria-hidden="true"></i>${label}</span>`;
+  const legend = `<div class="alegend">${ADDR_STATES.map(sw).join("")}<span class="asep" aria-hidden="true"></span>${
+    ADDR_RESV.map(sw).join("")}</div>`;
   return legend + `<div class="ablocks">${nets.map(n => {
     const free = Math.max(0, n.free - n.seen);
     const base = n.net.replace(/0\/24$/, "");
