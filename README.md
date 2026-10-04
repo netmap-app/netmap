@@ -349,7 +349,7 @@ plus up to two critical entries with a URL worth pinning, one click each), and
 changes by one actor to one entry (or to entries on one address) within two
 hours folded into one row that opens, with All / Discovered / Edits / State
 filters and the six newest groups. **Address space** draws every /24 in the
-inventory as a 32 x 8 grid, one cell per address, coloured used, shared (two or
+inventory as a grid of its usable addresses (.1 to .254), 32 to a row, coloured used, shared (two or
 more entries), seen (a source sees something the inventory does not have),
 reserved (a DHCP reservation, outlined) or free; each cell names its address
 and state on hover, and one with entries opens Inventory filtered to exactly

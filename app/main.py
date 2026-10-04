@@ -28,7 +28,7 @@ from .sources import dynamic
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
 CHANGELOG_PATH = os.path.join(os.path.dirname(HERE), "CHANGELOG.md")
-VERSION = "2.6.0"
+VERSION = "2.6.1"
 STARTED = time.time()
 notify.VERSION = VERSION
 

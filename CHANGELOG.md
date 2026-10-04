@@ -4,6 +4,11 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.6.1 - 2026-10-04
+
+- Address space starts at .1 and ends at .254: the network and broadcast addresses (.0, .255) are no longer drawn.
+- A reserved address that is also used, shared or seen is drawn as a framed cell (a thin ring in the background colour inside the fill) instead of with a light ring that looked like a glow in dark mode.
+
 ## 2.6.0 - 2026-10-04
 
 - Address space on the Overview is a 32 x 8 grid per /24, one cell per address: used, shared, seen (by a source, not in the inventory), reserved (outlined) or free, with a legend, the subnet's zone and its summary. Every cell names its address and state on hover.

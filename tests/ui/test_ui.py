@@ -1593,16 +1593,22 @@ def test_address_space_draws_every_address_and_opens_one(page, server):
     expect(block.locator(".ahead")).to_contain_text("10.0.0.0/24")
     expect(block.locator(".azone")).to_have_text("LAN")
     cells = block.locator(".agrid > *")
-    expect(cells).to_have_count(256)
-    cls = lambda i: cells.nth(i).get_attribute("class")      # noqa: E731
-    assert "ac0" in cls(0) and "ac0" in cls(255)
+    expect(cells).to_have_count(254)                                 # .1 to .254
+    cell = lambda last: cells.nth(last - 1)                          # noqa: E731
+    cls = lambda last: cell(last).get_attribute("class")             # noqa: E731
+    expect(cell(1)).to_have_attribute("title", re.compile(r"^10\.0\.0\.1 · "))
+    expect(cell(254)).to_have_attribute("title", "10.0.0.254 · free")
     assert "used" in cls(1) and "dup" in cls(5) and "seen" in cls(7)
     assert "used" in cls(9) and "resv" in cls(9) and "resv" in cls(20) and "free" in cls(2)
-    expect(cells.nth(5)).to_have_attribute("title", "10.0.0.5 · 2 entries: NAS, Plex")
-    expect(cells.nth(20)).to_have_attribute("title", "10.0.0.20 · reserved, nothing recorded")
+    expect(cell(5)).to_have_attribute("title", "10.0.0.5 · 2 entries: NAS, Plex")
+    expect(cell(20)).to_have_attribute("title", "10.0.0.20 · reserved, nothing recorded")
+    # A reserved address that is also used is ringed in the background colour, not a light glow.
+    ring = cell(9).evaluate("el => getComputedStyle(el).boxShadow")
+    bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
+    assert bg in ring, (ring, bg)
     expect(block.locator(".agrid button")).to_have_count(4)          # only addresses with entries
     # A cell opens Inventory on exactly that address, not .15 as well.
-    cells.nth(1).click()
+    cell(1).click()
     expect(page.locator("#list")).to_be_visible()
     expect(page.locator("#chips")).to_contain_text("IP: 10.0.0.1 ✕")
     expect(page.locator("#count")).to_contain_text("1 of 5 entries")

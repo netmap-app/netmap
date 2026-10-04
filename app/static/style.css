@@ -1379,15 +1379,17 @@ button.hwcard:hover{border-color:var(--accent)}
   border:1px solid var(--line);border-radius:999px;padding:0 7px}
 .ahead .ac{font-size:12px}
 .agrid{display:grid;grid-template-columns:repeat(32,minmax(0,1fr));gap:2px}
-.acell,.ac0{display:block;aspect-ratio:1;border-radius:2px;border:0;padding:0;margin:0;
+.acell{display:block;aspect-ratio:1;border-radius:2px;border:0;padding:0;margin:0;
   background:var(--panel2);font:inherit}
 .acell.free{background:var(--panel2)}
-.ac0{background:transparent;border:1px dashed var(--line)}
-.acell.used{background:var(--accent)}
-.acell.dup{background:var(--down)}
-.acell.seen{background:var(--warn)}
-.acell.resv{box-shadow:inset 0 0 0 1.5px var(--accent)}
-.acell.used.resv{box-shadow:inset 0 0 0 1.5px var(--fg)}
+.acell.used{--f:var(--accent);background:var(--f)}
+.acell.dup{--f:var(--down);background:var(--f)}
+.acell.seen{--f:var(--warn);background:var(--f)}
+/* Reserved: an outline. On a filled cell, a frame - fill, a thin ring in the
+   background colour, fill - so it reads as marked, not as a smaller cell; a
+   light ring there looked like a glow in dark mode. */
+.acell.resv{box-shadow:inset 0 0 0 2px var(--accent)}
+.acell.resv:is(.used,.dup,.seen){box-shadow:inset 0 0 0 2px var(--f),inset 0 0 0 4px var(--bg)}
 button.acell{cursor:pointer}
 button.acell:hover,button.acell:focus-visible{outline:2px solid var(--fg);outline-offset:1px}
 .ovcard .acell.free,.ovcard .acell:not(.used):not(.dup):not(.seen){background:var(--bg)}

@@ -577,19 +577,17 @@ function catCardHtml(all) {
    handing it to something else. OPNsense says so in its `dhcp` sightings. */
 let RESV = new Set();
 
-/* One block per /24: its 256 addresses as a 32x8 grid, each cell coloured by
+/* One block per /24: its 254 usable addresses, .1 to .254, 32 to a row, each cell coloured by
    what holds it - used, shared (two or more entries), seen (a source sees
    something there that the inventory does not have), reserved (a DHCP
    reservation) or free. Every cell names its address and state on hover;
    the ones with entries are buttons that open Inventory on exactly that
-   address. .0 and .255 are the network and broadcast addresses. */
+   address. .0 and .255 (network, broadcast) are never assignable, so not drawn. */
 const ADDR_STATES = [["used", "used"], ["dup", "shared"], ["seen", "seen"], ["resv", "reserved"], ["free", "free"]];
 
 function addrCell(base, i, here) {
   const ip = base + i;
   const resv = RESV.has(ip);
-  if (i === 0 || i === 255)
-    return `<i class="ac0" title="${esc(`${ip} · ${i ? "broadcast" : "network"} address`)}"></i>`;
   if (here.length) {
     const st = here.length > 1 ? "dup" : "used";
     const names = here.slice(0, 3).map(e => e.name).join(", ") + (here.length > 3 ? ` +${here.length - 3}` : "");
@@ -617,7 +615,7 @@ function addrCardHtml(all) {
     for (const e of Object.values(n.addrs).flat()) if (e.zone) zc[e.zone] = (zc[e.zone] || 0) + 1;
     const zone = Object.entries(zc).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
     const cells = [];
-    for (let i = 0; i < 256; i++) cells.push(addrCell(base, i, n.addrs[i] || []));
+    for (let i = 1; i <= 254; i++) cells.push(addrCell(base, i, n.addrs[i] || []));
     return `
     <div class="ablock">
       <div class="ahead"><b class="mono">${esc(n.net)}</b>${zone ? `<span class="azone">${esc(zone)}</span>` : ""}
