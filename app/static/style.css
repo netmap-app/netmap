@@ -1333,3 +1333,33 @@ button.hwcard:hover{border-color:var(--accent)}
 .hwcard .warnc,.hwgear .warnc{color:var(--warn)}
 .hwitems{display:flex;flex-wrap:wrap;gap:4px 6px}
 .hwitems .lchip{display:inline-flex;align-items:center;gap:5px}
+
+/* ---------- quick launch ---------- */
+.qlgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:640px){ .qlgrid{grid-template-columns:minmax(0,1fr)} }
+.qlrow{display:flex;align-items:center;gap:11px;min-width:0;padding:9px 12px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  color:inherit;text-decoration:none;font:inherit;text-align:left;cursor:pointer}
+.qlrow:hover{border-color:var(--accent);text-decoration:none}
+.qlrow .cg{width:32px;height:32px;border-radius:9px}
+.qlrow .cg .svc{width:22px;height:22px}
+.qlrow .t{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.qlrow .n{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qlrow .a{font-size:12px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qlsug{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:10px;font-size:12.5px}
+.qlsugi{display:inline-flex;align-items:center;gap:6px}
+
+/* ---------- changes ---------- */
+.chfilters{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.chfilters .chf{font-size:12px;padding:3px 10px;cursor:pointer}
+.chrow{display:flex;gap:12px;align-items:baseline;padding:7px 2px;width:100%;background:none;
+  border:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.chrow:hover .chm{color:var(--accent)}
+.cht{flex:none;font-size:12px;color:var(--faint);width:40px}
+.chs{display:flex;flex-direction:column;gap:2px;min-width:0}
+.chm{font-size:13px;overflow-wrap:anywhere}
+.chsub{font-size:11.5px;color:var(--faint);overflow-wrap:anywhere}
+.chmerged .chm::after{content:" ▸";color:var(--faint)}
+.chmerged[aria-expanded="true"] .chm::after{content:" ▾"}
+.chsubs{margin-left:52px;border-left:2px solid var(--line);padding-left:10px}
+.chall{margin-top:8px}

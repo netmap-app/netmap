@@ -342,8 +342,13 @@ firewall, DNS, proxy, edge, read from where each source's URL points - share
 the host, when three or more critical entries depend on it, or when it is
 tagged `backup:none`; plus the network gear, up out of monitored), an
 inventory-by-category breakdown with each category's monitored share (solid)
-inside its total (faint), a **Quick links** row of pinned services, and the six
-most recent changes. The numbers and
+inside its total (faint), **Quick launch** (pinned services by name, each a
+link with its URL's host name - ip:port when it has no URL - and its status,
+plus up to two critical entries with a URL worth pinning, one click each), and
+**Changes**: the change log and status changes grouped by day, a run of
+changes by one actor to one entry (or to entries on one address) within two
+hours folded into one row that opens, with All / Discovered / Edits / State
+filters and the six newest groups. The numbers and
 the breakdown always describe the whole inventory, never the current filter.
 Clicking a category jumps to Inventory filtered to it. **Customize overview**
 at the bottom of the page shows, hides and reorders the cards below the status;

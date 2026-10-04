@@ -249,16 +249,23 @@ const OV_CARDS = {
       ${exposureHtml(OV.exposure)}
     </div>`,
   quicklinks: (all, pinned) => `
-    <div class="ovsec wide2" data-ovcard="quicklinks">
-      <div class="ovhead"><h2>Quick links</h2><span class="hint" data-tip>Pinned services.</span></div>
-      ${pinned.length ? `<div class="qgrid">${pinned.map(qlink).join("")}</div>`
+    <div class="ovsec" data-ovcard="quicklinks">
+      <div class="ovhead"><h2>Quick launch</h2><span class="hint" data-tip>Pinned services,
+        by name. Pin any entry from its card.</span></div>
+      ${pinned.length ? `<div class="qlgrid">${[...pinned]
+          .sort((a, b) => a.name.localeCompare(b.name)).map(qlRow).join("")}</div>`
       : `<div class="empty-hint">Nothing pinned yet - open any entry and tick
            <strong>Pin to Quick links</strong> to put it here.</div>`}
+      ${qlSuggest(all)}
     </div>`,
   changes: () => `
     <div class="ovsec" data-ovcard="changes">
-      <div class="ovhead"><h2>Recent changes</h2><span class="more" id="ovHist">View all</span></div>
-      <div class="card2"><div class="feed" id="ovFeed"><div class="empty-hint">Loading…</div></div></div>
+      <div class="ovhead"><h2>Changes</h2>
+        <span class="chfilters" role="group" aria-label="Show">${CHG_FILTERS.map(([k, label]) =>
+          `<button class="chip chf${CHG_FILTER === k ? " on" : ""}" data-chf="${k}" aria-pressed="${
+            CHG_FILTER === k}">${label}</button>`).join("")}</span></div>
+      <div class="card2"><div class="feed" id="ovFeed"><div class="empty-hint">Loading…</div></div>
+        <button class="linkbtn chall" id="ovHist">All changes</button></div>
     </div>`,
   hardware: () => `
     <div class="ovsec" data-ovcard="hardware">
@@ -452,19 +459,39 @@ function wireOverview(box, all) {
   if (hw) api("/api/overview/hardware").then(h => { hw.innerHTML = hwHtml(h); })
     .catch(() => { hw.innerHTML = `<div class="empty-hint">The hardware view could not load.</div>`; });
 
-  api("/api/audit?limit=6").then(rows => {
+  const feed = $("#ovFeed");
+  if (feed) loadChanges().then(ok => {
     const f = $("#ovFeed");
-    if (!f) return;
-    f.innerHTML = rows.length ? rows.map(h => `
-      <div class="feeditem ${h.action === "delete" ? "del" : ""}"${
-        h.action !== "delete" && h.entry_id ? ` data-card="${h.entry_id}"` : ""}>
-        <span class="fd"></span>
-        <div class="ft">
-          <span class="fa"><b>${esc(h.action)}</b> ${esc(h.name || "")}</span>
-          <span class="fw">${esc(h.actor)} · ${esc(when(h.ts))}</span>
-        </div>
-      </div>`).join("") : `<div class="empty-hint">No changes recorded yet.</div>`;
-  }).catch(() => {});
+    if (f) f.innerHTML = ok ? chgHtml() : `<div class="empty-hint">The change log could not load.</div>`;
+  });
+  box.querySelectorAll("[data-chf]").forEach(b => {
+    b.onclick = () => {
+      CHG_FILTER = b.dataset.chf; CHG_OPEN.clear();
+      box.querySelectorAll("[data-chf]").forEach(x => {
+        x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); });
+      $("#ovFeed").innerHTML = chgHtml();
+    };
+  });
+  const fd = $("#ovFeed");
+  if (fd) fd.addEventListener("click", ev => {
+    const m = ev.target.closest("[data-chopen]"); if (!m) return;
+    const i = Number(m.dataset.chopen);
+    CHG_OPEN.has(i) ? CHG_OPEN.delete(i) : CHG_OPEN.add(i);
+    fd.innerHTML = chgHtml();
+    fd.querySelector(`[data-chopen="${i}"]`)?.focus();
+  });
+  box.querySelectorAll("[data-pin]").forEach(b => {
+    b.onclick = async (ev) => {
+      ev.stopPropagation();
+      try {
+        await api("/api/entries/" + b.dataset.pin, {
+          method: "PATCH", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ pinned: true }) });
+      } catch { return; }
+      toast("Pinned");
+      await load();
+    };
+  });
 }
 
 /* What the inventory is made of. The bar is proportional to the largest
@@ -575,20 +602,174 @@ function addrCardHtml(all) {
   }).join("")}</div>`;
 }
 
-function qlink(e) {
-  const href = linkFor(e);
+/* ---- Quick launch ---- */
+// The address a person recognises: the URL's host name, else ip:port.
+function qlAddr(e) {
   const port = (e.ports || "").match(/\b\d{1,5}\b/);
-  const addr = [e.ip, port ? port[0] : ""].filter(Boolean).join(":");
-  // Status is a short rule standing beside the name rather than a dot or a
-  // full-height cell border: findable in peripheral vision and in greyscale,
-  // and set in from the edge so it reads as part of the entry rather than as
-  // part of the grid.
+  const ipport = [e.ip, port ? port[0] : ""].filter(Boolean).join(":");
+  let host = "";
+  try { host = e.url ? new URL(e.url).host : ""; } catch { /* not a URL */ }
+  return { main: host || ipport, ipport };
+}
+
+function qlRow(e) {
+  const href = linkFor(e);
+  const a = qlAddr(e);
   const st = e.status || {};
   const tone = st.up === true ? "up" : st.up === false ? "down" : "na";
-  const why = statusWhy(st);
-  return `<a class="qlink" title="${esc(why)}" ${href ? `href="${esc(href)}" target="_blank" rel="noopener"` : ""}>
-    <i class="qbar ${tone}"></i>
-    ${entGlyph(e)}
-    <span class="t"><span class="n">${esc(e.name)}</span><span class="a mono">${esc(addr || "-")}</span></span>
-  </a>`;
+  const inner = `${entGlyph(e)}
+    <span class="t"><span class="n">${esc(e.name)}</span><span class="a mono">${esc(a.main || "-")}</span></span>
+    <i class="dot ${tone}" title="${esc(statusWhy(st))}"></i>`;
+  const tip = esc([a.ipport, statusWhy(st)].filter(Boolean).join(" · "));
+  return href
+    ? `<a class="qlrow" href="${esc(href)}" target="_blank" rel="noopener" title="${tip}">${inner}</a>`
+    : `<button class="qlrow" data-card="${e.id}" title="${tip}">${inner}</button>`;
 }
+
+// Critical, has a URL, not pinned yet: worth one click. At most two.
+function qlSuggest(all) {
+  const s = all.filter(e => e.criticality === "critical" && e.url && !e.pinned)
+    .sort((a, b) => a.name.localeCompare(b.name)).slice(0, 2);
+  if (!s.length) return "";
+  return `<div class="qlsug"><span class="hint">Suggested to pin:</span>${s.map(e => `
+    <span class="qlsugi">${esc(e.name)}<button class="btn sm" data-pin="${e.id}"
+      aria-label="Pin ${esc(e.name)}">Pin</button></span>`).join("")}</div>`;
+}
+
+/* ---- Changes ---- */
+// The change log and the status transitions as one readable feed: grouped by
+// day, and a run of changes by one actor to one entry (or to entries on one
+// address) within two hours folded into a row that opens.
+const CHG_FILTERS = [["all", "All"], ["discovered", "Discovered"], ["edit", "Edits"], ["state", "State"]];
+let CHG_FILTER = "all";
+let CHG_EVENTS = null, CHG_NOTE = "";
+const CHG_OPEN = new Set();
+const CHG_GAP = 2 * 3600 * 1000, CHG_MAX = 6;
+const chgDate = (ts) => new Date(String(ts).endsWith("Z") ? ts : ts + "Z");
+const chgTime = (d) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+function chgKind(ev) {
+  if (ev.obs || ev.actor === "system" || /^(source|notify)-/.test(ev.action)) return "state";
+  if (ev.action === "create" && ev.detail && typeof ev.detail === "object"
+      && (ev.detail.verified === false || ev.detail.verified === 0
+          || /^Discovered\b/.test(ev.detail.notes || ""))) return "discovered";
+  return "edit";
+}
+
+function chgSummary(ev) {
+  const n = ev.name || "";
+  switch (ev.action) {
+    case "create": return (ev.kind === "discovered" ? "Discovered " : "Added ") + n;
+    case "update": {
+      const d = ev.detail && typeof ev.detail === "object" ? ev.detail : {};
+      if (d.name) return `Renamed ${d.name[0] || "?"} to ${d.name[1] || "?"}`;
+      return `Edited ${n}`;
+    }
+    case "delete": return `Deleted ${n}`;
+    case "link": return `Linked ${n}`;
+    case "unlink": return `Unlinked ${n}`;
+    case "ignore": return `Ignored ${n}`;
+    case "unignore": return `Brought back ${n}`;
+    case "setting": return `Setting: ${n}`;
+    case "up": return `${n} answers again`;
+    case "down": return `${n} stopped answering`;
+    default: return `${ev.action} ${n}`.trim();
+  }
+}
+
+function chgDetail(ev) {
+  if (ev.obs) return ev.detail || "";
+  const d = ev.detail;
+  if (ev.action === "update" && d && typeof d === "object")
+    return Object.keys(d).join(", ");
+  if (ev.action === "create" && d && typeof d === "object") return d.ip || "";
+  return "";
+}
+
+function chgGroups(events) {
+  const ipOf = {};
+  for (const e of (ALL.length ? ALL : ENTRIES)) if (e.ip) ipOf[e.id] = e.ip.trim();
+  const same = (a, b) => a.entry_id && b.entry_id && (a.entry_id === b.entry_id
+    || (ipOf[a.entry_id] && ipOf[a.entry_id] === ipOf[b.entry_id]));
+  // Consecutive for that actor: another actor's event in between (a status
+  // flap while someone edits) does not split the run.
+  const groups = [];
+  for (const ev of events) {                         // newest first
+    const g = groups.find(x => {
+      const last = x.items[x.items.length - 1];
+      return last.actor === ev.actor && same(last, ev)
+        && last.d.toDateString() === ev.d.toDateString() && last.d - ev.d <= CHG_GAP;
+    });
+    if (g) g.items.push(ev); else groups.push({ items: [ev] });
+  }
+  return groups;
+}
+
+function dayHead(d) {
+  const today = new Date(), y = new Date(Date.now() - 86400000);
+  const dd = d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === y.toDateString()) return `Yesterday · ${dd}`;
+  return dd;
+}
+
+function chgGroupHtml(g, i) {
+  const first = g.items[0], n = g.items.length;      // first = newest
+  if (n === 1) {
+    const det = chgDetail(first);
+    return `<div class="chrow"${first.entry_id ? ` data-card="${first.entry_id}"` : ""}>
+      <span class="cht mono">${chgTime(first.d)}</span>
+      <span class="chs"><span class="chm">${esc(chgSummary(first))}</span>
+        <span class="chsub">${esc(first.actor)}${det ? " · " + esc(det) : ""}</span></span></div>`;
+  }
+  // Oldest to newest reads as a story: "Added X, then renamed to Y".
+  const story = [...g.items].reverse();
+  const head = story.length > 2
+    ? `${chgSummary(story[0])}, then ${chgSummary(story[story.length - 1]).replace(/^./, c => c.toLowerCase())}`
+    : story.map((e, k) => k ? chgSummary(e).replace(/^./, c => c.toLowerCase()) : chgSummary(e)).join(", then ");
+  const open = CHG_OPEN.has(i);
+  return `<div class="chgrp">
+    <button class="chrow chmerged" data-chopen="${i}" aria-expanded="${open}">
+      <span class="cht mono">${chgTime(first.d)}</span>
+      <span class="chs"><span class="chm">${esc(head)}</span>
+        <span class="chsub">${esc(first.actor)} · ${n} changes collapsed · ${chgTime(story[0].d)}-${chgTime(first.d)}</span></span>
+    </button>
+    ${open ? `<div class="chsubs">${g.items.map(e => `
+      <div class="chrow"${e.entry_id ? ` data-card="${e.entry_id}"` : ""}>
+        <span class="cht mono">${chgTime(e.d)}</span>
+        <span class="chs"><span class="chm">${esc(chgSummary(e))}</span>
+          ${chgDetail(e) ? `<span class="chsub">${esc(chgDetail(e))}</span>` : ""}</span></div>`).join("")}</div>` : ""}
+  </div>`;
+}
+
+function chgHtml() {
+  if (!CHG_EVENTS) return `<div class="empty-hint">Loading…</div>`;
+  const evs = CHG_EVENTS.filter(e => CHG_FILTER === "all" || e.kind === CHG_FILTER);
+  if (!evs.length) return `<div class="empty-hint">Nothing ${CHG_FILTER === "all" ? "recorded" : "of this kind"} yet.</div>${
+    CHG_NOTE ? `<div class="hint">${esc(CHG_NOTE)}</div>` : ""}`;
+  const groups = chgGroups(evs).slice(0, CHG_MAX);
+  let day = "";
+  return groups.map((g, i) => {
+    const h = dayHead(g.items[0].d);
+    const head = h === day ? "" : `<div class="dayhead">${esc(h)}</div>`;
+    day = h;
+    return head + chgGroupHtml(g, i);
+  }).join("") + (CHG_NOTE ? `<div class="hint">${esc(CHG_NOTE)}</div>` : "");
+}
+
+async function loadChanges() {
+  const [audit, obs] = await Promise.all([
+    api("/api/audit?limit=200").catch(() => null),
+    api("/api/observations?limit=100").catch(() => null),
+  ]);
+  if (!audit && !obs) { CHG_EVENTS = null; return false; }
+  CHG_NOTE = !audit ? "The change log could not load." : !obs ? "Status changes could not load." : "";
+  const evs = (audit || []).map(h => ({ ...h }))
+    .concat((obs || []).filter(o => o.up !== null).map(o => ({
+      ts: o.ts, actor: "system", action: o.up ? "up" : "down", entry_id: o.entry_id,
+      name: o.name, detail: o.target || "", obs: true })));
+  for (const e of evs) { e.d = chgDate(e.ts); e.kind = chgKind(e); }
+  CHG_EVENTS = evs.filter(e => !isNaN(e.d)).sort((a, b) => b.d - a.d);
+  return true;
+}
+

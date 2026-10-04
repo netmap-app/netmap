@@ -1301,10 +1301,10 @@ def test_overview_cards_can_be_hidden_reordered_and_reset(page, server):
     dlg.get_by_label("Address space", exact=True).uncheck()
     expect(page.locator('#overview [data-ovcard="addresses"]')).to_have_count(0)
     for _ in range(3):
-        dlg.get_by_role("button", name="Move Quick links up").click()
+        dlg.get_by_role("button", name="Move Quick launch up").click()
     expect(page.locator("#overview [data-ovcard]").first).to_have_attribute("data-ovcard", "quicklinks")
     # Focus stays on the control that moved, so the keyboard can keep going.
-    expect(dlg.get_by_role("button", name="Move Quick links down")).to_be_focused()
+    expect(dlg.get_by_role("button", name="Move Quick launch down")).to_be_focused()
     page.keyboard.press("Escape")
     expect(dlg).to_be_hidden()
     expect(page.locator("#ovCustomize")).to_be_focused()
@@ -1473,3 +1473,96 @@ def test_categories_show_the_monitored_share(page, server):
     expect(page.locator('#overview [data-ovcard="categories"] .ovhead')).to_contain_text("solid = monitored")
     rows.first.click()
     expect(page.locator("#list")).to_be_visible()
+
+
+# ---- quick launch & changes --------------------------------------------------------------------
+def test_quick_launch_lists_pins_by_name_with_their_host(page, server):
+    server.api("POST", "/api/entries", {"name": "Zeta", "pinned": True, "url": "https://zeta.example.org/app",
+                                        "ip": "10.0.0.9", "ports": "8443"})
+    server.api("POST", "/api/entries", {"name": "Alpha", "pinned": True, "ip": "10.0.0.5", "ports": "8080"})
+    server.api("POST", "/api/entries", {"name": "Mid", "pinned": True})
+    server.api("POST", "/api/entries", {"name": "Router", "criticality": "critical",
+                                        "url": "https://router.example.org"})
+    page.reload()
+    card = page.locator('#overview [data-ovcard="quicklinks"]')
+    rows = card.locator(".qlrow")
+    expect(rows.locator(".n")).to_have_text(["Alpha", "Mid", "Zeta"])
+    expect(rows.nth(2).locator(".a")).to_have_text("zeta.example.org")
+    expect(rows.nth(2)).to_have_attribute("href", "https://zeta.example.org/app")
+    expect(rows.nth(2)).to_have_attribute("target", "_blank")
+    expect(rows.nth(2)).to_have_attribute("title", re.compile(r"^10\.0\.0\.9:8443"))
+    expect(rows.nth(0).locator(".a")).to_have_text("10.0.0.5:8080")
+    expect(rows.nth(1)).to_have_js_property("tagName", "BUTTON")     # nothing to open: its card
+    # A critical entry with a URL, not pinned: one click pins it.
+    expect(card.locator(".qlsug")).to_contain_text("Router")
+    card.get_by_role("button", name="Pin Router").click()
+    expect(toast(page)).to_contain_text("Pinned")
+    expect(card.locator(".qlrow .n")).to_have_text(["Alpha", "Mid", "Router", "Zeta"])
+    expect(card.locator(".qlsug")).to_have_count(0)
+
+
+def _changes_with(page, server, audit, obs):
+    page.route("**/api/audit?*", lambda r: r.fulfill(status=200, content_type="application/json",
+                                                       body=json.dumps(audit)))
+    page.route("**/api/observations?*", lambda r: r.fulfill(status=200, content_type="application/json",
+                                                              body=json.dumps(obs)))
+    page.reload()
+    page.wait_for_selector("#ovFeed .chrow")
+
+
+def test_changes_group_by_day_fold_runs_and_filter(page, server):
+    a = server.api("POST", "/api/entries", {"name": "Scale", "ip": "10.0.0.7"})["id"]
+    b = server.api("POST", "/api/entries", {"name": "DNS on 53", "ip": "10.0.0.7"})["id"]
+    c = server.api("POST", "/api/entries", {"name": "Plex", "ip": "10.0.0.8"})["id"]
+    t = lambda mins: page.evaluate(f"new Date(Date.now() - {mins} * 60000).toISOString()")  # noqa: E731
+    audit = [   # newest first, like /api/audit
+        {"ts": t(5), "actor": "admin", "action": "update", "entry_id": a, "name": "Scale",
+         "detail": {"name": ["DNS on 53", "Scale"]}},
+        {"ts": t(30), "actor": "admin", "action": "update", "entry_id": b, "name": "DNS on 53",
+         "detail": {"category": ["", "Smart Home"]}},
+        {"ts": t(60), "actor": "admin", "action": "create", "entry_id": b, "name": "DNS on 53",
+         "detail": {"ip": "10.0.0.7", "verified": False, "notes": "Discovered from Pi-hole"}},
+        {"ts": t(60 * 26), "actor": "admin", "action": "update", "entry_id": c, "name": "Plex",
+         "detail": {"ports": ["32400", "32400, 8324"]}},
+    ]
+    obs = [{"ts": t(10), "entry_id": c, "name": "Plex", "up": False, "target": "10.0.0.8:32400"}]
+    _changes_with(page, server, audit, obs)
+    feed = page.locator("#ovFeed")
+    expect(feed.locator(".dayhead").first).to_have_text("Today")
+    expect(feed.locator(".dayhead").nth(1)).to_have_text(re.compile(r"^Yesterday · "))
+    merged = feed.locator(".chmerged")
+    expect(merged).to_have_count(1)                       # three admin changes on one address
+    expect(merged.locator(".chm")).to_have_text("Discovered DNS on 53, then renamed DNS on 53 to Scale")
+    expect(merged.locator(".chsub")).to_contain_text("admin · 3 changes collapsed")
+    expect(merged).to_have_attribute("aria-expanded", "false")
+    merged.click()
+    expect(feed.locator(".chmerged")).to_have_attribute("aria-expanded", "true")
+    expect(feed.locator(".chsubs .chrow")).to_have_count(3)
+
+    card = page.locator('#overview [data-ovcard="changes"]')
+    card.get_by_role("button", name="State").click()
+    expect(card.get_by_role("button", name="State")).to_have_attribute("aria-pressed", "true")
+    expect(feed.locator(".chm")).to_have_text(["Plex stopped answering"])
+    card.get_by_role("button", name="Discovered").click()
+    expect(feed.locator(".chm")).to_have_text(["Discovered DNS on 53"])
+    card.get_by_role("button", name="Edits").click()
+    expect(feed.locator(".chm")).to_have_text(["Edited DNS on 53, then renamed DNS on 53 to Scale",
+                                               "Edited Plex"])
+    card.get_by_role("button", name="All changes").click()
+    expect(page.locator("#changes")).to_be_visible()
+
+
+def test_changes_show_at_most_six_groups_and_say_what_failed(page, server):
+    t = lambda mins: page.evaluate(f"new Date(Date.now() - {mins} * 60000).toISOString()")  # noqa: E731
+    audit = [{"ts": t(i * 5), "actor": f"user{i}", "action": "setting", "entry_id": None,
+              "name": f"setting {i}", "detail": None} for i in range(9)]
+    page.route("**/api/observations?*", lambda r: r.fulfill(status=500, body="no"))
+    page.route("**/api/audit?*", lambda r: r.fulfill(status=200, content_type="application/json",
+                                                       body=json.dumps(audit)))
+    page.reload()
+    feed = page.locator("#ovFeed")
+    expect(feed.locator(".chrow")).to_have_count(6)
+    expect(feed).to_contain_text("Status changes could not load.")
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375

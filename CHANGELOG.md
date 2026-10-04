@@ -4,6 +4,12 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.5.0 - 2026-10-04
+
+- Quick links is now Quick launch: pinned services by name in two columns, each a link showing the URL's host name (ip:port when there is no URL, and on hover) and a status dot. Pinned entries with nothing to open open their card.
+- Quick launch suggests up to two critical entries with a URL that are not pinned, with a Pin button each.
+- Recent changes is now Changes: the change log and status changes (up/down) together, grouped by day ("Today", "Yesterday · Sat, Oct 3"), with a run of changes by one actor to one entry or to entries on one address within two hours folded into one row that opens. Filters: All, Discovered, Edits, State. Six groups, then All changes; if the log or the status changes cannot load, the card says which.
+
 ## 2.4.0 - 2026-10-04
 
 - New Overview card, Hardware & blast radius: one tile per physical host that something runs on, with how many entries depend on it (through VMs and containers), how many of those a health check watches, and amber notes when two of the firewall, DNS, proxy and edge sources point at the same host, when three or more critical entries depend on it, or when it is tagged `backup:none`. A Network gear tile shows the Core Network hardware, up out of monitored. API: `GET /api/overview/hardware`.

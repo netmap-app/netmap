@@ -624,8 +624,8 @@ CARDS = [
     ("exposure", "Reachable from outside"),
     ("hardware", "Hardware & blast radius"),
     ("categories", "Inventory by category"),
-    ("quicklinks", "Quick links"),
-    ("changes", "Recent changes"),
+    ("quicklinks", "Quick launch"),
+    ("changes", "Changes"),
     ("addresses", "Address space"),
 ]
 LAYOUT_KEY = "overview_layout"
