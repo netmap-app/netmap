@@ -16,7 +16,7 @@ def test_no_em_dash_in_the_repository():
             text = (ROOT / f).read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue                                   # binary, or deleted in the tree
-        bad += [f"{f}:{n}" for n, line in enumerate(text.splitlines(), 1) if "—" in line]
+        bad += [f"{f}:{n}" for n, line in enumerate(text.splitlines(), 1) if chr(0x2014) in line]
     assert not bad, bad
 
 
