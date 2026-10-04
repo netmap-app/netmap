@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.6.3 - 2026-10-04
+
+- Customize overview is an icon button at the right of Overview in the sidebar; from any page it opens the Overview with the dialog. With the sidebar collapsed, and on narrow screens without a sidebar, the button under the cards stays the way in.
+
 ## 2.6.2 - 2026-10-04
 
 - The Address space legend shows reserved addresses the way the grid draws them: "reserved, in use" (a framed filled cell) and "reserved, unused" (an outline), after the four fills (used, shared, seen, free).

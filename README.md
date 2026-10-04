@@ -356,7 +356,8 @@ and state on hover, and one with entries opens Inventory filtered to exactly
 that address (`/api/entries?ip=`, shown as a removable "IP" chip). The numbers and
 the breakdown always describe the whole inventory, never the current filter.
 Clicking a category jumps to Inventory filtered to it. **Customize overview**
-at the bottom of the page shows, hides and reorders the cards below the status;
+(the icon next to Overview in the sidebar; on a phone, the button under the
+cards) shows, hides and reorders the cards below the status;
 the layout is stored on the server, one for the instance. The status strip is
 always shown, first.
 

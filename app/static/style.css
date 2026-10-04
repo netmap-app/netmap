@@ -91,6 +91,21 @@ html{touch-action:manipulation}
 .rnav.on{background:var(--accent);color:var(--onaccent);font-weight:600}
 .rnav.on .ico{color:var(--onaccent)}
 .rnav .vbadge{margin-left:auto}
+/* Overview's row carries Customize at its right edge: a sibling button, not
+   one nested in the nav button, so both stay real buttons. */
+.rrow{position:relative}
+.rrow .rnav{padding-right:42px}
+.rcust{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:30px;height:30px;
+  display:flex;align-items:center;justify-content:center;background:none;border:none;
+  border-radius:6px;cursor:pointer;color:var(--faint)}
+.rcust .ico{width:16px;height:16px}
+.rcust:hover,.rcust:focus-visible{background:var(--panel2);color:var(--fg)}
+.rrow:has(.rnav.on) .rcust{color:var(--onaccent)}
+.rrow:has(.rnav.on) .rcust:hover,.rrow:has(.rnav.on) .rcust:focus-visible{
+  background:color-mix(in srgb,var(--onaccent) 22%,transparent);color:var(--onaccent)}
+body.railmin .rcust{display:none}
+body.railmin .rrow .rnav{padding-right:0}
+
 .railfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
 .railver{display:flex;align-items:center;gap:7px;padding:0 10px;
   font-size:11px;color:var(--faint)}
@@ -1395,3 +1410,7 @@ button.hwcard:hover{border-color:var(--accent)}
 button.acell{cursor:pointer}
 button.acell:hover,button.acell:focus-visible{outline:2px solid var(--fg);outline-offset:1px}
 .ovcard .acell.free,.ovcard .acell:not(.used):not(.dup):not(.seen){background:var(--bg)}
+
+/* Where the full rail is, it is the way in; the button under the cards is
+   for a collapsed rail and for narrow screens, which have no room for it. */
+@media (min-width:981px){ body:not(.railmin) .ovfoot{display:none} }

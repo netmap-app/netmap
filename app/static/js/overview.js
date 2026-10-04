@@ -367,6 +367,12 @@ $("#layoutList").addEventListener("click", ev => {
   saveOvLayout({ cards }, `[data-lid="${CSS.escape(b.dataset.lid)}"][data-lmove="${b.dataset.lmove}"]`);
 });
 $("#layoutReset").onclick = () => saveOvLayout({ reset: true });
+// The rail's own way in: from any page, it goes to the Overview first so the
+// change is seen as it is made.
+$("#railCustomize").onclick = () => {
+  if (view !== "overview") { view = "overview"; applyView(); }
+  openLayout();
+};
 $("#layoutClose").onclick = () => ($("#layoutModal").hidden = true);
 
 function wireOverview(box, all) {

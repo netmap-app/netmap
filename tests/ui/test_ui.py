@@ -1296,7 +1296,7 @@ def test_overview_cards_can_be_hidden_reordered_and_reset(page, server):
     assert _ov_cards(page) == ["exposure", "hardware", "categories", "quicklinks", "changes", "addresses"]
     # Every card is drawn with the card shell.
     expect(page.locator("#overview [data-ovcard]:not(.ovcard)")).to_have_count(0)
-    page.click("#ovCustomize")
+    page.click("#railCustomize")
     dlg = page.locator("#layoutModal")
     expect(dlg).to_be_visible()
     expect(dlg.locator("#lyStatus")).to_be_disabled()             # the status strip always shows
@@ -1309,12 +1309,12 @@ def test_overview_cards_can_be_hidden_reordered_and_reset(page, server):
     expect(dlg.get_by_role("button", name="Move Quick launch down")).to_be_focused()
     page.keyboard.press("Escape")
     expect(dlg).to_be_hidden()
-    expect(page.locator("#ovCustomize")).to_be_focused()
+    expect(page.locator("#railCustomize")).to_be_focused()
 
     page.reload()                                                   # saved on the server
     page.wait_for_selector("#overview .verdict")
     assert _ov_cards(page) == ["quicklinks", "exposure", "hardware", "categories", "changes"]
-    page.click("#ovCustomize")
+    page.click("#railCustomize")
     page.click("#layoutReset")
     expect(page.locator('#overview [data-ovcard="addresses"]')).to_have_count(1)
     assert _ov_cards(page) == ["exposure", "hardware", "categories", "quicklinks", "changes", "addresses"]
@@ -1328,7 +1328,7 @@ def test_every_card_hidden_leaves_the_status_and_the_way_back(page, server):
     page.wait_for_selector("#overview .verdict")
     expect(page.locator("#overview [data-ovcard]")).to_have_count(0)
     expect(page.locator("#overview .verdict")).to_be_visible()
-    expect(page.locator("#ovCustomize")).to_be_visible()
+    expect(page.locator("#railCustomize")).to_be_visible()
 
 
 def test_header_shows_freshness_and_drops_the_csv_button(page, server):
@@ -1619,3 +1619,25 @@ def test_address_space_draws_every_address_and_opens_one(page, server):
     page.set_viewport_size({"width": 375, "height": 812})
     page.wait_for_timeout(100)
     assert page.evaluate("document.documentElement.scrollWidth") <= 375
+
+
+def test_customize_sits_in_the_rail_next_to_overview(page, server):
+    rail = page.locator("#railCustomize")
+    expect(rail).to_have_attribute("aria-label", "Customize overview")
+    expect(page.locator("#ovCustomize")).to_be_hidden()          # the rail is the way in here
+    # From another page it goes to the Overview and opens the dialog there.
+    page.click('#railnav [data-view="inventory"]')
+    rail.click()
+    expect(page.locator("#layoutModal")).to_be_visible()
+    expect(page.locator("#overview")).to_be_visible()
+    page.keyboard.press("Escape")
+    expect(rail).to_be_focused()
+    # A collapsed rail has no room for it.
+    page.click("#railTog")
+    expect(rail).to_be_hidden()
+    expect(page.locator("#ovCustomize")).to_be_visible()
+    page.click("#railTog")
+    expect(page.locator("#ovCustomize")).to_be_hidden()
+    # No rail on a phone: the button under the cards is the way in.
+    page.set_viewport_size({"width": 375, "height": 812})
+    expect(page.locator("#ovCustomize")).to_be_visible()
