@@ -5,6 +5,10 @@ small-office network. Single container: FastAPI + SQLite + an MCP server, no
 build step, no framework. `app/db.py` is meant to be readable in one sitting -
 keep it that way.
 
+NetMap is developed with Claude (Anthropic's AI, through Claude Code), and its
+commits carry a co-author trailer. Whoever writes a change, it has to follow the
+rules below and pass the tests.
+
 Issues and pull requests are welcome. Security problems go through
 [SECURITY.md](SECURITY.md), not a public issue. How a release is cut:
 [RELEASING.md](RELEASING.md).

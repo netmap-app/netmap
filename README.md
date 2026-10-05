@@ -1705,6 +1705,13 @@ sources and notification channels you add, fetch service icons from
 cached on disk and fetched once. Settings › About › *Fetch Icons* does it on
 demand.
 
+## How it is built
+
+NetMap is developed by Claude (Anthropic's AI, through Claude Code), directed by
+its maintainer, who sets the requirements and priorities, runs it on a home
+network and decides what ships. Commits carry a `Co-Authored-By: Claude`
+trailer. The tests and CI in this repository check every change.
+
 ## Contributing
 
 Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) has the
