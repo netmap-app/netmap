@@ -106,7 +106,9 @@ html{touch-action:manipulation}
 .rrow:has(.rnav.on) .rcust:hover,.rrow:has(.rnav.on) .rcust:focus-visible{
   background:color-mix(in srgb,var(--onaccent) 22%,transparent);color:var(--onaccent)}
 body.railmin .rcust{display:none}
-body.railmin .rrow .rnav{padding-right:0}
+/* As specific as the rule that makes room for the icon, so collapsed it is
+   centred like every other item. */
+body.railmin .rrow:has(.rnav.on) .rnav,body.railmin .rrow .rnav{padding:10px 0}
 
 .railfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
 .railver{display:flex;align-items:center;gap:7px;padding:0 10px;

@@ -1638,6 +1638,12 @@ def test_customize_sits_in_the_rail_next_to_overview(page, server):
     page.click("#railTog")
     expect(rail).to_be_hidden()
     expect(page.locator("#ovCustomize")).to_be_visible()
+    # Collapsed, Overview is centred like the rest: same box, icon in the same column.
+    page.wait_for_timeout(300)
+    boxes = page.evaluate("""[...document.querySelectorAll('#railnav .rnav')].map(b => {
+      const r = b.getBoundingClientRect(), i = b.querySelector('.ico').getBoundingClientRect();
+      return [Math.round(r.width), Math.round(i.left + i.width / 2)]; })""")
+    assert len({b[0] for b in boxes}) == 1 and len({b[1] for b in boxes}) == 1, boxes
     page.click("#railTog")
     expect(page.locator("#ovCustomize")).to_be_hidden()
     # No rail on a phone: the button under the cards is the way in.
