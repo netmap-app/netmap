@@ -1331,24 +1331,8 @@ def test_every_card_hidden_leaves_the_status_and_the_way_back(page, server):
     expect(page.locator("#railCustomize")).to_be_visible()
 
 
-def test_header_shows_freshness_and_drops_the_csv_button(page, server):
-    real = server.api("GET", "/api/discovery/summary")
-    scanned = page.evaluate("new Date(Date.now() - 5 * 60 * 1000).toISOString()")
-    nxt = page.evaluate("new Date(Date.now() + 40 * 60 * 1000 + 20000).toISOString()")
-    health = [{"source": "docker", "label": "Docker", "type": "docker", "configured": True,
-               "pending": False, "ok": True, "last_ok": scanned, "error": None}]
-    page.route("**/api/discovery/summary", lambda r: r.fulfill(
-        status=200, content_type="application/json",
-        body=json.dumps({**real, "health": health, "scanned_at": scanned, "next_scan": nxt})))
-    page.reload()
-    page.wait_for_selector("#overview .verdict")
-    hm = page.evaluate(f"(() => {{ const d = new Date('{scanned}'); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }})()")
-    expect(page.locator("#freshness")).to_have_text(f"Scanned {hm} · next in 40 min")
-
-    # No scheduled scan: only the "Scanned" part.
-    page.evaluate("SRC_HEALTH.next_scan = null; paintFreshness()")
-    expect(page.locator("#freshness")).to_have_text(f"Scanned {hm}")
-
+def test_header_has_no_freshness_line_and_no_csv_button(page, server):
+    expect(page.locator("#freshness")).to_have_count(0)
     expect(page.locator('header a[href="/api/export.csv"]')).to_have_count(0)
     expect(page.locator('#refreshBtn')).to_have_attribute("aria-label", "Rescan all sources")
     expect(page.get_by_label("Search the inventory")).to_have_attribute(
@@ -1662,3 +1646,20 @@ def test_the_top_line_shares_one_centre(page, server):
     tog, search = page.evaluate("""['#railTog', '#search'].map(s => {
       const r = document.querySelector(s).getBoundingClientRect(); return r.top + r.height / 2; })""")
     assert abs(tog - search) <= 1.5, (tog, search)
+
+
+def test_page_name_shows_only_with_the_sidebar_collapsed(page, server):
+    page.set_viewport_size({"width": 1440, "height": 900})
+    title = page.locator(".pagetitle")
+    width = lambda: title.bounding_box()["width"]          # noqa: E731
+    assert width() <= 1                                     # the rail says it
+    page.click("#railTog")
+    expect(page.locator("#ptName")).to_have_text("Overview")
+    page.wait_for_timeout(200)
+    assert width() > 40
+    page.click('#railnav [data-view="network"]')
+    expect(page.locator("#ptName")).to_be_visible()
+    expect(page.locator("#ptName")).to_have_text("Network")
+    page.click("#railTog")
+    page.wait_for_timeout(200)
+    assert width() <= 1

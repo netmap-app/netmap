@@ -57,8 +57,7 @@ $("#refreshBtn").setAttribute("aria-label", "Rescan all sources");
 // The shortcut in the placeholder is the one this keyboard has.
 $("#search").placeholder = "Search name, IP, port, tag…   "
   + (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "⌘K" : "Ctrl+K");
-// "Next in 40 min" counts down without new data arriving.
-setInterval(paintFreshness, 30000);
+
 for (const m of ["editModal", "histModal", "palModal", "cardModal", "portModal", "changelogModal", "layoutModal"])
   $("#" + m).addEventListener("click", ev => {
     if (ev.target.id !== m) return;

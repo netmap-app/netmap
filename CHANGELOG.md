@@ -4,6 +4,11 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.6.7 - 2026-10-05
+
+- With the sidebar collapsed, the page name shows left of the search box; with the sidebar open it is hidden again (the sidebar already says it).
+- The "Scanned HH:MM · next in N" line is gone from the header. The sidebar's "checked" line still says when the sources were last scanned, and `next_scan` stays in `/api/discovery/summary` and `/api/overview`.
+
 ## 2.6.6 - 2026-10-05
 
 - The sidebar's logo, name and collapse button sit on the same centre line as the search box and header buttons, expanded and collapsed.

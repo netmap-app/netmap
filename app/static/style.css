@@ -944,9 +944,13 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 @media (min-width:981px){
   .barbrand,.viewtabs,#histBtn,#setBtn{display:none}
 }
-/* The rail (wide) or the tab group (narrow) already says which page this is,
-   so the title is there for screen readers only and the search gets the room. */
+/* The full rail (wide) or the tab group (narrow) already says which page this
+   is, so the title is there for screen readers only and the search gets the
+   room. A collapsed rail shows icons alone, so then the name is shown. */
 .pagetitle{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (min-width:981px){
+  body.railmin .pagetitle{position:static;width:auto;height:auto;overflow:visible;clip:auto;margin-right:8px}
+}
 
 /* ---------- collapsed rail ---------- */
 .railtog{position:absolute;top:calc(17.5px + env(safe-area-inset-top));right:10px;background:none;border:none;
@@ -1295,12 +1299,6 @@ td,.qlink,.lchip,.kv{overflow-wrap:anywhere}
 body.pagestale :is(.dot, .srcline .s, .vfact, .vstate, .atpill, .cs, .gu, .gd, .lat){filter:grayscale(1);opacity:.6}
 .stalebanner{cursor:pointer}
 
-/* ---------- header freshness ---------- */
-.fresh{font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;min-width:0;flex:0 1 auto}
-.fresh:empty{display:none}
-/* Narrow: its own line above the buttons, so they keep one row. */
-@media (max-width:980px){ .fresh{flex:1 0 100%;order:-1} }
 
 /* ---------- customize overview ---------- */
 .ovfoot{display:flex;justify-content:flex-end;margin:4px 0 22px}

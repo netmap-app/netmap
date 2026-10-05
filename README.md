@@ -361,9 +361,6 @@ the sidebar collapsed or on a phone, the button under the cards) shows, hides an
 the layout is stored on the server, one for the instance. The status strip is
 always shown, first.
 
-The header says when the sources were last scanned and when the next automatic
-scan is due ("Scanned 12:15 · next in 40 min").
-
 **Inventory** is the editable table (cards on a phone), grouped by category with
 a per-group health summary in each heading.
 
