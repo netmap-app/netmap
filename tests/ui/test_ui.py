@@ -1649,3 +1649,16 @@ def test_customize_sits_in_the_rail_next_to_overview(page, server):
     # No rail on a phone: the button under the cards is the way in.
     page.set_viewport_size({"width": 375, "height": 812})
     expect(page.locator("#ovCustomize")).to_be_visible()
+
+
+def test_the_top_line_shares_one_centre(page, server):
+    """Logo, name and collapse button line up with the search box and buttons."""
+    page.set_viewport_size({"width": 1440, "height": 900})
+    mids = page.evaluate("""['.railbrand .logo', '.railbrand span', '#railTog', '#search', '#addBtn']
+      .map(s => { const r = document.querySelector(s).getBoundingClientRect(); return r.top + r.height / 2; })""")
+    assert max(mids) - min(mids) <= 1.5, mids
+    page.click("#railTog")                       # collapsed, the button stays on the line
+    page.wait_for_timeout(300)
+    tog, search = page.evaluate("""['#railTog', '#search'].map(s => {
+      const r = document.querySelector(s).getBoundingClientRect(); return r.top + r.height / 2; })""")
+    assert abs(tog - search) <= 1.5, (tog, search)

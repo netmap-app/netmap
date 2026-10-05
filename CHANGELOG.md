@@ -4,6 +4,10 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.6.6 - 2026-10-05
+
+- The sidebar's logo, name and collapse button sit on the same centre line as the search box and header buttons, expanded and collapsed.
+
 ## 2.6.5 - 2026-10-05
 
 - With the sidebar collapsed, Overview is centred like the other items again; the room kept for the Customize icon had pushed it to the left.

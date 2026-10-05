@@ -79,8 +79,10 @@ html{touch-action:manipulation}
 .rail{position:fixed;left:0;top:0;bottom:0;width:206px;z-index:30;
   background:var(--panel);border-right:1px solid var(--line);
   display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top)) 12px 14px}
+/* Logo, name and collapse button sit on the header's centre line (the
+   58px bar: centre at 29px), so the top of the page reads as one row. */
 .railbrand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;
-  letter-spacing:.3px;padding:6px 8px 16px}
+  letter-spacing:.3px;padding:4.5px 8px 17.5px}
 .railnav{display:flex;flex-direction:column;gap:2px}
 .rnav{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
   background:none;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;
@@ -947,7 +949,7 @@ button.tcar:hover::before{border-left-color:var(--accent)}
 .pagetitle{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------- collapsed rail ---------- */
-.railtog{position:absolute;top:14px;right:10px;background:none;border:none;
+.railtog{position:absolute;top:calc(17.5px + env(safe-area-inset-top));right:10px;background:none;border:none;
   color:var(--faint);cursor:pointer;padding:4px;border-radius:6px;line-height:0}
 .railtog:hover{color:var(--fg);background:var(--panel2)}
 .rail{position:fixed}
