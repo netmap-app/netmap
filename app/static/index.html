@@ -210,6 +210,17 @@
         </div>
 
       </form>
+      <form class="card2 setcard scanset" id="downForm">
+        <div class="setrow">
+          <span>Count an entry as down after</span>
+          <span class="hint" data-tip>Failed health checks in a row before an entry shows as
+            down and a notification goes out. One good answer brings it back up at once.
+            1 acts on the first failure.</span>
+          <label class="scanin"><input id="downAfter" type="number" min="1" max="10" step="1"
+            inputmode="numeric" aria-label="Failed checks"> failed checks in a row</label>
+          <button class="btn" type="submit" id="downSave">Save</button>
+        </div>
+      </form>
       <div class="card2 setcard">
         <div id="srcList"></div>
         <div class="setrow"><button class="btn" id="srcAddBtn">Add source…</button></div>

@@ -4,6 +4,12 @@ Notable changes to NetMap, newest first. One line per change, no commentary -
 each bullet stays on a single line, since `/api/changelog` parses this
 file with a simple line-based reader (see `app/main.py`).
 
+## 2.7.0 - 2026-10-21
+
+- An entry counts as down only after a number of failed health checks in a row, 2 by default, so a single blip neither shows "down" on the Overview nor sends a notification. Coming back up stays immediate on the first good answer. Set it under Settings › Sources ("Count an entry as down after", 1-10); 1 restores the old behaviour of acting on the first failure.
+- While a failure is being counted, the entry keeps the state it was last known in and its status says so ("failed 1 of 2 checks before it counts as down"); nothing is written to its history until it actually goes down.
+- API: `/api/settings/checks` carries and accepts `down_after` next to `tls_warn_days`; either may be sent alone.
+
 ## 2.6.7 - 2026-10-05
 
 - With the sidebar collapsed, the page name shows left of the search box; with the sidebar open it is hidden again (the sidebar already says it).

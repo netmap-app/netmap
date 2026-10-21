@@ -147,9 +147,23 @@ $("#newdevForm").addEventListener("submit", async ev => {
 
 /* ---- when a checked certificate is worth a warning ---- */
 async function loadCertDays() {
-  try { $("#certDays").value = (await api("/api/settings/checks")).tls_warn_days; }
-  catch { /* the field stays empty; saving still works */ }
+  try {
+    const r = await api("/api/settings/checks");
+    $("#certDays").value = r.tls_warn_days;
+    $("#downAfter").value = r.down_after;
+  } catch { /* the fields stay empty; saving still works */ }
 }
+$("#downForm").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  try {
+    const r = await api("/api/settings/checks", {
+      method: "PUT", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ down_after: parseInt($("#downAfter").value || "0", 10) }),
+    });
+    toast(r.down_after === 1 ? "Down on the first failed check"
+      : `Down after ${r.down_after} failed checks in a row`);
+  } catch { /* api() already toasted why */ }
+});
 $("#certForm").addEventListener("submit", async ev => {
   ev.preventDefault();
   try {

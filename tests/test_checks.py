@@ -258,7 +258,8 @@ def test_a_transition_records_what_was_checked(make_app, web):
     e = db.create_entry({"name": "api", "ip": "127.0.0.1",
                          "healthcheck": f"http:{web.port}/health"})
     web.status = 503
-    asyncio.run(status.check_entry(e))
+    for _ in range(status.down_after()):          # down only after the threshold
+        asyncio.run(status.check_entry(e))
     o = db.last_observation(e["id"])
     assert o["up"] is False and "→ 503" in o["detail"]
 

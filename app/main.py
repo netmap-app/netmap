@@ -28,7 +28,7 @@ from .sources import dynamic
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
 CHANGELOG_PATH = os.path.join(os.path.dirname(HERE), "CHANGELOG.md")
-VERSION = "2.6.7"
+VERSION = "2.7.0"
 STARTED = time.time()
 notify.VERSION = VERSION
 
@@ -1323,20 +1323,31 @@ def api_newdevices_settings_set(request: Request, payload: dict = Body(...)):
 
 @app.get("/api/settings/checks")
 def api_checks_settings():
-    """How many days before expiry a checked certificate is worth a warning."""
-    return {"tls_warn_days": status.tls_warn_days(), "default": status.TLS_WARN_DEFAULT}
+    """How many days before expiry a checked certificate is worth a warning,
+    and how many failed checks in a row before an entry counts as down."""
+    return {"tls_warn_days": status.tls_warn_days(), "default": status.TLS_WARN_DEFAULT,
+            "down_after": status.down_after(), "down_after_default": status.DOWN_AFTER_DEFAULT,
+            "down_after_max": status.DOWN_AFTER_MAX}
 
 
 @app.put("/api/settings/checks")
 def api_checks_settings_set(request: Request, payload: dict = Body(...)):
-    try:
-        days = int(payload.get("tls_warn_days"))
-    except (TypeError, ValueError):
-        raise HTTPException(400, "tls_warn_days must be a whole number of days")
-    try:
-        status.set_tls_warn_days(days, actor=actor(request))
-    except ValueError as exc:
-        raise HTTPException(400, str(exc))
+    """`tls_warn_days` and/or `down_after`; either may be left out."""
+    if payload.get("tls_warn_days") is None and payload.get("down_after") is None:
+        raise HTTPException(400, "send tls_warn_days or down_after")
+    for key, what, setter in (
+            ("tls_warn_days", "tls_warn_days must be a whole number of days", status.set_tls_warn_days),
+            ("down_after", "down_after must be a whole number of checks", status.set_down_after)):
+        if payload.get(key) is None:
+            continue
+        try:
+            n = int(payload[key])
+        except (TypeError, ValueError):
+            raise HTTPException(400, what)
+        try:
+            setter(n, actor=actor(request))
+        except ValueError as exc:
+            raise HTTPException(400, str(exc))
     return api_checks_settings()
 
 

@@ -32,6 +32,17 @@ LAST_SWEEP: str | None = None
 TLS_WARN_KEY = "tls_warn_days"
 TLS_WARN_DEFAULT = 21
 
+# How many failed checks in a row before an entry counts as down. One failed
+# TCP connect or a single dropped ping is often a blip, and acting on it put
+# a "down" on the Overview and a notification in someone's pocket for a
+# service that was back two minutes later. Coming back up stays immediate:
+# one good answer is proof, one bad one is not. A setting, kept in kv.
+DOWN_AFTER_KEY = "down_after_failures"
+DOWN_AFTER_DEFAULT = 2
+DOWN_AFTER_MAX = 10
+# entry_id -> failed checks in a row; cleared by any other result.
+FAILS: dict[int, int] = {}
+
 _PORT_RE = re.compile(r"\b(\d{1,5})\b")
 
 
@@ -41,6 +52,24 @@ def tls_warn_days() -> int:
     except ValueError:
         v = 0
     return v if 1 <= v <= 365 else TLS_WARN_DEFAULT
+
+
+def down_after() -> int:
+    try:
+        v = int(db.get_setting(DOWN_AFTER_KEY) or 0)
+    except ValueError:
+        v = 0
+    return v if 1 <= v <= DOWN_AFTER_MAX else DOWN_AFTER_DEFAULT
+
+
+def set_down_after(n: int, actor: str = "web") -> int:
+    n = int(n)
+    if not 1 <= n <= DOWN_AFTER_MAX:
+        raise ValueError(f"down after between 1 and {DOWN_AFTER_MAX} failed checks")
+    before = down_after()
+    db.set_setting(DOWN_AFTER_KEY, str(n))
+    db.log(actor, "setting", None, "down after failed checks", {"from": before, "to": n})
+    return n
 
 
 def set_tls_warn_days(days: int, actor: str = "web") -> int:
@@ -289,19 +318,43 @@ async def run_check(entry: dict) -> dict:
 
 async def check_entry(entry: dict) -> dict:
     res = await run_check(entry)
-    before = CACHE.get(entry["id"])
-    CACHE[entry["id"]] = res
+    eid = entry["id"]
+    before = CACHE.get(eid)
+    # The state this entry was last known in. The in-memory cache is empty
+    # after a restart, so fall back to the last stored row there - otherwise
+    # every restart would log 60 false changes (and restart the count below).
+    prev = None
+    if before is None:
+        try:
+            prev = await asyncio.to_thread(db.last_observation, eid)
+        except Exception as exc:
+            print(f"[status] could not read observation: {exc}", flush=True)
+    known = before.get("up") if before is not None else (prev["up"] if prev else None)
+
+    # Down only after DOWN_AFTER failed checks in a row. Until then the entry
+    # keeps the state it was last known in (up, or not yet known), and the
+    # result says how many checks have failed - so the Overview, the
+    # notifications and the stored transitions all see one flip, not a blip.
+    # Already down stays down on the next failure; any other result clears
+    # the count, so the way back up is immediate.
+    if res["up"] is False:
+        FAILS[eid] = FAILS.get(eid, 0) + 1
+        need = down_after()
+        if FAILS[eid] < need and known is not False:
+            res = {**res, "up": known, "failing": FAILS[eid], "failing_of": need,
+                   "summary": f"{res.get('summary', '')} · failed {FAILS[eid]} of {need} "
+                              "checks before it counts as down"}
+    else:
+        FAILS.pop(eid, None)
+    CACHE[eid] = res
     # Store transitions only. Every sweep would be 46 rows a minute of noise;
     # a change of state is the thing anyone ever wants to look back at.
-    # The in-memory cache is empty after a restart, so fall back to the last
-    # stored row there - otherwise every restart would log 60 false changes.
     try:
-        if before is None:
-            prev = await asyncio.to_thread(db.last_observation, entry["id"])
-            changed = prev is None or prev["up"] is not res["up"]
-        else:
-            changed = before.get("up") is not res["up"]
-        if changed:
+        changed = (prev is None or prev["up"] is not res["up"]) if before is None \
+            else before.get("up") is not res["up"]
+        # A failure still being counted is not a transition, even for an
+        # entry with no history yet.
+        if changed and not res.get("failing"):
             await asyncio.to_thread(
                 db.record_observation, entry["id"], res["up"],
                 res["latency_ms"], res["target"], res.get("summary", ""))
@@ -335,10 +388,13 @@ async def sweep() -> None:
 
     await asyncio.gather(*(one(e) for e in entries))
     # An entry that answered its check exists - see app/stale.py.
-    await asyncio.to_thread(db.confirm, [i for i, r in CACHE.items() if r.get("up") is True],
+    # Not one held as up while a failure is counted: it did not answer.
+    await asyncio.to_thread(db.confirm, [i for i, r in CACHE.items()
+                                         if r.get("up") is True and not r.get("failing")],
                             "health check answered")
     for stale in set(CACHE) - {e["id"] for e in entries}:
         CACHE.pop(stale, None)
+        FAILS.pop(stale, None)
     LAST_SWEEP = db.now()
     from . import uptime
     await asyncio.to_thread(uptime.heartbeat)     # "NetMap was watching" - see uptime.py

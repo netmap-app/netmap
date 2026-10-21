@@ -218,6 +218,13 @@ each monitored entry. Green = answered, red = no answer, hollow = not monitored
 or not probed. The dot's tooltip and the service card say what was checked and
 what answered ("HTTPS 10.0.0.5:8443/health → 200 in 42 ms").
 
+An entry counts as **down** only after **2 failed checks in a row** (Settings ›
+Sources, "Count an entry as down after", 1-10; 1 acts on the first failure),
+so a single dropped ping or refused connect puts nothing on the Overview and
+sends no notification. Until then it keeps the state it was last known in and
+its tooltip says "failed 1 of 2 checks before it counts as down". One good
+answer brings it back up at once.
+
 By default that is a TCP connect to the entry's first port. An open port is
 not a working service, so an entry's **Health check** field can ask for more:
 

@@ -522,6 +522,23 @@ def test_the_certificate_warning_window_is_saved(page, server):
     assert server.api("GET", "/api/settings/checks")["tls_warn_days"] == 30
 
 
+def test_the_down_threshold_is_saved(page, server):
+    open_settings(page, "sources")
+    field = page.get_by_label("Failed checks")
+    expect(field).to_have_value("2")
+    field.fill("3")
+    page.click("#downSave")
+    expect(toast(page)).to_contain_text("Down after 3 failed checks in a row")
+    got = server.api("GET", "/api/settings/checks")
+    assert got["down_after"] == 3 and got["tls_warn_days"] == 21          # the other is untouched
+    field.fill("1")
+    page.click("#downSave")
+    expect(toast(page)).to_contain_text("Down on the first failed check")
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(100)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 375
+
+
 # ---- leases & ARP --------------------------------------------------------------------------------
 def test_a_lease_file_source_is_added_tested_and_its_finding_shown(page, server, tmp_path):
     leases = tmp_path / "dnsmasq.leases"
