@@ -1,0 +1,32 @@
+# Auto-merge Dependabot pull requests once CI passes.
+#
+# This only switches on GitHub's auto-merge for the PR; GitHub then merges it
+# when the required check (`pytest`, set in the main-branch ruleset) is green,
+# and never if it fails. Needs Settings › General › "Allow auto-merge" on.
+#
+# Only PRs opened by Dependabot qualify - never a fork or another author - and
+# no PR code is checked out or run here.
+#
+# A merge made through GITHUB_TOKEN does not start a new workflow run on main,
+# so publish/release/deploy do not fire for these merges. That is fine for a
+# dependency bump (it does not change VERSION, so publish would skip anyway);
+# the next release push picks the change up.
+name: Dependabot auto-merge
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'netmap-app/netmap'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Enable auto-merge (squash)
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
